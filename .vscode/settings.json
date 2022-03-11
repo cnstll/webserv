@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "epoll.h": "c",
+    "stdio.h": "c"
+  }
+}
