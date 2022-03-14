@@ -87,7 +87,7 @@ int main(){
   int server_fd;
   int connexion_fd;
   int epoll_fd;
-  uint8_t sent_line[] = "HTTP/1.0 200 OK \r\n\r\n<html><head>SO BAAAAAD</head></html>\n";
+  uint8_t sent_line[] = "HTTP/1.1 200 OK \r\n\r\n<html><head>SO BAAAAAD</head></html>\n";
   uint8_t received_line[READ_SIZE + 1];
   // int epollin_value = EPOLLIN;
   // int epollout_value = EPOLLOUT;
