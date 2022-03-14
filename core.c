@@ -7,10 +7,10 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
+//#include <signal.h>
 #define MAX_EVENTS 10
 #define READ_SIZE 30000
-#define SERVER_PORT 18000
+#define SERVER_PORT 18001
 #define MAX_QUEUE 100
 
 int server_fd;
@@ -27,7 +27,7 @@ int setup_server(int port, int backlog){
   int read_bytes;
   struct sockaddr_in server_addr;
 
-  check((server_fd = socket(AF_INET, SOCK_STREAM, 0)), "socket error");
+  check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
 
   bzero(&server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
@@ -47,13 +47,20 @@ int accept_new_connexion(int server_fd){
   return connexion_fd;
 }
 
-void monitor_socket(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor){
+void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action){
   //Set a epoll event object to parametrize monitored fds
   struct epoll_event event_parameters;
   //Fd that will be added to the epoll
   event_parameters.data.fd = fd_to_monitor;
   event_parameters.events = events_to_monitor;
-  check((epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd_to_monitor, &event_parameters)), "epoll_ctl error");
+  check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
+}
+
+void make_fd_non_blocking(int fd){
+  int flags;
+  check((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
+  flags |= O_NONBLOCK;
+  check((fcntl(fd, F_SETFL, flags)), "fcntl error");
 }
 
 //void handle_sig(int sig, siginfo_t *info, void *ucontext){
@@ -86,7 +93,7 @@ int main(){
   // int epollout_value = EPOLLOUT;
   // int epollhup_value = EPOLLHUP;
   int read_bytes;
-  int count_of_fd_actualized;
+  int count_of_fd_actualized = 0;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
 
   //Prep a set of epoll event struct to register listened events
@@ -95,12 +102,11 @@ int main(){
   //Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
   //Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  monitor_socket(epoll_fd, server_fd, EPOLLIN | EPOLLOUT);
-  //Modify SIGINT behaviour
-  void set_signal_handling();
+  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
   while (1){
     //count_of_fd_actualized = 0;
     printf("waiting for a connection on port %d\n", SERVER_PORT);
+    printf("count of fd actualized %d\n", count_of_fd_actualized);
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events_received, MAX_EVENTS, -1)), "epoll_wait error");
     for(int i = 0; i < count_of_fd_actualized; i++){
       printf("idx: %d - fd: %d - event mask %d\n", i, events_received[i].data.fd, events_received[i].events);
@@ -112,7 +118,8 @@ int main(){
           check(-1, "server error");
         }
         check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
-        monitor_socket(epoll_fd, connexion_fd, EPOLLIN);
+        make_fd_non_blocking(connexion_fd);
+        monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLET, EPOLL_CTL_ADD);
         printf("Connexion accepted for fd: %d\n", connexion_fd);
       }
       else {
@@ -123,9 +130,9 @@ int main(){
           break;
         }
         if (events_received[i].events & EPOLLOUT) write(0, "EPPOLOUT\n", 9);
-        if (events_received[i].events & EPOLLIN)  write(0, "EPPOLINN\n", 9);
+        if (events_received[i].events & EPOLLIN) write(0, "EPPOLINN\n", 9);
         bzero(&received_line, READ_SIZE);
-        while ((read_bytes = read(connexion_fd, received_line, READ_SIZE)) > 0){
+        while ((read_bytes = read(events_received[i].data.fd, received_line, READ_SIZE)) > 0){
           write(STDOUT_FILENO, received_line, read_bytes); 
           if (received_line[read_bytes - 1] == '\n'){
             break;
@@ -134,13 +141,13 @@ int main(){
         }
         check(read_bytes, "read error");
         if (read_bytes == 0){
-          write(STDOUT_FILENO, "closing connexion..\n", strlen("closing connexion..\n"));
+          printf("Closing connexion for fd: %d\n", events_received[i].data.fd);
           close(events_received[i].data.fd);
-          //break;
+          break;
         }
         write(connexion_fd, (char*)sent_line, strlen((char *)sent_line));
-        write(connexion_fd, "\0", 1);
-        }
+        //write(connexion_fd, "\0", 1);
+      }
     }
   }
   close(server_fd);
