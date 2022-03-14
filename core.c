@@ -10,10 +10,11 @@
 //#include <signal.h>
 #define MAX_EVENTS 10
 #define READ_SIZE 30000
-#define SERVER_PORT 18001
+#define SERVER_PORT 18000
 #define MAX_QUEUE 100
 
 int server_fd;
+int count_of_fd_monitored = 0;
 
 void check (int return_value, char *error_msg){
   if (return_value < 0){
@@ -54,6 +55,7 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
   event_parameters.data.fd = fd_to_monitor;
   event_parameters.events = events_to_monitor;
   check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
+  count_of_fd_monitored++;
 }
 
 void make_fd_non_blocking(int fd){
@@ -87,11 +89,19 @@ int main(){
   int server_fd;
   int connexion_fd;
   int epoll_fd;
-  uint8_t sent_line[] = "HTTP/1.0 200 OK \r\n\r\n<html><head>SO BAAAAAD</head></html>\n";
+  uint8_t sent_line[] = "HTTP/1.1 200 OK \n Date: Mon, 27 Jul 2009 12:28:53 GMT \n Server: Webserv B**** (He uses arcch btw.) \n Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 0 \n\n"//Content-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n"//<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
+<html>\
+<head>\
+   <title>400 Bad Request</title>\
+</head>\
+<body>\
+   <h1>Bad Request</h1>\
+   <p>Your browser sent a request that this server could not understand.</p>\
+   <p>The request line contained invalid characters following the protocol string.</p>\
+</body>\
+</html>"
+;
   uint8_t received_line[READ_SIZE + 1];
-  // int epollin_value = EPOLLIN;
-  // int epollout_value = EPOLLOUT;
-  // int epollhup_value = EPOLLHUP;
   int read_bytes;
   int count_of_fd_actualized = 0;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
@@ -104,11 +114,11 @@ int main(){
   //Use epoll_ctl to add the server socket to epoll to monitor events from the server
   monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
   while (1){
-    //count_of_fd_actualized = 0;
     printf("waiting for a connection on port %d\n", SERVER_PORT);
     printf("count of fd actualized %d\n", count_of_fd_actualized);
+    printf("count of fd monitored %d\n", count_of_fd_monitored);
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events_received, MAX_EVENTS, -1)), "epoll_wait error");
-    for(int i = 0; i < count_of_fd_actualized; i++){
+    for (int i = 0; i < count_of_fd_actualized; i++){
       printf("idx: %d - fd: %d - event mask %d\n", i, events_received[i].data.fd, events_received[i].events);
       if (events_received[i].data.fd == server_fd){
         if (events_received[i].events & EPOLLOUT) write(0, "EPPOLOUT SERV\n", 14);
@@ -145,7 +155,7 @@ int main(){
           close(events_received[i].data.fd);
           break;
         }
-        write(connexion_fd, (char*)sent_line, strlen((char *)sent_line));
+        write(events_received[i].data.fd, (char*)sent_line, strlen((char *)sent_line));
         //write(connexion_fd, "\0", 1);
       }
     }
