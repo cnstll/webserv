@@ -48,14 +48,15 @@ int accept_new_connexion(int server_fd){
   return connexion_fd;
 }
 
-void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action){
+void monitor_socket_operation(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int operation){
   //Set a epoll event object to parametrize monitored fds
   struct epoll_event event_parameters;
   //Fd that will be added to the epoll
   event_parameters.data.fd = fd_to_monitor;
   event_parameters.events = events_to_monitor;
-  check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
-  count_of_fd_monitored++;
+  check((epoll_ctl(epoll_fd, operation, fd_to_monitor, &event_parameters)), "epoll_ctl error");
+  if (operation == EPOLL_CTL_ADD)
+    count_of_fd_monitored++;
 }
 
 void make_fd_non_blocking(int fd){
@@ -89,15 +90,15 @@ int main(){
   int server_fd;
   int connexion_fd;
   int epoll_fd;
-  uint8_t sent_line[] = "HEAD HTTP/1.1 204 OK \n"; //Date: Mon, 27 Jul 2009 12:28:53 GMT \n Server: Webserv B**** (He uses arcch btw.) \n Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 0 \n\n"//Content-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n"//<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
+  uint8_t sent_line[] = "HTTP/1.1 200 OK \nDate: Mon, 27 Jul 2009 12:28:53 GMT \nServer: Webserv B**** (He uses arcch btw.) \nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 135 \nContent-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
 <html>\
 <head>\
-   <title>400 Bad Request</title>\
+   <title>You Are AWESOME WOW</title>\
 </head>\
 <body>\
-   <h1>Bad Request</h1>\
-   <p>Your browser sent a request that this server could not understand.</p>\
-   <p>The request line contained invalid characters following the protocol string.</p>\
+   <h1>Fantastic</h1>\
+   <p>VERY VERY FANTASTIC</p>\
+   <p>INCREDIBLE</p>\
 </body>\
 </html>"
 ;
@@ -112,24 +113,25 @@ int main(){
   //Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
   //Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  monitor_socket_operation(epoll_fd, server_fd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLRDHUP, EPOLL_CTL_ADD);
   while (1){
-    printf("waiting for a connection on port %d\n", SERVER_PORT);
+    printf("\nwaiting for a connection on port %d\n", SERVER_PORT);
     printf("count of fd actualized %d\n", count_of_fd_actualized);
     printf("count of fd monitored %d\n", count_of_fd_monitored);
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events_received, MAX_EVENTS, -1)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++){
       printf("idx: %d - fd: %d - event mask %d\n", i, events_received[i].data.fd, events_received[i].events);
       if (events_received[i].data.fd == server_fd){
-        if (events_received[i].events & EPOLLOUT) write(0, "EPPOLOUT SERV\n", 14);
-        if (events_received[i].events & EPOLLIN)  write(0, "EPPOLINN SERV\n", 14);
+        if (events_received[i].events & EPOLLOUT) write(0, "EPPOLLOUT SERV\n", 15);
+        if (events_received[i].events & EPOLLIN)  write(0, "EPPOLLIN SERV\n", 14);
         if (events_received[i].events & EPOLLHUP || events_received[i].events & EPOLLERR){
           close(server_fd);
-          check(-1, "server error");
+          check(-1, "server error\n");
         }
-        check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
+        if (events_received[i].events & EPOLLRDHUP) write(0, "EPPOLLRDHUP SERV\n", 17);
+        check((connexion_fd = accept_new_connexion(server_fd)), "\naccept error\n");
         make_fd_non_blocking(connexion_fd);
-        monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLET, EPOLL_CTL_ADD);
+        monitor_socket_operation(epoll_fd, connexion_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
         printf("Connexion accepted for fd: %d\n", connexion_fd);
       }
       else {
@@ -139,24 +141,33 @@ int main(){
           close(events_received[i].data.fd);
           break;
         }
-        if (events_received[i].events & EPOLLOUT) write(0, "EPPOLOUT\n", 9);
-        if (events_received[i].events & EPOLLIN) write(0, "EPPOLINN\n", 9);
-        bzero(&received_line, READ_SIZE);
-        while ((read_bytes = read(events_received[i].data.fd, received_line, READ_SIZE)) > 0){
-          write(STDOUT_FILENO, received_line, read_bytes); 
-          if (received_line[read_bytes - 1] == '\n'){
-            break;
-          }
-          bzero(received_line, READ_SIZE);
-        }
-        check(read_bytes, "read error");
-        if (read_bytes == 0){
-          printf("Closing connexion for fd: %d\n", events_received[i].data.fd);
+        else if (events_received[i].events & EPOLLRDHUP){
+          write(0, "EPPOLLRDHUP\n", 12);
+          printf("CLOSING CONNECTION FOR FD: %d\n", events_received[i].data.fd);
+          count_of_fd_monitored--;
           close(events_received[i].data.fd);
           break;
         }
-        write(events_received[i].data.fd, (char*)sent_line, strlen((char *)sent_line));
-        //write(connexion_fd, "\0", 1);
+        else if (events_received[i].events & EPOLLIN)
+        {
+          write(0, "EPPOLLIN\n", 9);
+          //monitor_socket_operation(epoll_fd, events_received[i].data.fd, EPOLLOUT | EPOLLET | EPOLLRDHUP, EPOLL_CTL_MOD);
+          bzero(&received_line, READ_SIZE);
+          while ((read_bytes = read(events_received[i].data.fd, received_line, READ_SIZE)) > 0){
+            write(STDOUT_FILENO, received_line, read_bytes);
+            if (received_line[read_bytes - 1] == '\n')
+              break;
+            bzero(received_line, READ_SIZE);
+          }
+          check(read_bytes, "\nread error\n");
+          if (events_received[i].events & EPOLLOUT){
+            write(0, "EPPOLLOUT\n", 10);
+            write(events_received[i].data.fd, (char*)sent_line, strlen((char *)sent_line));
+            monitor_socket_operation(epoll_fd, events_received[i].data.fd, EPOLLIN | EPOLLET | EPOLLRDHUP, EPOLL_CTL_MOD);
+          }
+        }
+        else
+          ;//Do we have any other case to handle here ?
       }
     }
   }
