@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "core.hpp"
+#include <iostream>
 #define MAX_EVENTS 10
 #define READ_SIZE 30000
 #define SERVER_PORT 18000
@@ -15,9 +16,9 @@
 
 int server_fd;
 
-void check (int return_value, char *error_msg){
+void check (int return_value, std::string const &error_msg){
   if (return_value < 0){
-    perror(error_msg);
+    std::cerr << error_msg << std::endl;
     exit(EXIT_FAILURE);
   }
 }
@@ -28,7 +29,13 @@ int setup_server(int port, int backlog){
   struct sockaddr_in server_addr;
 
   check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
+int yes=1;
 
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+  {
+    perror("setsockopt");
+    exit(1);
+  }
   bzero(&server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -123,7 +130,7 @@ int main(){
   int server_fd;
   int connexion_fd;
   int epoll_fd;
-    uint8_t sent_line[] = "HTTP/1.1 200 OK \nDate: Mon, 27 Jul 2009 12:28:53 GMT \nServer: Webserv B**** (He uses arcch btw.) \nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 135 \nContent-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
+    uint8_t sent_line[] = "HTTP/1.1 200 OK \nDate: Mon, 27 Jul 2009 12:28:53 GMT \nServer: Webserv B**** (He uses arcch btw.) \nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 19743 \nContent-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
 <html>\
 <head>\
    <title>You Are AWESOME WOW</title>\
@@ -141,37 +148,47 @@ int main(){
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
 
   //Prep a set of epoll event struct to register listened events
-  struct epoll_event *events = calloc(MAX_EVENTS, sizeof(struct epoll_event));
+  struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
+//char yes='1'; // Solaris people use this
 
-  //Set up an epoll instance
-  check((epoll_fd = epoll_create(1)), "epoll error");
-  //Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT , EPOLL_CTL_ADD);
+// Set up an epoll instance
+check((epoll_fd = epoll_create(1)), "epoll error");
+// Use epoll_ctl to add the server socket to epoll to monitor events from the server
+monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
 
-  while (1){
-    check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
-    print_events(events, count_of_fd_actualized);
-    for(int i = 0; i < count_of_fd_actualized; i++){
-      if (events[i].data.fd == server_fd){
-        check_error_flags(events[i].events);
-        check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
-        make_fd_non_blocking(connexion_fd);
-        monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET , EPOLL_CTL_ADD);
-        printf("Connexion accepted for fd: %d\n", connexion_fd);
+while (1)
+{
+  check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
+  print_events(events, count_of_fd_actualized);
+  for (int i = 0; i < count_of_fd_actualized; i++)
+  {
+    if (events[i].data.fd == server_fd)
+    {
+      check_error_flags(events[i].events);
+      check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
+      make_fd_non_blocking(connexion_fd);
+      monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
+      printf("Connexion accepted for fd: %d\n", connexion_fd);
+      // lose the pesky "Address already in use" error message
+
+    }
+    else if (events[i].events & EPOLLIN)
+    {
+      check_error_flags(events[i].events);
+      check(read_bytes = read_all(events[i].data.fd), "read error");
+      if (read_bytes == 0)
+      {
+        printf("Closing connexion for fd: %d\n", events[i].data.fd);
+        close(events[i].data.fd);
+        break;
       }
-      else if (events[i].events & EPOLLIN) {
-        check_error_flags(events[i].events);
-        check(read_bytes = read_all(events[i].data.fd), "read error");
-        if (read_bytes == 0)
-        {
-          printf("Closing connexion for fd: %d\n", events[i].data.fd);
-          close(events[i].data.fd);
-          break;
-        }
-        if (events[i].events & EPOLLOUT)
-          write(connexion_fd, (char*)sent_line, strlen((char *)sent_line));
-      }
+      std::string str = readFileIntoString("testfile.html");
+      // const char *content;
+      // content = file_to_c_string("testfile.html");
+      if (events[i].events & EPOLLOUT)
+        write(connexion_fd, str.c_str(), str.size());
     }
   }
+}
   close(server_fd);
 }

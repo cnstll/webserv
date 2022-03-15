@@ -18,6 +18,13 @@ const char *string_to_c_str(const std::string& str)
     return (ret_str);
 }
 
+const char *file_to_c_string(const std::string& path)
+{
+    std::string str = readFileIntoString(path);
+    const char *c_str = string_to_c_str(str);
+    return (c_str);
+}
+/*
 int main(int argc, char **argv)
 {
 
@@ -30,4 +37,4 @@ int main(int argc, char **argv)
     const char *c_str = str.c_str();
     printf("%s", c_str);
     return 0;
-}
+}*/
