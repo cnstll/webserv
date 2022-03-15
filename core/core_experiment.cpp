@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "core.hpp"
+#include "Response.hpp"
 #include <iostream>
 #define MAX_EVENTS 10
 #define READ_SIZE 30000
@@ -182,11 +183,14 @@ while (1)
         close(events[i].data.fd);
         break;
       }
-      std::string str = readFileIntoString("testfile.html");
+   //   std::string str = readFileIntoString("testfile.html");
       // const char *content;
       // content = file_to_c_string("testfile.html");
-      if (events[i].events & EPOLLOUT)
-        write(connexion_fd, str.c_str(), str.size());
+      if (events[i].events & EPOLLOUT){
+        Response resp(200);
+        resp.addBody("testfile.html");
+        resp.sendResponse(events[i].data.fd);
+      }
     }
   }
 }

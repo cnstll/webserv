@@ -24,6 +24,7 @@ const char *file_to_c_string(const std::string& path)
     const char *c_str = string_to_c_str(str);
     return (c_str);
 }
+
 /*
 int main(int argc, char **argv)
 {
