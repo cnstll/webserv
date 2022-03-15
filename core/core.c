@@ -89,7 +89,7 @@ int main(){
   int server_fd;
   int connexion_fd;
   int epoll_fd;
-  uint8_t sent_line[] = "HTTP/1.1 200 OK \n Date: Mon, 27 Jul 2009 12:28:53 GMT \n Server: Webserv B**** (He uses arcch btw.) \n Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 0 \n\n"//Content-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n"//<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
+  uint8_t sent_line[] = "HEAD HTTP/1.1 204 OK \n"; //Date: Mon, 27 Jul 2009 12:28:53 GMT \n Server: Webserv B**** (He uses arcch btw.) \n Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 0 \n\n"//Content-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n"//<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
 <html>\
 <head>\
    <title>400 Bad Request</title>\
