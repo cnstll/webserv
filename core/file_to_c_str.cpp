@@ -1,0 +1,33 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+std::string readFileIntoString(const std::string& path) {
+    std::ifstream input_file(path);
+    if (!input_file.is_open()) {
+        std::cerr << "Could not open the file - '"
+             << path << "'" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    return std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+}
+
+const char *string_to_c_str(const std::string& str)
+{
+    const char *ret_str = str.c_str();
+    return (ret_str);
+}
+
+int main(int argc, char **argv)
+{
+
+    if(argc != 2)
+        return 1;
+
+
+    std::string str = readFileIntoString(argv[1]);
+    // printf("this is the ccontent:\n\n%s\n", str);
+    const char *c_str = str.c_str();
+    printf("%s", c_str);
+    return 0;
+}
