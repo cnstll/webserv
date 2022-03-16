@@ -5,7 +5,7 @@ import (
 	//	"fmt"
 	"net"
 	"os"
-	//	"strconv"
+	//"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -33,7 +33,7 @@ func GetCsvInfo(path string) []test_data {
 }
 
 func TestResponsesTable(t *testing.T) {
-	var tests []test_data = GetCsvInfo("expected_vs_output.csv")
+	var tests []test_data = GetCsvInfo("testInput.csv")
 
 	var wg sync.WaitGroup
 
@@ -44,12 +44,16 @@ func TestResponsesTable(t *testing.T) {
 		for _, test := range tests {
 			i++
 			output := HandleConnections(c, test.request)
+			//parts := strings.Split(output, "\n")
+			//partsExpected := strings.Split(test.response, "\n")
 			//time.Sleep(1 * time.Second)
 			output = strings.Trim(output, "\n")
 			output = strings.Trim(output, " ")
-			if output != test.response {
-				//		t.Error("\n\ntest number " + strconv.Itoa(i) + " failed\n" + "Request: " + test.request + "\n" + "expected response: " + test.response + "\nrecieved response: " + output)
-			}
+
+			//if output != test.response {
+			// ! this is shit
+			//	t.Error("\n\ntest number " + strconv.Itoa(i) + " failed\n" + "Request: " + "\n" + "expected response: " + partsExpected[0] + "\nrecieved response: " + parts[0])
+			//}
 		}
 		wg.Done()
 	}

@@ -98,4 +98,5 @@ void Response::sendResponse(int clientSocket){
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE);
     }
+    write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
 }
