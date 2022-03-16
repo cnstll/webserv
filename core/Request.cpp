@@ -5,6 +5,7 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
+Request::Request(){};
 
 Request::Request(std::string fullRequest)  : _fullRequest(fullRequest)
 {
@@ -61,6 +62,10 @@ std::string Request::extractUri(void)
 	uri = tokens[1];
 	std::cout << "uri: " << uri;
 	return uri;
+}
+
+void Request::append(char *str){
+	_fullRequest.append(str);
 }
 
 /*

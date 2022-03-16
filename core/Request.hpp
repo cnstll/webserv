@@ -8,19 +8,20 @@ class Request
 {
 
 	public:
-
+		Request();
 		Request(std::string fullRequest);
 		Request( Request const & src );
 		~Request();
 
 		Request &		operator=( Request const & rhs );
+		void append(char *str);
 		std::string getRequestedUri( void );
 
 	private:
 
 		std::string extractUri( void );
 		std::string _fullRequest;
-		std::string _uri
+		std::string _uri;
 
 };
 
