@@ -10,7 +10,6 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "${fileDirname}/file_to_c_str.cpp",
                 "${fileDirname}/Response.cpp"
             ],
             "options": {

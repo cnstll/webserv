@@ -10,10 +10,10 @@
 #include "core.hpp"
 #include "Response.hpp"
 #include <iostream>
-#define MAX_EVENTS 10
+#define MAX_EVENTS 10000
 #define READ_SIZE 30000
 #define SERVER_PORT 18000
-#define MAX_QUEUE 100
+#define MAX_QUEUE 10000
 
 int server_fd;
 
@@ -129,20 +129,9 @@ void print_events(struct epoll_event *events, int eventful_fds)
 int main(){
 
   int server_fd;
+  int count_response = 0;
   int connexion_fd;
   int epoll_fd;
-    uint8_t sent_line[] = "HTTP/1.1 200 OK \nDate: Mon, 27 Jul 2009 12:28:53 GMT \nServer: Webserv B**** (He uses arcch btw.) \nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT \nContent-Length: 19743 \nContent-Type: text/html; charset=iso-8859-1 \nConnection: Keep-Alive \n\n<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\
-<html>\
-<head>\
-   <title>You Are AWESOME WOW</title>\
-</head>\
-<body>\
-   <h1>Fantastic</h1>\
-   <p>VERY VERY FANTASTIC</p>\
-   <p>INCREDIBLE</p>\
-</body>\
-</html>"
-;
   uint8_t received_line[READ_SIZE + 1];
   int read_bytes;
   int count_of_fd_actualized = 0;
@@ -170,12 +159,19 @@ while (1)
       make_fd_non_blocking(connexion_fd);
       monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
       printf("Connexion accepted for fd: %d\n", connexion_fd);
-      // lose the pesky "Address already in use" error message
-
     }
     else if (events[i].events & EPOLLIN)
     {
-      check_error_flags(events[i].events);
+      // check_error_flags(events[i].events); 
+      if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
+      {
+        if (events[i].events & EPOLLHUP)
+          write(0, "EPPOLHUP\n", 9);
+        if (events[i].events & EPOLLERR)
+          write(0, "EPPOLERR\n", 9);
+        break ;
+      }
+      // ! ATTENTION REFACTO CHELOUX ICI, DESORDRE DES CHOSES >> A REFACTO
       check(read_bytes = read_all(events[i].data.fd), "read error");
       if (read_bytes == 0)
       {
@@ -183,12 +179,11 @@ while (1)
         close(events[i].data.fd);
         break;
       }
-   //   std::string str = readFileIntoString("testfile.html");
-      // const char *content;
-      // content = file_to_c_string("testfile.html");
       if (events[i].events & EPOLLOUT){
         Response resp(200);
-        resp.addBody("testfile.html");
+        resp.addBody("/mnt/nfs/homes/jescully/Documents/webserv/core/testfile.html");
+        printf("Sending response to fd:  %d\n", events[i].data.fd);
+        printf("count of response:  %d\n", ++count_response);
         resp.sendResponse(events[i].data.fd);
       }
     }

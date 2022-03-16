@@ -1,15 +1,17 @@
 NAME = webserv
 
-SRCS = ./core/core.c  \
+SRCS = ./core/core_experiment.cpp  \
+		./core/Response.cpp
+
 
 OBJS = $(SRCS:.c=.o)
 
 UNAME_S := $(shell uname -s)
    ifeq ($(UNAME_S),Linux)
-        CC=clang
+        CC=clang++
     endif
     ifeq ($(UNAME_S),Darwin)
-        CC= clang
+        CC= clang++
     endif
 
 CFLAGS = #-Wall -Wextra -Werror
