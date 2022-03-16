@@ -172,6 +172,8 @@ while (1)
         break ;
       }
       // ! ATTENTION REFACTO CHELOUX ICI, DESORDRE DES CHOSES >> A REFACTO
+      // TODO: handle root path, fix tester, learn to read, make ragu bolognese
+      
       check(read_bytes = read_all(events[i].data.fd), "read error");
       if (read_bytes == 0)
       {
