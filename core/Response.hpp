@@ -8,6 +8,7 @@
 # include <iostream>
 #include <stdlib.h>
 #include<sys/socket.h>  
+# define ROOT_DIR "server_root"
 
 
 class Response

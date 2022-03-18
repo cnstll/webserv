@@ -69,7 +69,9 @@ void Response::addBody(std::string pathname)
     {
         std::cerr << "Could not open the file - '"
                   << pathname << "'" << std::endl;
-        exit(EXIT_FAILURE);
+        //std::string errorPageNotFound = ;
+        input_file.open(ROOT_DIR + std::string("/404.html"), std::ifstream::in);
+        //exit(EXIT_FAILURE);
     }
     _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
     // std::cout << _Content << std::endl;
