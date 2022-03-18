@@ -8,10 +8,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "core.hpp"
+#include "Request.hpp"
 #include "Response.hpp"
 #include <iostream>
 #define MAX_EVENTS 10000
 #define READ_SIZE 30000
+#define REQUEST_READ_SIZE 4096
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
 
@@ -26,11 +28,10 @@ void check (int return_value, std::string const &error_msg){
 
 int setup_server(int port, int backlog){
   int connexion_fd;
-  int read_bytes;
   struct sockaddr_in server_addr;
 
   check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
-int yes=1;
+  int yes = 1;
 
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
   {
@@ -41,7 +42,7 @@ int yes=1;
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(SERVER_PORT);
-  check(bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)), "bind error");
+  check(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
   check(listen(server_fd, MAX_QUEUE), "listen error");
   return server_fd;
 }
@@ -61,6 +62,7 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
   //Fd that will be added to the epoll
   event_parameters.data.fd = fd_to_monitor;
   event_parameters.events = events_to_monitor;
+  //event_parameters.data.ptr = NULL;
   check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
 }
 
@@ -70,8 +72,8 @@ void make_fd_non_blocking(int fd){
   flags |= O_NONBLOCK;
   check((fcntl(fd, F_SETFL, flags)), "fcntl error");
 }
-void check_error_flags(int event)
-{
+
+void check_error_flags(int event){
   if (event & EPOLLHUP || event & EPOLLERR)
   {
     if (event & EPOLLHUP)
@@ -82,24 +84,21 @@ void check_error_flags(int event)
   }
 }
 
-int read_all(int fd)
-{
-  uint8_t received_line[READ_SIZE + 1];
+int recv_request(const int &fd, Request *rq){
   int read_bytes;
+  char request_buffer[REQUEST_READ_SIZE];
 
-  bzero(&received_line, READ_SIZE);
-  while ((read_bytes = recv(fd, received_line, READ_SIZE, MSG_DONTWAIT)) > 0)
-  {
-    if (received_line[read_bytes - 1] == '\n')
-    {
+  bzero(&request_buffer, REQUEST_READ_SIZE);
+  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
+    rq->append(request_buffer);
+    if (request_buffer[read_bytes - 1] == '\n')
       break;
-    }
+    bzero(&request_buffer, REQUEST_READ_SIZE);
   }
   return read_bytes;
 }
 
-void print_events(struct epoll_event *events, int eventful_fds)
-{
+void print_events(struct epoll_event *events, int eventful_fds){
   for (int i = 0; i < eventful_fds; i++)
   {
     printf("fd:    %i\n", events[i].data.fd);
@@ -132,9 +131,9 @@ int main(){
   int count_response = 0;
   int connexion_fd;
   int epoll_fd;
-  uint8_t received_line[READ_SIZE + 1];
-  int read_bytes;
+  int recv_bytes;
   int count_of_fd_actualized = 0;
+  Request request;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
 
   //Prep a set of epoll event struct to register listened events
@@ -169,27 +168,39 @@ while (1)
           write(0, "EPPOLHUP\n", 9);
         if (events[i].events & EPOLLERR)
           write(0, "EPPOLERR\n", 9);
+        perror("error while receiving data");
+        request.clear();
         break ;
       }
-      // ! ATTENTION REFACTO CHELOUX ICI, DESORDRE DES CHOSES >> A REFACTO
-      // TODO: handle root path, fix tester, learn to read, make ragu bolognese
-      
-      check(read_bytes = read_all(events[i].data.fd), "read error");
-      if (read_bytes == 0)
-      {
+      // TODO: handle root +path, fix tester, learn to read, make ragu bolognese
+      if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0){
+        std::cout << "Clearing request object...\n";
+        perror("error while receiving data");
+        request.clear();
+        break;
+      }
+      if (recv_bytes == 0){
         printf("Closing connexion for fd: %d\n", events[i].data.fd);
+        std::cout << "Clearing request object...\n";
+        request.clear();
         close(events[i].data.fd);
         break;
       }
+      request.printFullRequest();
+      std::cout << "Parsing request..\n";
+      request.parse();
       if (events[i].events & EPOLLOUT){
         Response resp(200);
-        resp.addBody("/mnt/nfs/homes/jescully/Documents/webserv/core/testfile.html");
+        std::cout << request.getRequestedUri() << std::endl;
+        resp.addBody(request.getRequestedUri());
         printf("Sending response to fd:  %d\n", events[i].data.fd);
         printf("count of response:  %d\n", ++count_response);
         resp.sendResponse(events[i].data.fd);
       }
+      perror("error while receiving data");
+      request.clear();
     }
   }
 }
-  close(server_fd);
+close(server_fd);
 }
