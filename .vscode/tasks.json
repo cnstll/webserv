@@ -10,7 +10,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "${fileDirname}/Response.cpp"
+              //  "${fileDirname}/Response.cpp"
             ],
             "options": {
                 "cwd": "${fileDirname}"

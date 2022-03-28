@@ -4,7 +4,7 @@ SRCS = ./core/core_experiment.cpp  \
 		./core/Response.cpp
 
 
-OBJS = $(SRCS:.c=.o)
+OBJS = $(SRCS:.cpp=.o)
 
 UNAME_S := $(shell uname -s)
    ifeq ($(UNAME_S),Linux)
