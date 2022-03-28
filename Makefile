@@ -3,7 +3,6 @@ NAME = webserv
 SRCS = ./core/core_experiment.cpp  \
 		./core/Response.cpp
 
-
 OBJS = $(SRCS:.cpp=.o)
 
 UNAME_S := $(shell uname -s)
