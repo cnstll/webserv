@@ -129,8 +129,12 @@ void print_events(struct epoll_event *events, int eventful_fds){
 
 std::string get_extension(std::string uri)
 {
-  return (uri.substr(uri.find_last_of(".")));
+  size_t pos = uri.find_last_of(".");
+  if (pos != std::string::npos)
+    return (uri.substr(pos));
+  return (NULL);
 }
+
 
 int main(){
 
