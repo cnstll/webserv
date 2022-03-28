@@ -5,7 +5,7 @@
 #include<string.h>
 #include<string>
 #include<iostream>
-#include"./libft/libft.h"
+//#include"./libft/libft.h"
 
 class env
 {
