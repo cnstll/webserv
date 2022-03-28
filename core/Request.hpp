@@ -2,8 +2,11 @@
 # define REQUEST_HPP
 
 # include <iostream>
+#include <map>
 # include <string>
-# define ROOT_DIR "server_root"
+# ifndef ROOT_DIR
+# define ROOT_DIR "/core/server_root"
+# endif
 
 // Request       = Request-Line            
 //                 *(( general-header      
@@ -23,9 +26,11 @@ class Request
 		Request &		operator=( Request const & rhs );
 		void append(char *str);
 		void clear(void);
-		void parse(void);
+		int parse(void);
 		std::string getRequestedUri(void);
+    std::string getPathToFile(void);
 		void printFullRequest(void);
+    void printFullParsedRequest(void);
 
 	private:
 	
@@ -68,6 +73,8 @@ class Request
 		std::string _requestBody;
 		std::string _entityHeader; //* Fields no specified in the RFC are saved here for each request
     std::string _uri;
+    std::string root_dir;
+    std::map<std::string, std::string> _parsedHttpRequest;
 };
 
 std::ostream &			operator<<( std::ostream & o, Request const & i );

@@ -8,7 +8,9 @@
 # include <iostream>
 #include <stdlib.h>
 #include<sys/socket.h>  
-# define ROOT_DIR "server_root"
+# ifndef ROOT_DIR
+# define ROOT_DIR "/core/server_root"
+# endif
 
 
 class Response
