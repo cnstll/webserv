@@ -222,8 +222,8 @@ while (1)
         }
         else{
 
-        std::cout << request.getRequestedUri() << std::endl;
-        resp.addBody(request.getRequestedUri());
+        std::cout << request.getPathToFile() << std::endl;
+        resp.addBody(request.getPathToFile());
         printf("Sending response to fd:  %d\n", events[i].data.fd);
         printf("count of response:  %d\n", ++count_response);
         resp.sendResponse(events[i].data.fd);
