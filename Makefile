@@ -10,7 +10,7 @@ OBJS = $(SRCS:.cpp=.o)
 
 COMP=clang++
 
-CFLAGS = -std=c++98 #-Wall -Wextra -Werror
+CFLAGS =  -g #-std=c++98 #-Wall -Wextra -Werror
 
 GFLAG = #-g3 -fsanitize=address
 
@@ -19,10 +19,10 @@ INCLUDES= -I includes/
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(COMP) -g $(CFLAGS) -o $(NAME) $(OBJS)
+	$(COMP) $(CFLAGS) -o $(NAME) $(OBJS)
 
 %.o: %.cpp
-	$(COMP) -g -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
 
 clean :
 	rm -f $(OBJS)
