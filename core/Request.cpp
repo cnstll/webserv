@@ -109,7 +109,7 @@ int Request::parse(void){
 	//std::cout << "Head: " << head << " - Tail: " << tail << std::endl;
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
 	//Check if path exists
-	if (_parsedHttpRequest["requestURI"].compare("\") == 0){
+	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 
 	}
 	if (!doesFileExist(getPathToFile())){
@@ -122,7 +122,7 @@ int Request::parse(void){
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){
-		_requestParsingError = 505; // "Not implemented" ?
+		_requestParsingError = 505; // Not implemented
 		return -1;
 	}
 	//Parse each line of the request header and entity header
