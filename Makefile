@@ -8,9 +8,9 @@ SRCS = ./core/core_experiment.cpp  \
 
 OBJS = $(SRCS:.cpp=.o)
 
-CC=clang++
+COMP=clang++
 
-CFLAGS = #-Wall -Wextra -Werror
+CFLAGS = -std=c++98 #-Wall -Wextra -Werror
 
 GFLAG = #-g3 -fsanitize=address
 
@@ -19,16 +19,10 @@ INCLUDES= -I includes/
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
+	$(COMP) -g $(CFLAGS) -o $(NAME) $(OBJS)
 
-%.o: %.c
-	$(CC) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
-
-debug :
-	$(CC) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 
-
-debug_lldb :
-	$(CC) $(CFLAGS) -g -o $(NAME) $(SRCS) 
+%.o: %.cpp
+	$(COMP) -g -o $@ -c $^ $(CFLAGS) $(INCLUDES)
 
 clean :
 	rm -f $(OBJS)
