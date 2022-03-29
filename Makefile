@@ -8,7 +8,7 @@ SRCS = ./core/core_experiment.cpp  \
 
 OBJS = $(SRCS:.cpp=.o)
 
-CC=clang++
+COMP=g++ -fdiagnostics-color=always -g
 
 CFLAGS = #-Wall -Wextra -Werror
 
@@ -19,16 +19,16 @@ INCLUDES= -I includes/
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
+	$(COMP) $(CFLAGS) -o $(NAME) $(OBJS)
 
-%.o: %.c
-	$(CC) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+%.o: %.cpp
+	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
 
 debug :
-	$(CC) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 
+	$(COMP) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 
 
 debug_lldb :
-	$(CC) $(CFLAGS) -g -o $(NAME) $(SRCS) 
+	$(COMP) $(CFLAGS) -g -o $(NAME) $(SRCS) 
 
 clean :
 	rm -f $(OBJS)
