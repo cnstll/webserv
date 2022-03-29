@@ -7,7 +7,8 @@
 
 # include <iostream>
 #include <stdlib.h>
-#include<sys/socket.h>  
+#include<sys/socket.h>
+#include <map>  
 # ifndef ROOT_DIR
 # define ROOT_DIR "/core/server_root"
 # endif
@@ -33,6 +34,7 @@ public:
     Response(int code = 500);
     std::string codeToReasonPhrase(int);
     Response(const Response &newResponse);
+    Response(std::map<std::string, std::string> &parsedRequest, int errorCode);
     ~Response();
     void sendResponse(int clientSocket);
     void addBody(std::string pathname);

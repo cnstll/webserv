@@ -31,6 +31,7 @@ class Request
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
     uint16_t getError(void) const;
+    std::map<std::string, std::string> &getParsedRequest(void);
     void printFullRequest(void);
     void printFullParsedRequest(void);
 	private:

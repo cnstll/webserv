@@ -4,7 +4,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include<sys/socket.h>  
+#include<sys/socket.h>
+#include <map>
 
 std::string Response::codeToReasonPhrase(int statusCode){
     // ! To be modified with a table of code
@@ -21,6 +22,17 @@ Response::Response(int code)
     char buf[3];
     sprintf(buf,"%i", _statusCode);
     this->_ReasonPhrase = Response::codeToReasonPhrase(code);
+    _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
+};
+
+Response::Response(std::map<std::string, std::string> &parsedRequest, int errorCode)
+    : _statusCode(errorCode),
+      _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
+      _ContentType(parsedRequest["Content-Type"]), _Connection(parsedRequest["Connection"]){
+
+    char buf[3];
+    sprintf(buf,"%i", _statusCode);
+    this->_ReasonPhrase = codeToReasonPhrase(errorCode);
     _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
 };
 
@@ -62,7 +74,7 @@ void Response::addBody(std::string pathname)
 {
     std::ifstream input_file(pathname);
     char buf[10];
-    if (!doesFileExist(pathname))
+    if (!input_file.is_open()) //!doesFileExist(pathname))
     {
         std::cerr << "Could not open the file - '"
                   << pathname << "'" << std::endl;

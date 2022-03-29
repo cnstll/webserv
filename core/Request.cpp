@@ -133,15 +133,17 @@ int Request::parse(void){
 		head = tail + 2;
 		std::string field;
 		std::string value;
-		tail = _fullRequest.find(' ', head);
+		tail = _fullRequest.find(':', head);
 		field = std::string(_fullRequest, head, tail - head);
-		if (_parsedHttpRequest.count(field) == 0){
-			_requestParsingError = 400; //Bad Request
-			return -1;
-		}
-		head = tail + 1;
+		std::cout << "Field: " << field << "\n";
+		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
+		if (_parsedHttpRequest.count(field) == 0){
+			//_requestParsingError = 400; //Bad Request
+			//return -1;
+			continue;
+		}
 		_parsedHttpRequest[field] = value;
 	}
 	//Next come msg-body
@@ -191,6 +193,10 @@ uint16_t Request::getError(void) const {
 	return _requestParsingError;
 }
 
+std::map<std::string, std::string> &Request::getParsedRequest(void){
+	return _parsedHttpRequest;
+}
+
 /* ************************************************************************** */
 void Request::initParsedRequestMap(){
 		int i = 0;
@@ -207,6 +213,15 @@ std::string Request::_validRequestFields[] = {
 		"method",
 		"httpVersion",
 		"requestURI",
+		"Cache-Control",
+    "Connection",
+    "Date",
+    "Pragma",
+    "Trailer",
+    "Transfer-Encoding",
+    "Upgrade",
+    "Via",
+    "Warning",
 //request-header
     "Accept",
     "Accept-Charset",

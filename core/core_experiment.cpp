@@ -209,38 +209,35 @@ while (1)
       request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT)
       {
-        Response resp(200);
+        Response resp(request.getParsedRequest(), request.getError());
         std::string extension = get_extension(request.getRequestedUri());
-        if ((extension != ""))
+        if (extension == ".php")
         {
-          if (extension == ".php")
-          {
-            std::cout << "this is a script to be hanndled by cgi" << std::endl;
-            env cgiParams;
-            char *args[3] = {"a.out", "testfile.html", NULL};
+          std::cout << "this is a script to be hanndled by cgi" << std::endl;
+          env cgiParams;
+          char *args[3] = {"a.out", "testfile.html", NULL};
 
-            // TODO, send the request so the env object can be properly configured
-            int pid = 0;
-            int copy_ofstdout = dup(STDOUT_FILENO);
-            pid = fork();
-            if (!pid)
-            {
-              dup2(events[i].data.fd, STDOUT_FILENO);
-              execve("../a.out", args, cgiParams._environment);
-            }
-            wait(NULL);
-            dup2(STDOUT_FILENO, copy_ofstdout);
-            //    close(copy_ofstdout);
-          }
-          else
+          // TODO, send the request so the env object can be properly configured
+          int pid = 0;
+          int copy_ofstdout = dup(STDOUT_FILENO);
+          pid = fork();
+          if (!pid)
           {
-
-            std::cout << request.getPathToFile() << std::endl;
-            resp.addBody(request.getPathToFile());
-            printf("Sending response to fd:  %d\n", events[i].data.fd);
-            printf("count of response:  %d\n", ++count_response);
-            resp.sendResponse(events[i].data.fd);
+            dup2(events[i].data.fd, STDOUT_FILENO);
+            execve("../a.out", args, cgiParams._environment);
           }
+          wait(NULL);
+          dup2(STDOUT_FILENO, copy_ofstdout);
+          //    close(copy_ofstdout);
+        }
+        else
+        {
+
+          std::cout << request.getPathToFile() << std::endl;
+          resp.addBody(request.getPathToFile());
+          printf("Sending response to fd:  %d\n", events[i].data.fd);
+          printf("count of response:  %d\n", ++count_response);
+          resp.sendResponse(events[i].data.fd);
         }
       }
       perror("error while receiving data");
