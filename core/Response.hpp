@@ -36,7 +36,6 @@ public:
     ~Response();
     void sendResponse(int clientSocket);
     void addBody(std::string pathname);
-
     Response &operator=(const Response &newResponse);
 };
 #endif

@@ -29,9 +29,10 @@ class Request
 		int parse(void);
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
-		void printFullRequest(void);
+		std::string getHttpMethod(void);
+    uint16_t getError(void) const;
+    void printFullRequest(void);
     void printFullParsedRequest(void);
-
 	private:
 	
 		//  general-header = Cache-Control
@@ -64,6 +65,7 @@ class Request
                   //  | TE              
                   //  | User-Agent     
 		void extractUri( void );
+    void initParsedRequestMap(void);
 		std::string _fullRequest;
 		// * map<std::string, std::string> with all the elements. The elements gets updated if necessary
 		// * Look into unordered_map that might be quicker than map
@@ -74,7 +76,9 @@ class Request
 		std::string _entityHeader; //* Fields no specified in the RFC are saved here for each request
     std::string _uri;
     std::string root_dir;
+    uint16_t _requestParsingError;
     std::map<std::string, std::string> _parsedHttpRequest;
+    static std::string _validRequestFields[];
 };
 
 std::ostream &			operator<<( std::ostream & o, Request const & i );

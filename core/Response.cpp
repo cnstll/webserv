@@ -1,12 +1,10 @@
 #include "core.hpp"
-
-
-# include <iostream>
+#include "Response.hpp"
+#include "utils.hpp"
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 #include<sys/socket.h>  
-#include "Response.hpp"
-
 
 std::string Response::codeToReasonPhrase(int statusCode){
     // ! To be modified with a table of code
@@ -60,12 +58,11 @@ std::string Response::timeAsString()
     return (str);
 }
 
-
 void Response::addBody(std::string pathname)
 {
     std::ifstream input_file(pathname);
     char buf[10];
-    if (!input_file.is_open())
+    if (!doesFileExist(pathname))
     {
         std::cerr << "Could not open the file - '"
                   << pathname << "'" << std::endl;

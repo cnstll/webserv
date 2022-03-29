@@ -146,6 +146,8 @@ int main(){
   int count_of_fd_actualized = 0;
   Request request;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
+  std::cout << "Print init request..\n";
+  request.printFullParsedRequest();
 
   //Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
@@ -199,7 +201,10 @@ while (1)
       }
       request.printFullRequest();
       std::cout << "Parsing request..\n";
-      request.parse();
+      if (request.parse() < 0){
+        std::cout << "\nError while parsing request!!!\n";
+        std::cout << "Error num: " << request.getError() << std::endl;
+      }
       std::cout << "Print parsed request..\n";
       request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT)
