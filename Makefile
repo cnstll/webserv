@@ -3,7 +3,8 @@ NAME = webserv
 SRCS = ./core/core_experiment.cpp  \
 		./core/Response.cpp \
 		./core/Request.cpp \
-		./cgi/env.cpp
+		./cgi/env.cpp \
+		./core/utils.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
