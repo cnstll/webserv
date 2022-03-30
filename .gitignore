@@ -1,4 +1,4 @@
 *.o
 *.out
 webserv
-
+*.log
