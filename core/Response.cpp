@@ -14,7 +14,7 @@ std::string getErrorContent(int errCode)
          {401, "Unauthorized"},
          {402, "Payment Required"},
          {403, "Forbiden"},
-         {404, "hey you, out there in the dark feeling lonely feeling old."},
+         {404, "Not Found"},
          {405, "Method Not Allowed"},
          {406, "Not Acceptable"},
          {407, "Proxy Authentication Required"},

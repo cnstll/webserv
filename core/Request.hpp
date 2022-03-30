@@ -8,6 +8,10 @@
 # define ROOT_DIR "/core/server_root"
 # endif
 
+# ifndef URI_MAX_LEN
+# define URI_MAX_LEN 128
+# endif
+
 // Request       = Request-Line            
 //                 *(( general-header      
 //                  | request-header       

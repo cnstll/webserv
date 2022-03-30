@@ -209,8 +209,8 @@ while (1)
 //        std::cout << "Error num: " << request.getError() << std::endl;
       }
 
-      std::cout << "Print parsed request..\n";
-      request.printFullParsedRequest();
+      //std::cout << "Print parsed request..\n";
+      //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT){
         Response resp(request.getParsedRequest(), request.getError());
 
@@ -240,8 +240,8 @@ while (1)
         }
       }
       request.clear();
-      std::cout << "After clearing parsedRequest....\n";
-      request.printFullParsedRequest();
+      //std::cout << "After clearing parsedRequest....\n";
+      //request.printFullParsedRequest();
     }
   }
 }
