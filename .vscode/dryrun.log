@@ -1,0 +1,5 @@
+make all --dry-run --keep-going --print-directory
+make: Entering directory '/mnt/nfs/homes/jescully/Documents/webserv'
+make: Nothing to be done for 'all'.
+make: Leaving directory '/mnt/nfs/homes/jescully/Documents/webserv'
+ 
