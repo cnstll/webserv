@@ -113,7 +113,7 @@ int Request::parse(void){
 	std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	//Check if path exists
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
-
+		_parsedHttpRequest["requestURI"] = "/index.html";
 	}
 	if (!doesFileExist(getPathToFile())){
 		_requestParsingError = 404; //"Not Found" 
