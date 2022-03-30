@@ -8,7 +8,7 @@ SRCS = ./core/core_experiment.cpp  \
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP=clang++
+COMP=g++
 
 CFLAGS =  -g #-std=c++98 #-Wall -Wextra -Werror
 
