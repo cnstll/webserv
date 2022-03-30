@@ -102,6 +102,11 @@ int Request::parse(void){
 		return -1;
 	}
 	if (!doesFileExist(getPathToFile())){
+		if (_parsedHttpRequest["requestURI"] == "/redirect")
+		{
+			_requestParsingError = 301;
+			return -1;
+		}
 		_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}

@@ -27,6 +27,8 @@ private:
     std::string _ContentType;
     std::string _Content;
     std::string _Connection;
+    //! this obviously shouldn't be hardcoded... where should this info come from? the config file probably?
+    std::string _Location = "/index.html";
     std::string timeAsString();
     const char *convertToCString();
 
