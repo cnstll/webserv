@@ -66,7 +66,7 @@ std::string Response::timeAsString()
     std::string str("");
     str.append(buffer);
     str.append(" GMT");
-    std::cout << str << std::endl;
+    //std::cout << str << std::endl;
     return (str);
 }
 
@@ -74,12 +74,17 @@ void Response::addBody(std::string pathname)
 {
     std::ifstream input_file(pathname);
     char buf[10];
-    if (!input_file.is_open()) //!doesFileExist(pathname))
+    if (!doesFileExist(pathname))
     {
+        input_file.close();
         std::cerr << "Could not open the file - '"
                   << pathname << "'" << std::endl;
         //std::string errorPageNotFound = ;
-        input_file.open(ROOT_DIR + std::string("/404.html"), std::ifstream::in);
+        std::string errorPathname = "." + std::string(ROOT_DIR) + std::string("/404.html"); 
+        input_file.open(errorPathname, std::ifstream::in);
+        if(!doesFileExist(errorPathname)){
+            std::cout << "TU FAIS DE LA MERDE\n";
+        }
         //exit(EXIT_FAILURE);
     }
     _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
@@ -109,5 +114,5 @@ void Response::sendResponse(int clientSocket){
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE);
     }
-    write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
+    //write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
 }

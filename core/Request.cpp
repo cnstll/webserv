@@ -9,13 +9,13 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(0){
+Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
 	std::cout << "Request - Constructor called\n";
 	initParsedRequestMap();
 
 };
 
-Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR)
+Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR), _requestParsingError(200)
 {
 	initParsedRequestMap();
 }
@@ -79,6 +79,8 @@ void Request::clear(){
 		it->second = "";
 		++it;
 	}
+	_fullRequest = std::string();
+	_requestParsingError = 200;
 }
 
 /**
@@ -108,6 +110,7 @@ int Request::parse(void){
 	tail = _fullRequest.find(' ', head);
 	//std::cout << "Head: " << head << " - Tail: " << tail << std::endl;
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
+	std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	//Check if path exists
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 
