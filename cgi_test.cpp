@@ -25,14 +25,11 @@ const char *file_to_c_string(const std::string& path)
     return (c_str);
 }
 
-
 int main(int argc, char **argv)
 {
 
     if(argc != 2)
         return 1;
-
-
     std::string str = readFileIntoString("/mnt/nfs/homes/jescully/Documents/webserv/testfile.html");
     std::cout << str << std::endl;
     return 0;
