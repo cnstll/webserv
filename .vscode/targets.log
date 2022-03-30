@@ -7,7 +7,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # There is NO WARRANTY, to the extent permitted by law.
  
 
-# Make data base, printed on Wed Mar 30 11:28:48 2022
+# Make data base, printed on Wed Mar 30 11:37:34 2022
 
 # Variables
 
@@ -264,7 +264,7 @@ VSCODE_PID = 1691183
 # environment
 TERMINATOR_UUID = urn:uuid:71082eac-8129-4364-8e74-9643cbe42057
 # variable set hash-table stats:
-# Load=126/1024=12%, Rehash=0, Collisions=23/155=15%
+# Load=126/1024=12%, Rehash=0, Collisions=24/161=15%
 
 # Pattern-specific Variable Values
 
@@ -273,10 +273,9 @@ TERMINATOR_UUID = urn:uuid:71082eac-8129-4364-8e74-9643cbe42057
 # Directories
 
 # . (device 60, inode 60365008): 16 files, no impossibilities.
-# core (device 60, inode 63210600): 17 files, no impossibilities so far.
-# cgi (device 60, inode 199662517): 8 files, no impossibilities so far.
+# core (device 60, inode 63210600): 7 files, no impossibilities so far.
 
-# 41 files, no impossibilities in 3 directories.
+# 23 files, no impossibilities in 2 directories.
 
 # Implicit Rules
 
@@ -285,7 +284,6 @@ TERMINATOR_UUID = urn:uuid:71082eac-8129-4364-8e74-9643cbe42057
 	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
 
 # 1 implicit rules, 0 (0.0%) terminal.
- 
 
 # Files
 
@@ -294,61 +292,64 @@ all: webserv
 #  Implicit rule search has been done.
 #  File does not exist.
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+ 
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
 
 webserv: core/core_experiment.o core/Response.o core/Request.o cgi/env.o core/utils.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-03-30 11:27:48.813115654
+#  Last modified 2022-03-30 11:33:19.09488293
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
 #  recipe to execute (from 'Makefile', line 22):
 	$(COMP) $(CFLAGS) -o $(NAME) $(OBJS)
 
-core/Response.o: core/Response.cpp
-#  Implicit rule search has been done.
-#  Implicit/static pattern stem: 'core/Response'
-#  Last modified 2022-03-30 11:27:47.929110938
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 25):
-	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+# Not a target:
+core/Response.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
-core/utils.o: core/utils.cpp
-#  Implicit rule search has been done.
-#  Implicit/static pattern stem: 'core/utils'
-#  Last modified 2022-03-30 11:20:57.09092765
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 25):
-	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+# Not a target:
+core/utils.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-03-30 11:28:46.629424272
+#  Last modified 2022-03-30 11:37:25.860314466
 #  File has been updated.
 #  Successfully updated.
 
-cgi/env.o: cgi/env.cpp
-#  Implicit rule search has been done.
-#  Implicit/static pattern stem: 'cgi/env'
-#  Last modified 2022-03-30 11:20:56.882926549
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 25):
-	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+debug:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 28):
+	$(COMP) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 
 
 # Not a target:
-core/Request.cpp:
-#  Implicit rule search has been done.
-#  Last modified 2022-03-30 11:25:45.124456519
-#  File has been updated.
-#  Successfully updated.
+cgi/env.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+debug_lldb:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 31):
+	$(COMP) $(CFLAGS) -g -o $(NAME) $(SRCS) 
 
 # Not a target:
 core/core_experiment.cpp:
 #  Implicit rule search has been done.
-#  Last modified 2022-03-30 11:27:28.549007564
+#  Last modified 2022-03-30 11:36:41.812057443
 #  File has been updated.
 #  Successfully updated.
 
@@ -356,7 +357,7 @@ fclean: clean
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 31):
+#  recipe to execute (from 'Makefile', line 37):
 	rm -f $(NAME)
 
 # Not a target:
@@ -374,62 +375,56 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 28):
+#  recipe to execute (from 'Makefile', line 34):
 	rm -f $(OBJS)
 
 # Not a target:
-core/Response.cpp:
-#  Implicit rule search has been done.
-#  Last modified 2022-03-30 11:25:45.128456541
-#  File has been updated.
-#  Successfully updated.
-
-# Not a target:
-core/utils.cpp:
-#  Implicit rule search has been done.
-#  Last modified 2022-03-29 15:16:23.691766453
-#  File has been updated.
-#  Successfully updated.
-
-core/Request.o: core/Request.cpp
-#  Implicit rule search has been done.
-#  Implicit/static pattern stem: 'core/Request'
-#  Last modified 2022-03-30 11:27:48.661114843
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 25):
-	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+core/Request.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 core/core_experiment.o: core/core_experiment.cpp
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'core/core_experiment'
-#  Last modified 2022-03-30 11:27:47.289107523
+#  Last modified 2022-03-30 11:33:18.974882286
 #  File has been updated.
-#  Successfully updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := core/core_experiment.o
+# automatic
+# % := 
+# automatic
+# * := core/core_experiment
+# automatic
+# + := core/core_experiment.cpp
+# automatic
+# | := 
+# automatic
+# < := core/core_experiment.cpp
+# automatic
+# ^ := core/core_experiment.cpp
+# automatic
+# ? := core/core_experiment.cpp
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/16=6%
 #  recipe to execute (from 'Makefile', line 25):
 	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
 
-# Not a target:
-cgi/env.cpp:
-#  Implicit rule search has been done.
-#  Last modified 2022-03-28 14:44:23.662009843
-#  File has been updated.
-#  Successfully updated.
-
 # files hash-table stats:
-# Load=18/1024=2%, Rehash=0, Collisions=0/54=0%
+# Load=16/1024=2%, Rehash=0, Collisions=0/40=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 62 / storage = 692 B / avg = 11 B
-# current buf: size = 8162 B / used = 692 B / count = 62 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 40 / storage = 422 B / avg = 10 B
+# current buf: size = 8162 B / used = 422 B / count = 40 / avg = 10 B
 
-# strcache performance: lookups = 88 / hit rate = 29%
+# strcache performance: lookups = 61 / hit rate = 34%
 # hash-table stats:
-# Load=62/8192=1%, Rehash=0, Collisions=4/88=5%
-# Finished Make data base on Wed Mar 30 11:28:48 2022
+# Load=40/8192=0%, Rehash=0, Collisions=2/61=3%
+# Finished Make data base on Wed Mar 30 11:37:34 2022
 
  
