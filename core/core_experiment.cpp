@@ -18,6 +18,7 @@
 #define REQUEST_READ_SIZE 4096
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
+std::string CGI_EXTENSION = ".php";
 
 int server_fd;
 
@@ -222,6 +223,7 @@ while (1)
           int copy_ofstdout = dup(STDOUT_FILENO);
           pid = fork();
           if (!pid)
+
           {
             dup2(events[i].data.fd, STDOUT_FILENO);
             execve("../a.out", args, cgiParams._environment);
