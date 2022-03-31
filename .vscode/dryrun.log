@@ -1,8 +1,0 @@
-make all --dry-run --keep-going --print-directory
-make: Entering directory '/mnt/nfs/homes/jescully/Documents/webserv'
- 
-g++ -fdiagnostics-color=always -g -o core/core_experiment.o -c core/core_experiment.cpp  -I includes/
- 
-g++ -fdiagnostics-color=always -g  -o webserv ./core/core_experiment.o ./core/Response.o ./core/Request.o ./cgi/env.o ./core/utils.o
-make: Leaving directory '/mnt/nfs/homes/jescully/Documents/webserv'
- 
