@@ -227,13 +227,8 @@ while (1)
             dup2(events[i].data.fd, STDOUT_FILENO);
             std::string script_pathname = "python ." + std::string(ROOT_DIR) + request.getRequestedUri();
             std::cout << std::system(script_pathname.c_str());
-            // char eataly = 4;
-            // write(STDOUT_FILENO, &eataly, 10);
-            close(STDOUT_FILENO);
-            close(events[i].data.fd);
             dup2(STDOUT_FILENO, copy_ofstdout);
             close(copy_ofstdout);
-            std::cout << "\n\n\n\n" << script_pathname << "\n\n\n\n" << std::endl;
             exit(0);
              //   //execve("/mnt/nfs/homes/jescully/Documents/webserv/a.out", args, cgiParams._environment);
           }
