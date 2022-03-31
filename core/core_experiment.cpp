@@ -242,7 +242,7 @@ while (1)
               char *str = "user_name=jescully&user_message=fuckyou";
               dup2(events[i].data.fd, STDOUT_FILENO);
               dup2(fd[0], STDIN_FILENO);
-             // write(fd[1], str, request.donneMoiTonCorpsBabe().length());
+              write(fd[1], str, request.donneMoiTonCorpsBabe().length());
               close(fd[1]);
               //write(STDERR_FILENO, request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
               //char buf[100];
@@ -255,11 +255,11 @@ while (1)
 
             execve(args[0], args, cgiParams._environment);
 
-            dup2(STDOUT_FILENO, stdoutDup);
-            dup2(STDIN_FILENO, stdinDup);
-            close(stdoutDup);
-            close(stdinDup);
-            exit(0);
+            // dup2(STDOUT_FILENO, stdoutDup);
+            // dup2(STDIN_FILENO, stdinDup);
+            // close(stdoutDup);
+            // close(stdinDup);
+            // exit(0);
           }
           wait(NULL);
         }

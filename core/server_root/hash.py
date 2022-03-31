@@ -30,6 +30,11 @@ valid_body = " <!DOCTYPE html>\
   <h1>HASH</h1>\
   <p> Your message hash is: </p>\
   <p> hash_placeholder </p>\
+  <button onclick=\"window.location.href='http://localhost:18000//hash.html';\">\
+  AGAIN!\
+  <button onclick=\"window.location.href='http://localhost:18000';\">\
+  I WANNA GO HOME\
+  </button>\
   \
   </body>\
   </html> "
@@ -44,8 +49,10 @@ if check_form_fields(form) < 0:
   print("Content-Length: " + str(len(error_body)))
   print
   print(error_body)
+  print("cfgvhbjhklm,;';.")
+  print(form)
 else:
-  msg_hash = to_hash(form["user_message"])
+  msg_hash = to_hash(str(form["user_message"]))
   ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
   print("HTTP/1.1 200 OK")
   print("Content-Type: text/html")

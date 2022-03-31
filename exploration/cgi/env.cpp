@@ -60,42 +60,10 @@ env::env(void)
 
 
     int i = 0;
+    // while (_environment[i])
+    //     printf("%s\n", _environment[i++]);
     return ;
 }
-
-env::env(std::map<std::string, std::string> &parsedRequest)
-{
-	    _environment = calloc_str_list(1);
-    str_add("GATEWAY_INTERFACE=CGI/1.1");
-    str_add("SERVER_NAME=webserv");
-    str_add("SERVER_PROTOCOL=HTTP/1.1");
-    str_add("SERVER_SOFTWARE=webserv");
-    str_add("SERVER_ADDR=127.0.0.1");
-
-	std::map<std::string, std::string>::iterator it = requestToEnvMap.begin();
-
-	while (it != requestToEnvMap.end())
-	{
-		if (parsedRequest[it->second] != "")
-		{
-			std::string str = it->first + "=" + parsedRequest[it->second];
-			str_add(str.c_str());
-			std::cout << "\n\n\n" << it->second << "\n\n\n" << std::endl;
-			std::cout << "\n\n\n" << str.c_str() << "\n\n\n" << std::endl;
-		}
-		++it;
-	}
-
-    // str_add("REQUEST_METHOD=GET");
-    // str_add("QUERY_STRING=user_name=this&user_message=that");
-
-    str_add("HTTP_CONNECTION=keep-alive");
-    str_add("REMOTE_ADDR=127.0.0.1");
-    str_add("REMOTE_PORT=18000");
-    str_add("HTTP_USER_AGENT=Mozilla/5.0 Gecko/20100101 Firefox/67.0");
-    return ;
-}
-
 
 env::~env(void)
 {
