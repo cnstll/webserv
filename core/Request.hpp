@@ -34,7 +34,8 @@ class Request
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
-    uint16_t getError(void) const;
+    std::string donneMoiTonCorpsBabe(void);
+    int getError(void) const;
     std::map<std::string, std::string> &getParsedRequest(void);
     void printFullRequest(void);
     void printFullParsedRequest(void);

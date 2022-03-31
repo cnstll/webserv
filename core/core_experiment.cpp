@@ -94,7 +94,7 @@ int recv_request(const int &fd, Request *rq){
   bzero(&request_buffer, REQUEST_READ_SIZE);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
-    if (request_buffer[read_bytes - 1] == '\n')
+    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -209,8 +209,8 @@ while (1)
 //        std::cout << "Error num: " << request.getError() << std::endl;
       }
 
-      //std::cout << "Print parsed request..\n";
-      //request.printFullParsedRequest();
+      std::cout << "Print parsed request..\n";
+      request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT){
         Response resp(request.getParsedRequest(), request.getError());
 
