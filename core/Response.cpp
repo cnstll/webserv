@@ -100,19 +100,17 @@ Response::Response(std::map<std::string, std::string> &parsedRequest, int errorC
 
 Response::Response(const Response &newResponse)
 {
-    std::cout << "Copy Constructor for Response called" << std::endl;
     return;
 }
 
 Response::~Response(void)
 {
-    std::cout << "Default Destructor for Response called" << std::endl;
+   // std::cout << "Default Destructor for Response called" << std::endl;
     return;
 }
 
 Response &Response::operator=(const Response &newResponse)
 {
-    std::cout << "Response Assignement Operator called" << std::endl;
     return *this;
 }
 
