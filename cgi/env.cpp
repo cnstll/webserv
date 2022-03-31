@@ -60,8 +60,6 @@ env::env(void)
 
 
     int i = 0;
-    while (_environment[i])
-        printf("%s\n", _environment[i++]);
     return ;
 }
 

@@ -18,7 +18,7 @@
 #define REQUEST_READ_SIZE 4096
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
-std::string CGI_EXTENSION = ".php";
+std::string CGI_EXTENSION = ".py";
 
 int server_fd;
 
@@ -220,15 +220,24 @@ while (1)
           char *args[2] = {"a.out", NULL};
           // TODO, send the request so the env object can be properly configured
           int pid = 0;
-          int copy_ofstdout = dup(STDOUT_FILENO);
           pid = fork();
           if (!pid)
           {
+            int copy_ofstdout = dup(STDOUT_FILENO);
             dup2(events[i].data.fd, STDOUT_FILENO);
-            execve("/mnt/nfs/homes/jescully/Documents/webserv/a.out", args, cgiParams._environment);
+            std::string script_pathname = "python ." + std::string(ROOT_DIR) + request.getRequestedUri();
+            std::cout << std::system(script_pathname.c_str());
+            // char eataly = 4;
+            // write(STDOUT_FILENO, &eataly, 10);
+            close(STDOUT_FILENO);
+            close(events[i].data.fd);
+            dup2(STDOUT_FILENO, copy_ofstdout);
+            close(copy_ofstdout);
+            std::cout << "\n\n\n\n" << script_pathname << "\n\n\n\n" << std::endl;
+            exit(0);
+             //   //execve("/mnt/nfs/homes/jescully/Documents/webserv/a.out", args, cgiParams._environment);
           }
           wait(NULL);
-          dup2(STDOUT_FILENO, copy_ofstdout);
       //    close(copy_ofstdout);
         }
         else{
