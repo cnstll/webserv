@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <cstdlib>
 #include "core.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
@@ -211,7 +212,8 @@ while (1)
 
       //std::cout << "Print parsed request..\n";
       //request.printFullParsedRequest();
-      if (events[i].events & EPOLLOUT){
+      if (events[i].events & EPOLLOUT)
+      {
         Response resp(request.getParsedRequest(), request.getError());
 
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
@@ -222,14 +224,21 @@ while (1)
           pid = fork();
           if (!pid)
           {
-
-          int copy_ofstdout = dup(STDOUT_FILENO);
-          dup2(events[i].data.fd, STDOUT_FILENO);
-          std::string script_pathname = "python ." + std::string(ROOT_DIR) + request.getRequestedUri();
-          std::cout << std::system(script_pathname.c_str());
-          dup2(STDOUT_FILENO, copy_ofstdout);
-          close(copy_ofstdout);
+            std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
+            std::string CGI_EXECUTOR = "/usr/bin/python";
+            char *args[3];
+            env cgiParams;
+            args[0] = (char *)CGI_EXECUTOR.c_str();
+            args[1] = (char*)script_pathname.c_str();
+            args[2] = NULL;
+            int stdoutDup = dup(STDOUT_FILENO);
+            dup2(events[i].data.fd, STDOUT_FILENO);
+            execve(args[0], args, cgiParams._environment);
+            dup2(STDOUT_FILENO, stdoutDup);
+            close(stdoutDup);
+            exit(0);
           }
+          wait(NULL);
         }
         else
         {
