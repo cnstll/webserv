@@ -1,4 +1,5 @@
 <head>
+  <meta charset="utf-8" />
 
   <style>
     form {
@@ -10,6 +11,7 @@
       border: 1px solid #CCC;
       border-radius: 1em;
     }
+
     h1 {
       text-align: center;
     }
@@ -53,7 +55,8 @@
 
     input::placeholder,
     textarea::placeholder {
-      opacity: 1; /* Firefox */
+      opacity: 1;
+      /* Firefox */
       color: hsl(210, 4%, 62%);
     }
 
@@ -78,11 +81,11 @@
     <ul>
       <li>
         <label for="name">Name:</label>
-        <input type="text" id="name" name="user_name" placeholder="Daniil Medvedev"/>
+        <input type="text" id="name" name="user_name" placeholder="Daniil Medvedev" />
       </li>
       <li>
         <label for="msg">Message:</label>
-        <input type="text" id="msg" name="user_message" placeholder="Sooooo baaad"/>
+        <input type="text" id="msg" name="user_message" placeholder="Sooooo baaad" />
       </li>
       <li class="button">
         <button type="submit">Hash my message!</button>
