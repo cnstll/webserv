@@ -95,7 +95,7 @@ int recv_request(const int &fd, Request *rq){
   bzero(&request_buffer, REQUEST_READ_SIZE);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
-    if (request_buffer[read_bytes - 1] == '\n')
+    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -209,11 +209,9 @@ while (1)
         std::cout << "\nError while parsing request!!!\n";
 //        std::cout << "Error num: " << request.getError() << std::endl;
       }
-
-      //std::cout << "Print parsed request..\n";
-      //request.printFullParsedRequest();
-      if (events[i].events & EPOLLOUT)
-      {
+      std::cout << "Print parsed request..\n";
+      request.printFullParsedRequest();
+      if (events[i].events & EPOLLOUT){
         Response resp(request.getParsedRequest(), request.getError());
 
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
@@ -227,15 +225,40 @@ while (1)
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             std::string CGI_EXECUTOR = "/usr/bin/python";
             char *args[3];
-            env cgiParams;
+            env cgiParams(request.getParsedRequest());
             args[0] = (char *)CGI_EXECUTOR.c_str();
             args[1] = (char*)script_pathname.c_str();
             args[2] = NULL;
+
+            int fd[2];
+            pipe(fd);
+
             int stdoutDup = dup(STDOUT_FILENO);
-            dup2(events[i].data.fd, STDOUT_FILENO);
+            int stdinDup = dup(STDIN_FILENO);
+
+
+            if (request.donneMoiTonCorpsBabe() != "")
+            {
+              char *str = "user_name=jescully&user_message=fuckyou";
+              dup2(events[i].data.fd, STDOUT_FILENO);
+              dup2(fd[0], STDIN_FILENO);
+             // write(fd[1], str, request.donneMoiTonCorpsBabe().length());
+              close(fd[1]);
+              //write(STDERR_FILENO, request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
+              //char buf[100];
+              //read(fd[0], buf, request.donneMoiTonCorpsBabe().length());
+             // std::cout << "\n\n" << std::endl;
+             // write(STDERR_FILENO, buf, request.donneMoiTonCorpsBabe().length());
+             // std::cout << "\n\n" << std::endl;
+
+            }
+
             execve(args[0], args, cgiParams._environment);
+
             dup2(STDOUT_FILENO, stdoutDup);
+            dup2(STDIN_FILENO, stdinDup);
             close(stdoutDup);
+            close(stdinDup);
             exit(0);
           }
           wait(NULL);

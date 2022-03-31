@@ -1,6 +1,6 @@
-import cgitb
+import cgi
 import hashlib
-cgitb.enable()
+#cgi.enable()
 
 def to_hash(message):
   m = hashlib.sha256()
@@ -34,7 +34,7 @@ valid_body = " <!DOCTYPE html>\
   </body>\
   </html> "
 
-form = cgitb.FieldStorage()
+form = cgi.FieldStorage()
 
 if check_form_fields(form) < 0:
   print("HTTP/1.1 400 Bad Request")
@@ -42,7 +42,7 @@ if check_form_fields(form) < 0:
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
-  print()
+  print
   print(error_body)
 else:
   msg_hash = to_hash(form["user_message"])
@@ -52,5 +52,5 @@ else:
   print("Date: Mon, 27 Jul 2009 12:28:53 GMT")
   print("Connection: Keep-Alive")
   print("Content-Length: " + str(len(ready_body)))
-  print()
+  print
   print(ready_body)

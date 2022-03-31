@@ -141,6 +141,11 @@ int Request::parse(void){
 		_parsedHttpRequest[field] = value;
 	}
 	//Next come msg-body
+	if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
+		head = tail + 2;
+		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+		std::cout << "BODY: " << _parsedHttpRequest["message-body"] << std::endl;
+	}
 	//! parse body - which cases ? form ? Uploaded files ?
 	return 0;
 }
@@ -183,12 +188,16 @@ std::string Request::getHttpMethod(void){
 	return _parsedHttpRequest["method"];
 }
 
-uint16_t Request::getError(void) const {
+int Request::getError(void) const {
 	return _requestParsingError;
 }
 
 std::map<std::string, std::string> &Request::getParsedRequest(void){
 	return _parsedHttpRequest;
+}
+
+std::string Request::donneMoiTonCorpsBabe(void){
+	return _parsedHttpRequest["message-body"];
 }
 
 /* ************************************************************************** */
@@ -249,5 +258,7 @@ std::string Request::_validRequestFields[] = {
     "Expires",
     "Last-Modified",
     "extension-header",
+//message-body
+		"message-body",
 		""
 };
