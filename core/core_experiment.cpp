@@ -173,7 +173,7 @@ while (1)
       check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
       make_fd_non_blocking(connexion_fd);
       monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-      printf("Connexion accepted for fd: %d\n", connexion_fd);
+    //  printf("Connexion accepted for fd: %d\n", connexion_fd);
     }
     else if (events[i].events & EPOLLIN)
     {
@@ -216,31 +216,28 @@ while (1)
 
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
         {
-          env cgiParams;
-          char *args[2] = {"a.out", NULL};
+          //          env cgiParams;
           // TODO, send the request so the env object can be properly configured
-          int pid = 0;
+          int pid = -1;
           pid = fork();
           if (!pid)
           {
-            int copy_ofstdout = dup(STDOUT_FILENO);
-            dup2(events[i].data.fd, STDOUT_FILENO);
-            std::string script_pathname = "python ." + std::string(ROOT_DIR) + request.getRequestedUri();
-            std::cout << std::system(script_pathname.c_str());
-            dup2(STDOUT_FILENO, copy_ofstdout);
-            close(copy_ofstdout);
-            exit(0);
-             //   //execve("/mnt/nfs/homes/jescully/Documents/webserv/a.out", args, cgiParams._environment);
+
+          int copy_ofstdout = dup(STDOUT_FILENO);
+          dup2(events[i].data.fd, STDOUT_FILENO);
+          std::string script_pathname = "python ." + std::string(ROOT_DIR) + request.getRequestedUri();
+          std::cout << std::system(script_pathname.c_str());
+          dup2(STDOUT_FILENO, copy_ofstdout);
+          close(copy_ofstdout);
           }
-          wait(NULL);
-      //    close(copy_ofstdout);
         }
-        else{
-        //std::cout << request.getPathToFile() << std::endl;
-        resp.addBody(request.getPathToFile());
-        printf("Sending response to fd:  %d\n", events[i].data.fd);
-        printf("count of response:  %d\n", ++count_response);
-        resp.sendResponse(events[i].data.fd);
+        else
+        {
+          // std::cout << request.getPathToFile() << std::endl;
+          resp.addBody(request.getPathToFile());
+          printf("Sending response to fd:  %d\n", events[i].data.fd);
+          printf("count of response:  %d\n", ++count_response);
+          resp.sendResponse(events[i].data.fd);
         }
       }
       request.clear();

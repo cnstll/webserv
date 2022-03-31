@@ -10,7 +10,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
-	std::cout << "Request - Constructor called\n";
+	// std::cout << "Request - Constructor called\n";
 	initParsedRequestMap();
 
 };
@@ -129,7 +129,7 @@ int Request::parse(void){
 		std::string value;
 		tail = _fullRequest.find(':', head);
 		field = std::string(_fullRequest, head, tail - head);
-		std::cout << "Field: " << field << "\n";
+		// std::cout << "Field: " << field << "\n";
 		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
@@ -155,13 +155,13 @@ void Request::append(char *str){
 }
 
 void Request::printFullRequest(void){
-	std::cout << "Full Request: " << "\n" << _fullRequest << "\n" << std::endl;
+	// std::cout << "Full Request: " << "\n" << _fullRequest << "\n" << std::endl;
 }
 
 void Request::printFullParsedRequest(void){
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
 	while (it != _parsedHttpRequest.end()){
-		std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
+		// std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
 		it++;
 	}
 }
