@@ -130,12 +130,14 @@ void print_events(struct epoll_event *events, int eventful_fds){
 
 std::string get_extension(std::string uri)
 {
-  size_t pos = uri.find_last_of(".");
-  if (pos != std::string::npos)
-    return (uri.substr(pos));
-  return (NULL);
+  if (uri != "")
+  {
+    size_t pos = uri.find_last_of(".");
+    if (pos != std::string::npos)
+      return (uri.substr(pos));
+  }
+  return (uri);
 }
-
 
 int main(){
 
@@ -162,7 +164,7 @@ monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
 while (1)
 {
   check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
-  print_events(events, count_of_fd_actualized);
+ // print_events(events, count_of_fd_actualized);
   for (int i = 0; i < count_of_fd_actualized; i++)
   {
     if (events[i].data.fd == server_fd)
@@ -189,28 +191,28 @@ while (1)
       }
       // TODO: handle root +path, fix tester, learn to read, make ragu bolognese
       if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0){
-        std::cout << "Clearing request object...\n";
+        //std::cout << "Clearing request object...\n";
         perror("error while receiving data");
         request.clear();
         break;
       }
       if (recv_bytes == 0){
         printf("Closing connexion for fd: %d\n", events[i].data.fd);
-        std::cout << "Clearing request object...\n";
+        //std::cout << "Clearing request object...\n";
         request.clear();
         close(events[i].data.fd);
         break;
       }
-      request.printFullRequest();
       std::cout << "Parsing request..\n";
       if (request.parse() < 0){
         std::cout << "\nError while parsing request!!!\n";
-        std::cout << "Error num: " << request.getError() << std::endl;
+//        std::cout << "Error num: " << request.getError() << std::endl;
       }
-      std::cout << "Print parsed request..\n";
-      request.printFullParsedRequest();
+
+      //std::cout << "Print parsed request..\n";
+      //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT){
-        Response resp(200);
+        Response resp(request.getParsedRequest(), request.getError());
 
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
         {
@@ -230,15 +232,16 @@ while (1)
       //    close(copy_ofstdout);
         }
         else{
-        std::cout << request.getPathToFile() << std::endl;
+        //std::cout << request.getPathToFile() << std::endl;
         resp.addBody(request.getPathToFile());
         printf("Sending response to fd:  %d\n", events[i].data.fd);
         printf("count of response:  %d\n", ++count_response);
         resp.sendResponse(events[i].data.fd);
         }
       }
-      perror("error while receiving data");
       request.clear();
+      //std::cout << "After clearing parsedRequest....\n";
+      //request.printFullParsedRequest();
     }
   }
 }

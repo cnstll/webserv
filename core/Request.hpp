@@ -8,6 +8,10 @@
 # define ROOT_DIR "/core/server_root"
 # endif
 
+# ifndef URI_MAX_LEN
+# define URI_MAX_LEN 128
+# endif
+
 // Request       = Request-Line            
 //                 *(( general-header      
 //                  | request-header       
@@ -68,13 +72,6 @@ class Request
 		void extractUri( void );
     void initParsedRequestMap(void);
 		std::string _fullRequest;
-		// * map<std::string, std::string> with all the elements. The elements gets updated if necessary
-		// * Look into unordered_map that might be quicker than map
-		//std::string _generalHeader; //* No need to separate general headers from request header?
-		std::string _requestLine;
-		std::string _requestHeader;
-		std::string _requestBody;
-		std::string _entityHeader; //* Fields no specified in the RFC are saved here for each request
     std::string _uri;
     std::string root_dir;
     uint16_t _requestParsingError;

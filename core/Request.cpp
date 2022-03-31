@@ -9,13 +9,13 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(0){
+Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
 	std::cout << "Request - Constructor called\n";
 	initParsedRequestMap();
 
 };
 
-Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR)
+Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR), _requestParsingError(200)
 {
 	initParsedRequestMap();
 }
@@ -57,21 +57,6 @@ std::ostream &			operator<<( std::ostream & o, Request const & i )
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-// void Request::extractUri(void)
-// {
-// 	std::vector <std::string> tokens;
-
-// 	std::stringstream ss(_fullRequest);
-// 	std::string token;
-// 	while (std::getline(ss, token, ' ')){
-// 		tokens.push_back(token);
-// 	}
-// 	_uri = (tokens[1] == "/" ? root_dir + "/index.html" : root_dir + tokens[1]);
-// 	for (int i = 0; i < tokens.size(); i++){
-// 		std::cout << "\ntokens: " << tokens[i];
-// 	}
-// 	std::cout << "Extracted URI: " << _uri << std::endl;
-//}
 
 void Request::clear(){
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
@@ -79,6 +64,8 @@ void Request::clear(){
 		it->second = "";
 		++it;
 	}
+	_fullRequest = std::string();
+	_requestParsingError = 200;
 }
 
 /**
@@ -90,7 +77,6 @@ int Request::parse(void){
 	std::size_t tail = 0;
 	std::vector<std::string> methods = {"GET", "POST", "DELETE"};
 	tail = _fullRequest.find(' ', head);
-	//std::cout << "Head: " << head << " - Tail: " << tail << std::endl;
 	
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
 	int i = 0;
@@ -100,25 +86,33 @@ int Request::parse(void){
 		i++;
 	}
 	if (i == 3){
-		_requestParsingError = 501; //"Not implemented"
+		_requestParsingError = 405; //"Not implemented"
 		return -1;
 	}
 	//check if method is valid {"GET", "POST, "DELETE"}
 	head = tail + 1;
 	tail = _fullRequest.find(' ', head);
-	//std::cout << "Head: " << head << " - Tail: " << tail << std::endl;
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
-	//Check if path exists
+	//std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
-
+		_parsedHttpRequest["requestURI"] = "/index.html";
+	}
+	if (_parsedHttpRequest["requestURI"].size() > URI_MAX_LEN){
+		_requestParsingError = 414; //"URI Too long"
+		return -1;
 	}
 	if (!doesFileExist(getPathToFile())){
+		if (_parsedHttpRequest["requestURI"] == "/redirect")
+		{
+			_requestParsingError = 301;
+			return -1;
+		}
 		_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}
+
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
-	//std::cout << "Head: " << head << " - Tail: " << tail << std::endl;
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){

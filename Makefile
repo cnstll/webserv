@@ -8,7 +8,7 @@ SRCS = ./core/core_experiment.cpp  \
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP=g++ -fdiagnostics-color=always -g
+COMP=g++  -fdiagnostics-color=always -g #-std=c++98
 
 CFLAGS = #-Wall -Wextra -Werror
 

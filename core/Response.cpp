@@ -7,6 +7,68 @@
 #include<sys/socket.h>
 #include <map>
 
+std::string getErrorContent(int errCode)
+{
+    std::map<int, std::string> ErrCodeMap =
+        {{300, "Multiple Choice"},
+         {301, "Moved Permanently"},
+         {302, "Found"},
+         {303, "See Other"},
+         {304, "Not Modified"},
+         {307, "Temporary Redirect"},
+         {308, "Permanent Redirect"},
+         {400, "Bad Request"},
+         {401, "Unauthorized"},
+         {402, "Payment Required"},
+         {403, "Forbiden"},
+         {404, "Not Found"},
+         {405, "Method Not Allowed"},
+         {406, "Not Acceptable"},
+         {407, "Proxy Authentication Required"},
+         {408, "Request Timeout"},
+         {409, "Conflict"},
+         {410, "Gone"},
+         {411, "Length Required"},
+         {412, "Precondition Failed"},
+         {413, "Payload Too Large"},
+         {414, "URI Too Long"},
+         {415, "Unsupported Media Type"},
+         {416, "Range Not Satisfiable"},
+         {417, "Expectation Failed"},
+         {418, "I'm a teapot"},
+         {421, "Misdirected Request"},
+         {422, "Unprocessable Entity"},
+         {423, "Locked"},
+         {426, "Upgrade Required"},
+         {428, "Precondition Required"},
+         {429, "Too Many Requests"},
+         {431, "Request Header Fields Too Large"},
+         {451, "Unavailable For Legal Reasons"},
+         {500, "Internal Server Error"},
+         {501, "Not Implemented"},
+         {502, "Bad Gateway"},
+         {503, "Service Unavailable"},
+         {504, "Gateway Timeout"},
+         {505, "HTTP Version Not Supported"},
+         {506, "Variant Also Negotiates"},
+         {510, "Not Extended"},
+         {511, "Network Authentication Required"}};
+
+
+
+    char buf[3];
+    sprintf(buf, "%d", errCode);
+    std::string errPathname = "." + std::string(ROOT_DIR) + "/" + buf + ".html"; 
+    std::cout << errPathname << std::endl;
+    if(doesFileExist(errPathname))
+        return (readFileIntoString(errPathname));
+    std::map<int, std::string>::iterator it = ErrCodeMap.find(errCode);
+    if (it != ErrCodeMap.end())
+        return it->second;
+    return "";
+}
+
+
 std::string Response::codeToReasonPhrase(int statusCode){
     // ! To be modified with a table of code
     (void)statusCode;
@@ -66,24 +128,24 @@ std::string Response::timeAsString()
     std::string str("");
     str.append(buffer);
     str.append(" GMT");
-    std::cout << str << std::endl;
+    //std::cout << str << std::endl;
     return (str);
 }
 
 void Response::addBody(std::string pathname)
 {
-    std::ifstream input_file(pathname);
+    /*
+    if response code > 200
+    add body uses the content from the map in thhe response.
+    */
     char buf[10];
-    if (!input_file.is_open()) //!doesFileExist(pathname))
-    {
-        std::cerr << "Could not open the file - '"
-                  << pathname << "'" << std::endl;
-        //std::string errorPageNotFound = ;
-        input_file.open(ROOT_DIR + std::string("/404.html"), std::ifstream::in);
-        //exit(EXIT_FAILURE);
-    }
-    _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
-    // std::cout << _Content << std::endl;
+
+    if (_statusCode >= 300)
+        _Content = getErrorContent(_statusCode);    
+    else{
+        std::ifstream input_file(pathname.c_str());
+        _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+   }
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
 }
@@ -100,14 +162,17 @@ void Response::sendResponse(int clientSocket){
         "Server: " + _Server + carriageReturn +
         "Content-Length: " + _ContentLength + carriageReturn +
         "Content-Type: " + _ContentType + carriageReturn +
-        "Connection: " + _Connection + carriageReturn +
-        carriageReturn + _Content
-    ;
+        "Connection: " + _Connection + carriageReturn;
+
+
+    if (_statusCode >= 300 && _statusCode < 400)
+        packagedResponse += "Location: " + _Location + carriageReturn;
+    packagedResponse = packagedResponse + carriageReturn + _Content;
     // ! Handle error here. 
     size_t i;
     //FILE *thisIsAFile = fopen("colomban.txt", "w");
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE);
     }
-    write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
+    //write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
 }
