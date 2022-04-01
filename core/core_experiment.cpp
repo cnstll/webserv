@@ -11,7 +11,7 @@
 #include "core.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
-#include "../cgi/env.hpp"
+#include "../cgi/cgiParams.hpp"
 #include <sys/wait.h>
 #include <iostream>
 #define MAX_EVENTS 10000
@@ -192,14 +192,12 @@ while (1)
       }
       // TODO: handle root +path, fix tester, learn to read, make ragu bolognese
       if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0){
-        //std::cout << "Clearing request object...\n";
         perror("error while receiving data");
         request.clear();
         break;
       }
       if (recv_bytes == 0){
         printf("Closing connexion for fd: %d\n", events[i].data.fd);
-        //std::cout << "Clearing request object...\n";
         request.clear();
         close(events[i].data.fd);
         break;
@@ -207,64 +205,37 @@ while (1)
       std::cout << "Parsing request..\n";
       if (request.parse() < 0){
         std::cout << "\nError while parsing request!!!\n";
-//        std::cout << "Error num: " << request.getError() << std::endl;
       }
       std::cout << "Print parsed request..\n";
       request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT){
-        Response resp(request.getParsedRequest(), request.getError());
-
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
         {
-          //          env cgiParams;
-          // TODO, send the request so the env object can be properly configured
           int pid = -1;
           pid = fork();
           if (!pid)
           {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
-            std::string CGI_EXECUTOR = "/usr/bin/python";
-            char *args[3];
-            env cgiParams(request.getParsedRequest());
-            args[0] = (char *)CGI_EXECUTOR.c_str();
-            args[1] = (char*)script_pathname.c_str();
-            args[2] = NULL;
-
+            cgiParams cgiParams(request.getParsedRequest(), script_pathname);
             int fd[2];
-            pipe(fd);
-
-            int stdoutDup = dup(STDOUT_FILENO);
-            int stdinDup = dup(STDIN_FILENO);
-
-
             if (request.donneMoiTonCorpsBabe() != "")
             {
-              char *str = "user_name=jescully&user_message=fuckyou";
+              pipe(fd);
+              int stdoutDup = dup(STDOUT_FILENO);
+              int stdinDup = dup(STDIN_FILENO);
               dup2(events[i].data.fd, STDOUT_FILENO);
               dup2(fd[0], STDIN_FILENO);
-              write(fd[1], str, request.donneMoiTonCorpsBabe().length());
+              write(fd[1], request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
               close(fd[1]);
-              //write(STDERR_FILENO, request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
-              //char buf[100];
-              //read(fd[0], buf, request.donneMoiTonCorpsBabe().length());
-             // std::cout << "\n\n" << std::endl;
-             // write(STDERR_FILENO, buf, request.donneMoiTonCorpsBabe().length());
-             // std::cout << "\n\n" << std::endl;
-
             }
-
-            execve(args[0], args, cgiParams._environment);
-
-            // dup2(STDOUT_FILENO, stdoutDup);
-            // dup2(STDIN_FILENO, stdinDup);
-            // close(stdoutDup);
-            // close(stdinDup);
-            // exit(0);
+            execve(cgiParams._args[0], cgiParams._args, cgiParams._environment);
+            //!error handling here
           }
           wait(NULL);
         }
         else
         {
+          Response resp(request.getParsedRequest(), request.getError());
           // std::cout << request.getPathToFile() << std::endl;
           resp.addBody(request.getPathToFile());
           printf("Sending response to fd:  %d\n", events[i].data.fd);
@@ -273,8 +244,6 @@ while (1)
         }
       }
       request.clear();
-      //std::cout << "After clearing parsedRequest....\n";
-      //request.printFullParsedRequest();
     }
   }
 }
