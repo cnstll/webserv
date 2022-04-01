@@ -154,82 +154,90 @@ int main(){          // }
   std::cout << "Print init request..\n";
   request.printFullParsedRequest();
 
-  //Prep a set of epoll event struct to register listened events
+  // Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
-//char yes='1'; // Solaris people use this
+  // char yes='1'; // Solaris people use this
 
-// Set up an epoll instance
-check((epoll_fd = epoll_create(1)), "epoll error");
-// Use epoll_ctl to add the server socket to epoll to monitor events from the server
-monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  // Set up an epoll instance
+  check((epoll_fd = epoll_create(1)), "epoll error");
+  // Use epoll_ctl to add the server socket to epoll to monitor events from the server
+  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
 
-while (1)
-{
-  check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
- // print_events(events, count_of_fd_actualized);
-  for (int i = 0; i < count_of_fd_actualized; i++)
+  while (1)
   {
-    if (events[i].data.fd == server_fd)
+    check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
+    // print_events(events, count_of_fd_actualized);
+    for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      check_error_flags(events[i].events);
-      check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
-      make_fd_non_blocking(connexion_fd);
-      monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-    //  printf("Connexion accepted for fd: %d\n", connexion_fd);
-    }
-    else if (events[i].events & EPOLLIN)
-    {
-      // check_error_flags(events[i].events); 
-      if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
+      if (events[i].data.fd == server_fd)
       {
-        if (events[i].events & EPOLLHUP)
-          write(0, "EPPOLHUP\n", 9);
-        if (events[i].events & EPOLLERR)
-                   // TODO, send the request so the env object can be properly configured
- write(0, "EPPOLERR\n", 9);
-        perror("error while receiving data");
-        request.clear();
-        break ;
+        check_error_flags(events[i].events);
+        check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
+        make_fd_non_blocking(connexion_fd);
+        monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
+        //  printf("Connexion accepted for fd: %d\n", connexion_fd);
       }
-      // TODO: handle root +path, fix tester, learn to read, make ragu bolognese
-      if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0){
-        perror("error while receiving data");
-        request.clear();
-        break;
-      }
-      if (recv_bytes == 0){
-        printf("Closing connexion for fd: %d\n", events[i].data.fd);
-        request.clear();
-        close(events[i].data.fd);
-        break;
-      }
-      std::cout << "Parsing request..\n";
-      if (request.parse() < 0){
-        std::cout << "\nError while parsing request!!!\n";
-      }
-      std::cout << "Print parsed request..\n";
-      request.printFullParsedRequest();
-      if (events[i].events & EPOLLOUT) {
-        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
+      else if (events[i].events & EPOLLIN)
+      {
+        // check_error_flags(events[i].events);
+        if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
+        {
+          if (events[i].events & EPOLLHUP)
+            write(0, "EPPOLHUP\n", 9);
+          if (events[i].events & EPOLLERR)
+            // TODO, send the request so the env object can be properly configured
+            write(0, "EPPOLERR\n", 9);
+          perror("error while receiving data");
+          request.clear();
+          break;
+        }
+        // TODO: handle root +path, fix tester, learn to read, make ragu bolognese
+        if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0)
+        {
+          perror("error while receiving data");
+          request.clear();
+          break;
+        }
+        if (recv_bytes == 0)
+        {
+          printf("Closing connexion for fd: %d\n", events[i].data.fd);
+          request.clear();
+          close(events[i].data.fd);
+          break;
+        }
+        //std::cout << "Parsing request..\n";
+        if (request.parse() < 0)
+        {
+          std::cout << "\nError while parsing request!!!\n";
+        }
+        //std::cout << "Print parsed request..\n";
+        request.printFullParsedRequest();
+        if (events[i].events & EPOLLOUT)
+        {
+          if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
+          {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             cgiParams cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
-            //!lots of exceptions left to throw
-            try {
+            //! lots of exceptions left to throw
+            try
+            {
               cgiParams.handleCGI();
             }
-            catch(const std::exception& e) {
+            catch (const std::exception &e)
+            {
               std::cerr << e.what() << '\n';
             }
+          }
+          else
+          {
+            Response resp(request.getParsedRequest(), request.getError());
+            resp.addBody(request.getPathToFile());
+            resp.sendResponse(events[i].data.fd);
+          }
         }
-        else {
-          Response resp(request.getParsedRequest(), request.getError());
-          resp.addBody(request.getPathToFile());
-          resp.sendResponse(events[i].data.fd);
-        }
+        request.clear();
       }
-      request.clear();
     }
   }
-}
-close(server_fd);
+  close(server_fd);
 }

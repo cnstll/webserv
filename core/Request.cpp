@@ -77,7 +77,7 @@ int Request::parse(void){
 	std::size_t tail = 0;
 	std::vector<std::string> methods = {"GET", "POST", "DELETE"};
 	tail = _fullRequest.find(' ', head);
-	
+
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
 	int i = 0;
 	while (i < 3){
@@ -114,6 +114,8 @@ int Request::parse(void){
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
+	std::cout << _parsedHttpRequest["httpVersion"] <<  std::endl;
+	
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){
 		_requestParsingError = 505; // Not implemented
@@ -160,7 +162,7 @@ void Request::append(char *str){
 }
 
 void Request::printFullRequest(void){
-	// std::cout << "Full Request: " << "\n" << _fullRequest << "\n" << std::endl;
+	std::cout << "Full Request: " << "\n" << _fullRequest << "\n" << std::endl;
 }
 
 void Request::printFullParsedRequest(void){

@@ -35,6 +35,9 @@ valid_body = " <!DOCTYPE html>\
   <button onclick=\"window.location.href='http://localhost:18000';\">\
   I WANNA GO HOME\
   </button>\
+    <div>\
+  <iframe width=\"1280\" height=\"697\" src=\"https://www.youtube.com/embed/66BQ2ISoe_4\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay=1; mute=1; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>\
+  </div>\
   \
   </body>\
   </html> "
