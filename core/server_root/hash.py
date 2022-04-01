@@ -1,6 +1,9 @@
 import cgi
 import hashlib
-#cgi.enable()
+
+# /print("debugging info...")
+#cgi.print_directory()
+#cgi.print_environ()
 
 def to_hash(message):
   m = hashlib.sha256()
@@ -49,8 +52,8 @@ if check_form_fields(form) < 0:
   print("Content-Length: " + str(len(error_body)))
   print
   print(error_body)
-  print("cfgvhbjhklm,;';.")
-  print(form)
+  #print("cfgvhbjhklm,;';.")
+  #print(form)
 else:
   msg_hash = to_hash(str(form["user_message"]))
   ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
