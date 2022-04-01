@@ -95,7 +95,7 @@ int recv_request(const int &fd, Request *rq){
   bzero(&request_buffer, REQUEST_READ_SIZE);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
-    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
+    if (request_buffer[read_bytes - 1] == '\n') //|| request_buffer[read_bytes] == 0)
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -212,10 +212,10 @@ int main(){          // }
         }
         //std::cout << "Print parsed request..\n";
         request.printFullParsedRequest();
-        if (events[i].events & EPOLLOUT)
-        {
-          if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
-          {
+      //std::cout << "Print parsed request..\n";
+      //request.printFullParsedRequest();
+      if (events[i].events & EPOLLOUT) {
+        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             cgiParams cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
             //! lots of exceptions left to throw

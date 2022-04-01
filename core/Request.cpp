@@ -131,10 +131,10 @@ int Request::parse(void){
 		std::string value;
 		tail = _fullRequest.find(':', head);
 		field = std::string(_fullRequest, head, tail - head);
-		// std::cout << "Field: " << field << "\n";
 		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
+		//std::cout << "Field: " << field << " - Value: " << value<< "\n";
 		if (_parsedHttpRequest.count(field) == 0){
 			//_requestParsingError = 400; //Bad Request
 			//return -1;
@@ -143,11 +143,13 @@ int Request::parse(void){
 		_parsedHttpRequest[field] = value;
 	}
 	//Next come msg-body
-	if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
+	//if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
 		head = tail + 4;
 		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-		std::cout << "BODY: " << _parsedHttpRequest["message-body"] << std::endl;
-	}
+	//}
+		//std::cout << "THIS IS MY BODY--------------------\n ";
+		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
+		//std::cout << "----------------------END OF MY BODY\n";
 	//! parse body - which cases ? form ? Uploaded files ?
 	return 0;
 }
@@ -162,13 +164,15 @@ void Request::append(char *str){
 }
 
 void Request::printFullRequest(void){
-	std::cout << "Full Request: " << "\n" << _fullRequest << "\n" << std::endl;
+	std::cout << "\nBEGINNING OF FULL REQUEST -----------------\n";
+	std::cout << _fullRequest << std::endl;
+	std::cout << "-----------------------------END FULL REQUEST\n";
 }
 
 void Request::printFullParsedRequest(void){
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
 	while (it != _parsedHttpRequest.end()){
-		// std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
+		std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
 		it++;
 	}
 }

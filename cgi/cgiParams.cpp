@@ -1,8 +1,6 @@
 #include"cgiParams.hpp"
 #include"../core/Request.hpp"
 
-
-
 int cgiParams::strlen_list(char **strList) {
     int i = 0;
     while (strList[i])
@@ -77,12 +75,9 @@ cgiParams::cgiParams(std::map<std::string, std::string> &parsedRequest, std::str
 		}
 		++it;
 	}
-
     str_add("SERVER_ADDR=127.0.0.1");
     str_add("REMOTE_ADDR=127.0.0.1");
     str_add("REMOTE_PORT=18000");
-	
-
 	return;
 }
 
@@ -101,7 +96,7 @@ void	cgiParams::handleCGI()
 			_writeBodyToScript();
 		_executeScript();
 	}
-	wait(NULL);
+	//wait(NULL);
 }
 
 void	cgiParams::_writeBodyToScript()
