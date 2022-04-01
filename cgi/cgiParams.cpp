@@ -93,7 +93,9 @@ void	cgiParams::_executeScript()
 
 void	cgiParams::handleCGI()
 {
-	_writeBodyToScript();
+	if (_messageBody != "")
+		_writeBodyToScript();
+	_executeScript();
 
 }
 

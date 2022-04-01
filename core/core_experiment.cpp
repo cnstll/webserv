@@ -217,18 +217,19 @@ while (1)
           {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             cgiParams cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
-            int fd[2];
-            if (request.donneMoiTonCorpsBabe() != "")
-            {
-              pipe(fd);
-              int stdoutDup = dup(STDOUT_FILENO);
-              int stdinDup = dup(STDIN_FILENO);
-              dup2(events[i].data.fd, STDOUT_FILENO);
-              dup2(fd[0], STDIN_FILENO);
-              write(fd[1], request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
-              close(fd[1]);
-            }
-            execve(cgiParams._args[0], cgiParams._args, cgiParams._environment);
+            cgiParams.handleCGI();
+            // int fd[2];
+            // if (request.donneMoiTonCorpsBabe() != "")
+            // {
+            //   pipe(fd);
+            //   int stdoutDup = dup(STDOUT_FILENO);
+            //   int stdinDup = dup(STDIN_FILENO);
+            //   dup2(events[i].data.fd, STDOUT_FILENO);
+            //   dup2(fd[0], STDIN_FILENO);
+            //   write(fd[1], request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
+            //   close(fd[1]);
+            // }
+            // execve(cgiParams._args[0], cgiParams._args, cgiParams._environment);
             //!error handling here
           }
           wait(NULL);
