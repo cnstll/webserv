@@ -95,7 +95,7 @@ int recv_request(const int &fd, Request *rq){
   bzero(&request_buffer, REQUEST_READ_SIZE);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
-    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
+    if (request_buffer[read_bytes - 1] == '\n') //|| request_buffer[read_bytes] == 0)
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -207,8 +207,8 @@ while (1)
       if (request.parse() < 0){
         std::cout << "\nError while parsing request!!!\n";
       }
-      std::cout << "Print parsed request..\n";
-      request.printFullParsedRequest();
+      //std::cout << "Print parsed request..\n";
+      //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT) {
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
