@@ -154,18 +154,18 @@ void Response::addBody(std::string pathname)
  */
 void Response::sendResponse(int clientSocket){
 
-    std::string carriageReturn = "\n";
-    std::string packagedResponse = _Status + carriageReturn +
-        "Date: " + _Date + carriageReturn +
-        "Server: " + _Server + carriageReturn +
-        "Content-Length: " + _ContentLength + carriageReturn +
-        "Content-Type: " + _ContentType + carriageReturn +
-        "Connection: " + _Connection + carriageReturn;
+    std::string CRLF = "\n";
+    std::string packagedResponse = _Status + CRLF +
+        "Date: " + _Date + CRLF +
+        "Server: " + _Server + CRLF +
+        "Content-Length: " + _ContentLength + CRLF +
+        "Content-Type: " + _ContentType + CRLF +
+        "Connection: " + _Connection + CRLF;
 
 
     if (_statusCode >= 300 && _statusCode < 400)
-        packagedResponse += "Location: " + _Location + carriageReturn;
-    packagedResponse = packagedResponse + carriageReturn + _Content;
+        packagedResponse += "Location: " + _Location + CRLF;
+    packagedResponse = packagedResponse + CRLF + _Content;
     // ! Handle error here. 
     size_t i;
     //FILE *thisIsAFile = fopen("colomban.txt", "w");

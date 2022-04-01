@@ -216,7 +216,7 @@ while (1)
           if (!pid)
           {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
-            cgiParams cgiParams(request.getParsedRequest(), script_pathname);
+            cgiParams cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
             int fd[2];
             if (request.donneMoiTonCorpsBabe() != "")
             {
