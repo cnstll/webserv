@@ -142,7 +142,7 @@ int Request::parse(void){
 	}
 	//Next come msg-body
 	if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
-		head = tail + 2;
+		head = tail + 4;
 		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
 		std::cout << "BODY: " << _parsedHttpRequest["message-body"] << std::endl;
 	}
