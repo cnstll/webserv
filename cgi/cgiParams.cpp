@@ -93,10 +93,15 @@ void	cgiParams::_executeScript()
 
 void	cgiParams::handleCGI()
 {
-	if (_messageBody != "")
-		_writeBodyToScript();
-	_executeScript();
-
+	int pid = -1;
+	pid = fork();
+	if (!pid)
+	{
+		if (_messageBody != "")
+			_writeBodyToScript();
+		_executeScript();
+	}
+	wait(NULL);
 }
 
 void	cgiParams::_writeBodyToScript()

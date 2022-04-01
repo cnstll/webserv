@@ -9,6 +9,8 @@
 #include<string>
 #include<iostream>
 #include<map>
+#include <sys/wait.h>
+
 
 class cgiParams
 {

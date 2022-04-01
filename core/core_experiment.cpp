@@ -140,7 +140,8 @@ std::string get_extension(std::string uri)
   return (uri);
 }
 
-int main(){
+int main(){          // }
+          // wait(NULL);
 
   int server_fd;
   int count_response = 0;
@@ -208,39 +209,21 @@ while (1)
       }
       std::cout << "Print parsed request..\n";
       request.printFullParsedRequest();
-      if (events[i].events & EPOLLOUT){
-        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION)
-        {
-          int pid = -1;
-          pid = fork();
-          if (!pid)
-          {
+      if (events[i].events & EPOLLOUT) {
+        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             cgiParams cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
-            cgiParams.handleCGI();
-            // int fd[2];
-            // if (request.donneMoiTonCorpsBabe() != "")
-            // {
-            //   pipe(fd);
-            //   int stdoutDup = dup(STDOUT_FILENO);
-            //   int stdinDup = dup(STDIN_FILENO);
-            //   dup2(events[i].data.fd, STDOUT_FILENO);
-            //   dup2(fd[0], STDIN_FILENO);
-            //   write(fd[1], request.donneMoiTonCorpsBabe().c_str(), request.donneMoiTonCorpsBabe().length());
-            //   close(fd[1]);
-            // }
-            // execve(cgiParams._args[0], cgiParams._args, cgiParams._environment);
-            //!error handling here
-          }
-          wait(NULL);
+            //!lots of exceptions left to throw
+            try {
+              cgiParams.handleCGI();
+            }
+            catch(const std::exception& e) {
+              std::cerr << e.what() << '\n';
+            }
         }
-        else
-        {
+        else {
           Response resp(request.getParsedRequest(), request.getError());
-          // std::cout << request.getPathToFile() << std::endl;
           resp.addBody(request.getPathToFile());
-          printf("Sending response to fd:  %d\n", events[i].data.fd);
-          printf("count of response:  %d\n", ++count_response);
           resp.sendResponse(events[i].data.fd);
         }
       }
