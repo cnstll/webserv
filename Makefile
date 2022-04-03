@@ -1,9 +1,9 @@
 NAME = webserv
 
-SRCS = ./core/core_experiment.cpp  \
+SRCS = ./core/core.cpp  \
 		./core/Response.cpp \
 		./core/Request.cpp \
-		./cgi/cgiParams.cpp \
+		./cgi/cgiHandler.cpp \
 		./core/utils.cpp
 
 OBJS = $(SRCS:.cpp=.o)
