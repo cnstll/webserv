@@ -105,7 +105,6 @@ Response::Response(const Response &newResponse)
 
 Response::~Response(void)
 {
-   // std::cout << "Default Destructor for Response called" << std::endl;
     return;
 }
 
@@ -126,7 +125,6 @@ std::string Response::timeAsString()
     std::string str("");
     str.append(buffer);
     str.append(" GMT");
-    //std::cout << str << std::endl;
     return (str);
 }
 

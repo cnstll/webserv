@@ -69,8 +69,8 @@ func HandleConnections(c net.Conn, request string) string {
 var wg *sync.WaitGroup
 
 func main() {
-	nbOfConcurrentConnections := 1
-	nbOfRequests := 1
+	nbOfConcurrentConnections := 20
+	nbOfRequests := 20
 	var outb bytes.Buffer
 	server_root := os.Args[1]
 	contentPath := server_root + "/index.html"
