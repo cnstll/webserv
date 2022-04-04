@@ -153,7 +153,7 @@ int main(){          // }
   Request request;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
   std::cout << "Print init request..\n";
-  request.printFullParsedRequest();
+  // request.printFullParsedRequest();
 
   // Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
@@ -211,7 +211,7 @@ int main(){          // }
           std::cout << "\nError while parsing request!!!\n";
         }
         //std::cout << "Print parsed request..\n";
-        request.printFullParsedRequest();
+        // request.printFullParsedRequest();
       //std::cout << "Print parsed request..\n";
       //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT) {
