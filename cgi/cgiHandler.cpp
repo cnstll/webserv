@@ -84,31 +84,43 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 void	cgiHandler::_executeScript()
 {
 	execve(_args[0], _args, _environment);
+	perror("aaargh");
+	exit(1);
 }
 
 void	cgiHandler::handleCGI()
 {
 	int pid = -1;
-	pid = fork();
-	if (!pid)
-	{
-		if (_messageBody != "")
-			_writeBodyToScript();
-		_executeScript();
-	}
-}
-
-void	cgiHandler::_writeBodyToScript()
-{
 	int fd[2];
 	pipe(fd);
-	int stdoutDup = dup(STDOUT_FILENO);
-	int stdinDup = dup(STDIN_FILENO);
-	dup2(_serverSocket, STDOUT_FILENO);
-	dup2(fd[0], STDIN_FILENO);
+
+	if (_messageBody != "")
+	{
+		int stdoutDup = dup(STDOUT_FILENO);
+		int stdinDup = dup(STDIN_FILENO);
+	}
+	pid = fork();
+	// std::cerr << "Its alllz good for now. 0" << std::endl;
+	if (!pid)
+	{
+		dup2(_serverSocket, STDOUT_FILENO);
+		dup2(fd[0], STDIN_FILENO);
+		_executeScript();
+	}
 	write(fd[1], _messageBody.c_str(), _messageBody.length());
 	close(fd[1]);
 }
+
+// void	cgiHandler::_writeBodyToScript()
+// {
+// 	int stdoutDup = dup(STDOUT_FILENO);
+// 	int stdinDup = dup(STDIN_FILENO);
+// 	dup2(_serverSocket, STDOUT_FILENO);
+// 	dup2(fd[0], STDIN_FILENO);
+// 	std::cerr << "Its alllz good for now. 2" << std::endl;
+// 	write(fd[1], _messageBody.c_str(), _messageBody.length());
+// 	std::cerr << "Its alllz good for now. 3" << std::endl;
+// }
 
 cgiHandler::~cgiHandler(void)
 {

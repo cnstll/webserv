@@ -42,9 +42,8 @@ root = "/core/server_root"
 form = cgi.FieldStorage()
 # Retrieving filename
 fileitem = form["filename"]
-open("COLOMBAN_TU_ES_CHIANT.txt", 'w')
 #eprint("INFO: " + str(form))
-#eprint("ENV: " + str(os.environ))
+eprint("ENV: " + os.environ["QUERY_STRING"])
 if fileitem.filename:
   # Checking for leading path and striping it
   fn = os.path.basename(fileitem.filename.replace("\\", "/" ))

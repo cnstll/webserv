@@ -103,7 +103,7 @@ int recv_request(const int &fd, Request *rq){
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
-  rq->printFullRequest();
+  // rq->printFullRequest();
   return read_bytes;
 }
 
