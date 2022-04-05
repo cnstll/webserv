@@ -8,7 +8,7 @@ int main (int argc, char ** argv, char **env)
 {
 	int pid = -1;
 	char *args[5] = {"/usr/bin/go", "run", "client.go", "../core/server_root", NULL};
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		pid = fork();
 		if (!pid)
