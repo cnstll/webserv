@@ -39,6 +39,8 @@ class Request
     std::map<std::string, std::string> &getParsedRequest(void);
     void printFullRequest(void);
     void printFullParsedRequest(void);
+    void writeFullRequestToFile(const char *filename);
+    
 	private:
 	
 		//  general-header = Cache-Control
