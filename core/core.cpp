@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <cstdlib>
+#include <cstring>
+#include <cerrno>
 #include "core.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
@@ -16,7 +18,7 @@
 #include <iostream>
 #define MAX_EVENTS 10000
 #define READ_SIZE 30000
-#define REQUEST_READ_SIZE 4096
+#define REQUEST_READ_SIZE 512
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
 std::string CGI_EXTENSION = ".py";
@@ -96,7 +98,7 @@ int recv_request(const int &fd, Request *rq){
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
     //! The second half of this was commented for some reason, this broke cgi functionality
-    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
+    if ((request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)) //&& (read_bytes != REQUEST_READ_SIZE))
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -170,6 +172,7 @@ int main(){          // }
     // print_events(events, count_of_fd_actualized);
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
+      recv_bytes = 0;
       if (events[i].data.fd == server_fd)
       {
         check_error_flags(events[i].events);
@@ -193,8 +196,8 @@ int main(){          // }
         }
         if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0)
         {
-          std::cout << "aaaaaaaaaaaaaaaahhhhhhhhh" << std::endl;
-          perror("error while receiving data");
+          //perror("error while receiving data");
+          std::cout << "\nERRNO AFTER RECV: " << std::strerror(errno);
           request.clear();
           break;
         }
@@ -205,6 +208,9 @@ int main(){          // }
           close(events[i].data.fd);
           break;
         }
+        if (recv_bytes == REQUEST_READ_SIZE){
+          continue;
+        }
         //std::cout << "Parsing request..\n";
         if (request.parse() < 0)
         {
@@ -212,8 +218,6 @@ int main(){          // }
         }
         //std::cout << "Print parsed request..\n";
         // request.printFullParsedRequest();
-      //std::cout << "Print parsed request..\n";
-      //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT) {
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
