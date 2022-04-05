@@ -6,6 +6,7 @@
 #include <map>
 #include <iterator>
 #include <vector>
+#include <fstream>
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -61,7 +62,7 @@ std::ostream &			operator<<( std::ostream & o, Request const & i )
 void Request::clear(){
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
 	while (it != _parsedHttpRequest.end()){
-		it->second = "";
+		it->second = std::string();
 		++it;
 	}
 	_fullRequest = std::string();
@@ -142,10 +143,22 @@ int Request::parse(void){
 		_parsedHttpRequest[field] = value;
 	}
 	//Next come msg-body
-	//if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
+	if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
 		head = tail + 4;
 		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-	//}
+	}
+	std::string multipartType = "multipart/form-data;";
+	if (_parsedHttpRequest["Content-Type"].compare(0, multipartType.length(), multipartType) == 0){
+		std::cout << "\nEntered in if\n";
+		head = tail + 4;
+		std::size_t beginSeparator = _parsedHttpRequest["Content-Type"].find("=", 0) + 1;
+		std::size_t endSeparator = _parsedHttpRequest["Content-Type"].find(";", beginSeparator);
+		if (endSeparator == std::string::npos)
+			endSeparator = _parsedHttpRequest["Content-Type"].length();
+		std::string partSeparator = std::string(_parsedHttpRequest["Content-Type"] , beginSeparator, endSeparator);
+		std::cout << "\n Separator: " << partSeparator << std::endl;
+		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+	}
 		//std::cout << "THIS IS MY BODY--------------------\n ";
 		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
 		//std::cout << "----------------------END OF MY BODY\n";
@@ -175,6 +188,12 @@ void Request::printFullParsedRequest(void){
 		it++;
 	}
 }
+
+void Request::writeFullRequestToFile(const char *filename){
+	std::ofstream ofs(filename, std::ios_base::app);
+	ofs << _fullRequest;
+  ofs.close();
+};
 
 
 /*

@@ -51,15 +51,15 @@
         "cstring": "cpp"
     },
     "makefile.launchConfigurations": [
-        {
-            "cwd": "/mnt/nfs/homes/jescully/Documents/webserv",
-            "binaryPath": "/mnt/nfs/homes/jescully/Documents/webserv/webserv",
-            "binaryArgs": []
-        },
-        {
-            "cwd": "/mnt/nfs/homes/calle/42projects/webserv",
-            "binaryPath": "/mnt/nfs/homes/calle/42projects/webserv/webserv",
-            "binaryArgs": []
-        }
+      {
+        "cwd": "/mnt/nfs/homes/jescully/Documents/webserv",
+        "binaryPath": "/mnt/nfs/homes/jescully/Documents/webserv/webserv",
+        "binaryArgs": []
+      },
+      {
+        "cwd": "/mnt/nfs/homes/calle/42projects/webserv",
+        "binaryPath": "/mnt/nfs/homes/calle/42projects/webserv/webserv",
+        "binaryArgs": []
+      }
     ]
 }
