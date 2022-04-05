@@ -114,7 +114,7 @@ int Request::parse(void){
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
-	std::cout << _parsedHttpRequest["httpVersion"] <<  std::endl;
+	//std::cout << _parsedHttpRequest["httpVersion"] <<  std::endl;
 	
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){

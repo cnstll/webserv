@@ -16,7 +16,7 @@
 #include <iostream>
 #define MAX_EVENTS 10000
 #define READ_SIZE 30000
-#define REQUEST_READ_SIZE 4096
+#define REQUEST_READ_SIZE 512
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
 std::string CGI_EXTENSION = ".py";
@@ -77,29 +77,31 @@ void make_fd_non_blocking(int fd){
   check((fcntl(fd, F_SETFL, flags)), "fcntl error");
 }
 
-void check_error_flags(int event){
+bool check_error_flags(int event){
   if (event & EPOLLHUP || event & EPOLLERR)
   {
     if (event & EPOLLHUP)
       write(0, "EPPOLHUP\n", 9);
     if (event & EPOLLERR)
       write(0, "EPPOLERR\n", 9);
-    exit(1);
+    return (false);
   }
+  return (true);
 }
 
 int recv_request(const int &fd, Request *rq){
   int read_bytes;
-  char request_buffer[REQUEST_READ_SIZE];
+  char request_buffer[REQUEST_READ_SIZE + 1];
 
-  bzero(&request_buffer, REQUEST_READ_SIZE);
+  bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer);
     //! The second half of this was commented for some reason, this broke cgi functionality
-    if (request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0)
+    if ((request_buffer[read_bytes - 1] == '\n' && request_buffer[read_bytes] == 0) && !(read_bytes == REQUEST_READ_SIZE)) 
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
+  rq->printFullRequest();
   return read_bytes;
 }
 
@@ -180,20 +182,13 @@ int main(){          // }
       }
       else if (events[i].events & EPOLLIN)
       {
-        // check_error_flags(events[i].events);
-        if (events[i].events & EPOLLHUP || events[i].events & EPOLLERR)
-        {
-          if (events[i].events & EPOLLHUP)
-            write(0, "EPPOLHUP\n", 9);
-          if (events[i].events & EPOLLERR)
-            write(0, "EPPOLERR\n", 9);
+        if (check_error_flags(events[i].events) < 0){
           perror("error while receiving data");
           request.clear();
           break;
         }
         if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0)
         {
-          std::cout << "aaaaaaaaaaaaaaaahhhhhhhhh" << std::endl;
           perror("error while receiving data");
           request.clear();
           break;
@@ -205,13 +200,9 @@ int main(){          // }
           close(events[i].data.fd);
           break;
         }
-        //std::cout << "Parsing request..\n";
-        if (request.parse() < 0)
-        {
+        if (request.parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
-        //std::cout << "Print parsed request..\n";
-        // request.printFullParsedRequest();
       //std::cout << "Print parsed request..\n";
       //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT) {
