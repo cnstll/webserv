@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    a {
+      color: #369;
+    }
+    .note {
+      width: 500px;
+      margin: 50px auto;
+      font-size: 1.1em;
+      color: #333;
+      text-align: justify;
+    }
+    #drop-area {
+      border: 2px dashed #ccc;
+      border-radius: 20px;
+      width: 480px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    #drop-area.highlight {
+      border-color: purple;
+    }
+    p {
+      margin-top: 0;
+    }
+    .my-form {
+      margin-bottom: 10px;
+    }
+    #gallery {
+      margin-top: 10px;
+    }
+    #gallery img {
+      width: 150px;
+      margin-bottom: 10px;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px;
+      background: #ccc;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .button:hover {
+      background: #ddd;
+    }
+    #fileElem {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+    <div id="drop-area">
+      <form class="my-form">
+        <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
+        <input type="file" id="fileElem" multiple onchange="handleFiles(this.files)">
+        <label class="button" for="fileElem">Select some files</label>
+      </form>
+      <progress id="progress-bar" max=100 value=0></progress>
+      <div id="gallery" /></div>
+    </div>
+    <div class="note"><strong>Note: I've Removed the ability to actually upload files (it will error out silently since there is no error handler, so it'll still appear to work) because you guys were constantly filling up my Cloudinary account. Please <a href="https://cloudinary.com/invites/lpov9zyyucivvxsnalc5/j6iiupngdmwwwqspjtml">create your own account</a> and replace the "joezim007" and "ujpu6gyk" bits in the JavaScript with your own account's information.</strong></div>
+  </form>
+  <script type="text/javascript" src="/upload_script.js"></script>
+  
+</body>
+
+</html>

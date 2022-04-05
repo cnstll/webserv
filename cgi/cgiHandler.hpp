@@ -35,11 +35,11 @@ class cgiHandler
         
         std::map<std::string, std::string> requestToEnvMap =
             {{"REQUEST_METHOD", "method"},
-             {"QUERY_STRING", "message-body"},
              {"SCRIPT_NAME", "requestURI"},
              {"CONTENT_TYPE", "Content-Type"},
              {"HTTP_USER_AGENT", "User-Agent"},
              {"HTTP_CONNECTION", "Connection"},
              {"CONTENT_LENGTH", "Content-Length"}};
+            //  {"QUERY_STRING", "message-body"},
 };
 #endif
