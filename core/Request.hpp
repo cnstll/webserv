@@ -28,7 +28,7 @@ class Request
 		~Request();
 
 		Request &		operator=( Request const & rhs );
-		void append(char *str);
+		void append(char *str, std::size_t readBytes);
 		void clear(void);
 		int parse(void);
 		std::string getRequestedUri(void);
@@ -40,7 +40,7 @@ class Request
     void printFullRequest(void);
     void printFullParsedRequest(void);
     void writeFullRequestToFile(const char *filename);
-    
+    void writeStrToFile(const std::string &str, const char *filename);    
 	private:
 	
 		//  general-header = Cache-Control

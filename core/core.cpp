@@ -97,13 +97,13 @@ int recv_request(const int &fd, Request *rq){
 
   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
-    rq->append(request_buffer);
+    rq->append(request_buffer, read_bytes);
     //! The second half of this was commented for some reason, this broke cgi functionality
     if ((request_buffer[read_bytes - 1] == '\n' && request_buffer[read_bytes] == 0) && !(read_bytes == REQUEST_READ_SIZE)) 
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
-  // rq->printFullRequest();
+  //rq->printFullRequest();
   return read_bytes;
 }
 

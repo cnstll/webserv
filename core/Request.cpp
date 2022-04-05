@@ -142,10 +142,13 @@ int Request::parse(void){
 		}
 		_parsedHttpRequest[field] = value;
 	}
+	//writeFullRequestToFile("fullrequest.log");
 	//Next come msg-body
 	//if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
 		head = tail + 4;
+		tail = _fullRequest.length();
 		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+		//writeStrToFile(_parsedHttpRequest["message-body"], "body.log");
 	//}
 	//std::string multipartType = "multipart/form-data;";
 	//if (_parsedHttpRequest["Content-Type"].compare(0, multipartType.length(), multipartType) == 0){
@@ -171,8 +174,8 @@ int Request::parse(void){
  * 
  * @param str c string appended to _fullRequest
  */
-void Request::append(char *str){
-	_fullRequest.append(str);
+void Request::append(char *str, std::size_t readBytes){
+	_fullRequest.append(str, readBytes);
 }
 
 void Request::printFullRequest(void){
@@ -192,6 +195,12 @@ void Request::printFullParsedRequest(void){
 void Request::writeFullRequestToFile(const char *filename){
 	std::ofstream ofs(filename, std::ios_base::app);
 	ofs << _fullRequest;
+  ofs.close();
+};
+
+void Request::writeStrToFile(const std::string &str, const char *filename){
+	std::ofstream ofs(filename);
+	ofs << str;
   ofs.close();
 };
 
