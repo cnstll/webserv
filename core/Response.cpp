@@ -10,49 +10,49 @@
 std::string getErrorContent(int errCode)
 {
     std::map<int, std::string> ErrCodeMap =
-        {{300, "Multiple Choice"},
-         {301, "Moved Permanently"},
-         {302, "Found"},
-         {303, "See Other"},
-         {304, "Not Modified"},
-         {307, "Temporary Redirect"},
-         {308, "Permanent Redirect"},
-         {400, "Bad Request"},
-         {401, "Unauthorized"},
-         {402, "Payment Required"},
-         {403, "Forbiden"},
-         {404, "Not Found"},
-         {405, "Method Not Allowed"},
-         {406, "Not Acceptable"},
-         {407, "Proxy Authentication Required"},
-         {408, "Request Timeout"},
-         {409, "Conflict"},
-         {410, "Gone"},
-         {411, "Length Required"},
-         {412, "Precondition Failed"},
-         {413, "Payload Too Large"},
-         {414, "URI Too Long"},
-         {415, "Unsupported Media Type"},
-         {416, "Range Not Satisfiable"},
-         {417, "Expectation Failed"},
-         {418, "I'm a teapot"},
-         {421, "Misdirected Request"},
-         {422, "Unprocessable Entity"},
-         {423, "Locked"},
-         {426, "Upgrade Required"},
-         {428, "Precondition Required"},
-         {429, "Too Many Requests"},
-         {431, "Request Header Fields Too Large"},
-         {451, "Unavailable For Legal Reasons"},
-         {500, "Internal Server Error"},
-         {501, "Not Implemented"},
-         {502, "Bad Gateway"},
-         {503, "Service Unavailable"},
-         {504, "Gateway Timeout"},
-         {505, "HTTP Version Not Supported"},
-         {506, "Variant Also Negotiates"},
-         {510, "Not Extended"},
-         {511, "Network Authentication Required"}};
+        {{300, "<Html> Multiple Choice </Html>\n"},
+         {301, "<Html> Moved Permanently </Html>\n"},
+         {302, "<Html> Found </Html>\n"},
+         {303, "<Html> See Other </Html>\n"},
+         {304, "<Html> Not Modified </Html>\n"},
+         {307, "<Html> Temporary Redirect </Html>\n"},
+         {308, "<Html> Permanent Redirect </Html>\n"},
+         {400, "<Html> Bad Request </Html>\n"},
+         {401, "<Html> Unauthorized </Html>\n"},
+         {402, "<Html> Payment Required </Html>\n"},
+         {403, "<Html> Forbiden </Html>\n"},
+         {404, "<Html> Not Found </Html>\n"},
+         {405, "<Html> Method Not Allowed </Html>\n"},
+         {406, "<Html> Not Acceptable </Html>\n"},
+         {407, "<Html> Proxy Authentication Required </Html>\n"},
+         {408, "<Html> Request Timeout </Html>\n"},
+         {409, "<Html> Conflict </Html>\n"},
+         {410, "<Html> Gone </Html>\n"},
+         {411, "<Html> Length Required </Html>\n"},
+         {412, "<Html> Precondition Failed </Html>\n"},
+         {413, "<Html> Payload Too Large </Html>\n"},
+         {414, "<Html> URI Too Long </Html>\n"},
+         {415, "<Html> Unsupported Media Type </Html>\n"},
+         {416, "<Html> Range Not Satisfiable </Html>\n"},
+         {417, "<Html> Expectation Failed </Html>\n"},
+         {418, "<Html> I'm a teapot </Html>\n"},
+         {421, "<Html> Misdirected Request </Html>\n"},
+         {422, "<Html> Unprocessable Entity </Html>\n"},
+         {423, "<Html> Locked </Html>\n"},
+         {426, "<Html> Upgrade Required </Html>\n"},
+         {428, "<Html> Precondition Required </Html>\n"},
+         {429, "<Html> Too Many Requests </Html>\n"},
+         {431, "<Html> Request Header Fields Too Large </Html>\n"},
+         {451, "<Html> Unavailable For Legal Reasons </Html>\n"},
+         {500, "<Html> Internal Server Error </Html>\n"},
+         {501, "<Html> Not Implemented </Html>\n"},
+         {502, "<Html> Bad Gateway </Html>\n"},
+         {503, "<Html> Service Unavailable </Html>\n"},
+         {504, "<Html> Gateway Timeout </Html>\n"},
+         {505, "<Html> HTTP Version Not Supported </Html>\n"},
+         {506, "<Html> Variant Also Negotiates </Html>\n"},
+         {510, "<Html> Not Extended </Html>\n"},
+         {511, "<Html> Network Authentication Required </Html>\n"}};
 
 
 
@@ -142,6 +142,7 @@ void Response::addBody(std::string pathname)
         std::ifstream input_file(pathname.c_str());
         _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
    }
+   const char *str = _Content.c_str();
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
 }
@@ -153,11 +154,12 @@ void Response::addBody(std::string pathname)
 void Response::sendResponse(int clientSocket){
 
     std::string CRLF = "\n";
+    std::string contype;
     std::string packagedResponse = _Status + CRLF +
         "Date: " + _Date + CRLF +
         "Server: " + _Server + CRLF +
         "Content-Length: " + _ContentLength + CRLF +
-        "Content-Type: " + _ContentType + CRLF +
+        "Content-Type: " + contype + CRLF +
         "Connection: " + _Connection + CRLF;
 
 
@@ -165,10 +167,9 @@ void Response::sendResponse(int clientSocket){
         packagedResponse += "Location: " + _Location + CRLF;
     packagedResponse = packagedResponse + CRLF + _Content;
     // ! Handle error here. 
+    std::cerr << packagedResponse << std::endl;
     size_t i;
-    //FILE *thisIsAFile = fopen("colomban.txt", "w");
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE);
     }
-    //write(STDOUT_FILENO, packagedResponse.c_str(), packagedResponse.size());
 }
