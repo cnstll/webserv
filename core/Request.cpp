@@ -7,11 +7,11 @@
 #include <iterator>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
-	// std::cout << "Request - Constructor called\n";
 	initParsedRequestMap();
 
 };
@@ -81,14 +81,10 @@ int Request::parse(void){
 
 	//check if method is valid {"GET", "POST, "DELETE"}
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
-	int i = 0;
-	while (i < 3){
-		if (_parsedHttpRequest["method"].compare(methods[i]) == 0)
-			break;
-		i++;
-	}
-	if (i == 3){
-		_requestParsingError = 405; //"Not implemented"
+	std::vector<std::string>::iterator it;
+	it = std::find(methods.begin(), methods.end(), _parsedHttpRequest["method"]);
+	if (it == methods.end()){
+		_requestParsingError = 405; // Method Not implemented
 		return -1;
 	}
 	head = tail + 1;
@@ -96,10 +92,8 @@ int Request::parse(void){
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
 	std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
 	if (queryPos != std::string::npos){
-		//std::cout << "\n THERE IS A QUERY IN THIS URI ! \n";
 		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, tail - (queryPos + 1));
 		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
-		//std::cout << "CORRECTED URI: " << _parsedHttpRequest["requestURI"] << " - EXTRACTED QS: " << _parsedHttpRequest["queryString"] << std::endl;
 	}
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 		_parsedHttpRequest["requestURI"] = "/index.html";
@@ -110,12 +104,9 @@ int Request::parse(void){
 	}
 	if (!doesFileExist(getPathToFile())){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
-		{
 			_requestParsingError = 301;
-			return -1;
-		}
-		_requestParsingError = 404; //"Not Found" 
-		//std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
+		else
+			_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}
 
@@ -141,15 +132,9 @@ int Request::parse(void){
 		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
-		//std::cout << "Field: " << field << " - Value: " << value<< "\n";
-		if (_parsedHttpRequest.count(field) == 0){
-			//_requestParsingError = 400; //Bad Request
-			//return -1;
-			continue;
-		}
-		_parsedHttpRequest[field] = value;
+		if (_parsedHttpRequest.count(field) == 1)
+			_parsedHttpRequest[field] = value;
 	}
-	//writeFullRequestToFile("fullrequest.log");
 	//Next come msg-body
 	//if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
 		head = tail + 4;
@@ -172,8 +157,6 @@ int Request::parse(void){
 		//std::cout << "THIS IS MY BODY--------------------\n ";
 		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
 		//std::cout << "----------------------END OF MY BODY\n";
-	//! parse body - which cases ? form ? Uploaded files ?
-	//printFullParsedRequest();
 	return 0;
 }
 
