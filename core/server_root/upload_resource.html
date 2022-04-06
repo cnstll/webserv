@@ -5,7 +5,7 @@
 </head>
 
 <body>
-  <form method="post" action="/upload_files.py" enctype="multipart/form-data">
+  <form method="post" action="/upload_resource.py" enctype="multipart/form-data">
     <div>
       <label for="file">Choose a file</label>
       <input type="file" id="file" name="filename">
@@ -14,6 +14,7 @@
       <button>Send the file</button>
     </div>
   </form>
+  <button onclick="window.location.href='http://localhost:18000';"> HOME </button>
 </body>
 
 </html>

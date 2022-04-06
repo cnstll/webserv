@@ -1,9 +1,14 @@
+from __future__ import print_function
 import cgi
+import currentDate
 import hashlib
 
-# /print("debugging info...")
-#cgi.print_directory()
-#cgi.print_environ()
+import os, sys
+#import cgitb;
+#cgitb.enable()
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def to_hash(message):
   m = hashlib.sha256()
@@ -44,25 +49,24 @@ valid_body = " <!DOCTYPE html>\
   \
   </body>\
   </html> "
-
+eprint("HASH SCRIPT LAUNCHED")
 form = cgi.FieldStorage()
 
 if check_form_fields(form) < 0:
   print("HTTP/1.1 400 Bad Request")
-  print("Date: Mon, 27 Jul 2009 12:28:53 GMT")
+  currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
   print
   print(error_body)
-  #print("cfgvhbjhklm,;';.")
-  #print(form)
+
 else:
   msg_hash = to_hash(str(form["user_message"]))
   ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
   print("HTTP/1.1 200 OK")
   print("Content-Type: text/html")
-  print("Date: Mon, 27 Jul 2009 12:28:53 GMT")
+  currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Length: " + str(len(ready_body)))
   print
