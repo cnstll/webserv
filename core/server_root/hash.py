@@ -58,7 +58,7 @@ if check_form_fields(form) < 0:
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
-  print
+  print("\n")
   print(error_body)
 
 else:
@@ -69,5 +69,5 @@ else:
   currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Length: " + str(len(ready_body)))
-  print
+  print("\n")
   print(ready_body)

@@ -44,7 +44,6 @@ root = "/core/server_root"
 form = cgi.FieldStorage()
 # Retrieving filename
 fileitem = form["filename"]
-eprint("INFO: " + str(form))
 if fileitem.filename:
   # Checking for leading path and striping it
   fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
@@ -65,5 +64,5 @@ else:
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
-  print
+  print("\n")
   print(error_body)
