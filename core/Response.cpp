@@ -59,7 +59,6 @@ std::string getErrorContent(int errCode)
     char buf[3];
     sprintf(buf, "%d", errCode);
     std::string errPathname = "." + std::string(ROOT_DIR) + "/" + buf + ".html"; 
-    std::cout << errPathname << std::endl;
     if(doesFileExist(errPathname))
         return (readFileIntoString(errPathname));
     std::map<int, std::string>::iterator it = ErrCodeMap.find(errCode);
@@ -167,7 +166,6 @@ void Response::sendResponse(int clientSocket){
         packagedResponse += "Location: " + _Location + CRLF;
     packagedResponse = packagedResponse + CRLF + _Content;
     // ! Handle error here. 
-    std::cerr << packagedResponse << std::endl;
     size_t i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE);

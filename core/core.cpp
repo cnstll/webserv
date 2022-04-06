@@ -99,7 +99,7 @@ int recv_request(const int &fd, Request *rq){
   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
     rq->append(request_buffer, read_bytes);
-    if ((request_buffer[read_bytes - 1] == '\n' && request_buffer[read_bytes] == 0) && !(read_bytes == REQUEST_READ_SIZE)) 
+    if ((request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0) && !(read_bytes == REQUEST_READ_SIZE)) 
       break;
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
@@ -156,8 +156,6 @@ int main(){          // }
   int count_of_fd_actualized = 0;
   Request request;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
-  std::cout << "Print init request..\n";
-  // request.printFullParsedRequest();
 
   // Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));

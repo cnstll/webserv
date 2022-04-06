@@ -96,10 +96,10 @@ int Request::parse(void){
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
 	std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
 	if (queryPos != std::string::npos){
-		std::cout << "\n THERE IS A QUERY IN THIS URI ! \n";
+		//std::cout << "\n THERE IS A QUERY IN THIS URI ! \n";
 		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, tail - (queryPos + 1));
 		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
-		std::cout << "CORRECTED URI: " << _parsedHttpRequest["requestURI"] << " - EXTRACTED QS: " << _parsedHttpRequest["queryString"] << std::endl;
+		//std::cout << "CORRECTED URI: " << _parsedHttpRequest["requestURI"] << " - EXTRACTED QS: " << _parsedHttpRequest["queryString"] << std::endl;
 	}
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 		_parsedHttpRequest["requestURI"] = "/index.html";
@@ -115,7 +115,7 @@ int Request::parse(void){
 			return -1;
 		}
 		_requestParsingError = 404; //"Not Found" 
-		std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
+		//std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 		return -1;
 	}
 
@@ -173,7 +173,7 @@ int Request::parse(void){
 		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
 		//std::cout << "----------------------END OF MY BODY\n";
 	//! parse body - which cases ? form ? Uploaded files ?
-	printFullParsedRequest();
+	//printFullParsedRequest();
 	return 0;
 }
 
