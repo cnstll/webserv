@@ -1,4 +1,6 @@
 #include"cgiHandler.hpp"
+#include<exception>
+
 #include"../core/Request.hpp"
 
 int cgiHandler::strlen_list(char **strList) {
@@ -6,6 +8,11 @@ int cgiHandler::strlen_list(char **strList) {
     while (strList[i])
         i++;
     return i;
+}
+
+const char * cgiHandler::internalServerError::what( void ) const throw()
+{
+	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
 }
 
 char **cgiHandler::str_add(std::string str_to_add)
@@ -83,9 +90,10 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 
 void	cgiHandler::_executeScript()
 {
-	execve(_args[0], _args, _environment);
-	perror("aaargh");
-	exit(1);
+	if (execve(_args[0], _args, _environment) < 0)
+	{
+		throw internalServerError();
+	}
 }
 
 void	cgiHandler::handleCGI()
@@ -94,13 +102,13 @@ void	cgiHandler::handleCGI()
 	int fd[2];
 	pipe(fd);
 
+	// throw internalServerError();
 	if (_messageBody != "")
 	{
 		int stdoutDup = dup(STDOUT_FILENO);
 		int stdinDup = dup(STDIN_FILENO);
 	}
 	pid = fork();
-	// std::cerr << "Its alllz good for now. 0" << std::endl;
 	if (!pid)
 	{
 		dup2(_serverSocket, STDOUT_FILENO);
