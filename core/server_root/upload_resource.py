@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import currentDate
 import cgi, os, sys
 #import cgitb;
 #cgitb.enable()
@@ -27,7 +28,7 @@ valid_body = " <!DOCTYPE html>\
   \
   <h1>Success :)</h1>\
   <p> File successfully uploaded ! </p>\
-  <button onclick=\"window.location.href='http://localhost:18000/upload_files.html';\">\
+  <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
   AGAIN!\
   <button onclick=\"window.location.href='http://localhost:18000';\">\
   I WANNA GO HOME\
@@ -39,12 +40,10 @@ valid_body = " <!DOCTYPE html>\
 # Listing server files
 root = "/core/server_root"
 # Accessing form data
+#eprint("ENV: " + str(os.environ))
 form = cgi.FieldStorage()
 # Retrieving filename
 fileitem = form["filename"]
-open("COLOMBAN_TU_ES_CHIANT.txt", 'w')
-#eprint("INFO: " + str(form))
-#eprint("ENV: " + str(os.environ))
 if fileitem.filename:
   # Checking for leading path and striping it
   fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
@@ -52,7 +51,7 @@ if fileitem.filename:
   open("." + root + '/tmp/' + fn, 'wb').write(fileitem.file.read())
   # Response Header and Body sent to stdout
   print("HTTP/1.1 200 OK")
-  print("Date: Mon, 27 Jul 2009 12:28:53 GMT")
+  currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(valid_body)))
@@ -61,9 +60,9 @@ if fileitem.filename:
 else:
   # if no file has been sent, error msg
   print("HTTP/1.1 400 Bad Request")
-  print("Date: Mon, 27 Jul 2009 12:28:53 GMT")
+  currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
-  print
+  print("\n")
   print(error_body)
