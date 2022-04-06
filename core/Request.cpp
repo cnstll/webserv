@@ -79,6 +79,7 @@ int Request::parse(void){
 	std::vector<std::string> methods = {"GET", "POST", "DELETE"};
 	tail = _fullRequest.find(' ', head);
 
+	//check if method is valid {"GET", "POST, "DELETE"}
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
 	int i = 0;
 	while (i < 3){
@@ -90,11 +91,16 @@ int Request::parse(void){
 		_requestParsingError = 405; //"Not implemented"
 		return -1;
 	}
-	//check if method is valid {"GET", "POST, "DELETE"}
 	head = tail + 1;
 	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
-	//std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
+	std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
+	if (queryPos != std::string::npos){
+		std::cout << "\n THERE IS A QUERY IN THIS URI ! \n";
+		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, tail - (queryPos + 1));
+		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
+		std::cout << "CORRECTED URI: " << _parsedHttpRequest["requestURI"] << " - EXTRACTED QS: " << _parsedHttpRequest["queryString"] << std::endl;
+	}
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 		_parsedHttpRequest["requestURI"] = "/index.html";
 	}
@@ -109,6 +115,7 @@ int Request::parse(void){
 			return -1;
 		}
 		_requestParsingError = 404; //"Not Found" 
+		std::cout << "THIS IS YOUR requested URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 		return -1;
 	}
 
@@ -166,6 +173,7 @@ int Request::parse(void){
 		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
 		//std::cout << "----------------------END OF MY BODY\n";
 	//! parse body - which cases ? form ? Uploaded files ?
+	printFullParsedRequest();
 	return 0;
 }
 
@@ -185,11 +193,13 @@ void Request::printFullRequest(void){
 }
 
 void Request::printFullParsedRequest(void){
+	std::cout << "\nBEGINNING OF FULL PARSED REQUEST -----------------\n";
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
 	while (it != _parsedHttpRequest.end()){
 		std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
 		it++;
 	}
+	std::cout << "-----------------------------END FULL PARSED REQUEST\n";
 }
 
 void Request::writeFullRequestToFile(const char *filename){
@@ -249,6 +259,7 @@ std::string Request::_validRequestFields[] = {
 		"method",
 		"httpVersion",
 		"requestURI",
+		"queryString",
 		"Cache-Control",
     "Connection",
     "Date",

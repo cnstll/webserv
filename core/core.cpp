@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 #include <cerrno>
 #include "core.hpp"
@@ -193,7 +194,7 @@ int main(){          // }
         if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0)
         {
           //perror("error while receiving data");
-          std::cout << "\nERRNO AFTER RECV: " << std::strerror(errno);
+          std::cerr << "\nERRNO AFTER RECV: " << std::strerror(errno);
           request.clear();
           break;
         }
@@ -221,6 +222,13 @@ int main(){          // }
             catch (const std::exception &e)
             {
               std::cerr << e.what() << '\n';
+            }
+          }
+          else if (request.getHttpMethod() == "DELETE"){
+            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request.getRequestedUri();
+            if (std::remove(fileToBeDeleted.c_str()) != 0){
+              Response resp(request.getParsedRequest(), 204);
+              resp.sendResponse(events[i].data.fd);
             }
           }
           else
