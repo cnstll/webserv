@@ -12,42 +12,57 @@ def eprint(*args, **kwargs):
 # Response bodies
 error_body = " <!DOCTYPE html>\
 <html>\
+  <head>\
+    <h1>\
+    Error 400 :(\
+    </head>\
+      </h1>\
 <body>\
 \
-<h1>Error 400 :( </h1>\
 <p> Did you send a file ?</p>\
+  <button onclick=\"window.location.href='http://localhost:18000/';\">\
+  Home </button>\
   <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
-  Send again\
+  Send again</button>\
 \
 </body>\
 </html> "
 
 exception_body = " <!DOCTYPE html>\
 <html>\
+  <head>\
+    <h1>\
+    Error 500 :(\
+    </head>\
+      </h1>\
 <body>\
 \
-<h1>Error 500 :( </h1>\
-<p> My bad my bad... </p>\
+<p> Something went wrong :(</p>\
+  <button onclick=\"window.location.href='http://localhost:18000/';\">\
+  Home </button>\
   <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
-  Send again\
+  Send again</button>\
 \
 </body>\
 </html> "
 
 valid_body = " <!DOCTYPE html>\
-  <html>\
-  <body>\
-  \
-  <h1>Success :)</h1>\
-  <p> File successfully uploaded ! </p>\
+ <html>\
+  <head>\
+    <h1>\
+    Success :)\
+    </head>\
+      </h1>\
+<body>\
+\
+<p> File uploaded successfully!</p>\
+  <button onclick=\"window.location.href='http://localhost:18000/';\">\
+  Home </button>\
   <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
-  AGAIN!\
-  <button onclick=\"window.location.href='http://localhost:18000';\">\
-  I WANNA GO HOME\
-  </button>\
-  \
-  </body>\
-  </html> "
+  Send again</button>\
+\
+</body>\
+</html> "
 
 # Listing server files
 root = "/core/server_root"
