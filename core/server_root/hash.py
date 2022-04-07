@@ -25,9 +25,11 @@ error_body = " <!DOCTYPE html>\
 <html>\
 <body>\
 \
-<h1>Error</h1>\
-<p>Please fill in the name and message fields.</p>\
+<h1>Error 400</h1>\
+<p>Please fill in the name and message fields of the form.</p>\
 \
+<button onclick=\"window.location.href='http://localhost:18000/hash.html';\">\
+  Try Again\
 </body>\
 </html> "
 
@@ -38,7 +40,7 @@ valid_body = " <!DOCTYPE html>\
   <h1>HASH</h1>\
   <p> Your message hash is: </p>\
   <p> hash_placeholder </p>\
-  <button onclick=\"window.location.href='http://localhost:18000//hash.html';\">\
+  <button onclick=\"window.location.href='http://localhost:18000/hash.html';\">\
   AGAIN!\
   <button onclick=\"window.location.href='http://localhost:18000';\">\
   I WANNA GO HOME\
@@ -49,7 +51,7 @@ valid_body = " <!DOCTYPE html>\
   \
   </body>\
   </html> "
-eprint("HASH SCRIPT LAUNCHED")
+#eprint("HASH SCRIPT LAUNCHED")
 form = cgi.FieldStorage()
 
 if check_form_fields(form) < 0:
