@@ -141,7 +141,6 @@ void Response::addBody(std::string pathname)
         std::ifstream input_file(pathname.c_str());
         _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
    }
-   const char *str = _Content.c_str();
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
 }
