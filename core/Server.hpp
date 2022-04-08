@@ -7,25 +7,31 @@
 
 class Server
 {
-
 	public:
+		typedef typename std::map<std::string, std::string> configMap; 
 
 		Server();
-		Server( Server const & src );
 		~Server();
 
-		Server &		operator=( Server const & rhs );
-		class Location{
+		void displayServerConfig(std::ostream &o = std::cout) const;
+		configMap getServerConfig(void) const;
+		class Location {
+			Location();
+			~Location();
 			public:
-				std::map<std::string, std::string> parameters;
+				configMap parameters;
 
 		};
+		
 
 	private:
 
+		//Server &		operator=( Server const & rhs );
+		//Server( Server const &src );
+		void initServerConfig(void);
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
-		std::map<std::string, std::string> parameters;
+		configMap config;
 };
 
 std::ostream &			operator<<( std::ostream & o, Server const & i );
