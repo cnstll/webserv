@@ -78,7 +78,7 @@ int Request::parse(void){
 	std::size_t tail = 0;
 	std::vector<std::string> methods = {"GET", "POST", "DELETE"};
 	tail = _fullRequest.find(' ', head);
-
+	// printFullRequest();
 	//check if method is valid {"GET", "POST, "DELETE"}
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
 	std::vector<std::string>::iterator it;
@@ -132,6 +132,9 @@ int Request::parse(void){
 		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
+		//! The following two declarations are (annoyingly) only here for debbuging purposes
+		char *thisField = (char *)field.c_str();
+		char *thisValue = (char*)value.c_str();
 		if (_parsedHttpRequest.count(field) == 1)
 			_parsedHttpRequest[field] = value;
 	}
@@ -183,6 +186,10 @@ void Request::printFullParsedRequest(void){
 		it++;
 	}
 	std::cout << "-----------------------------END FULL PARSED REQUEST\n";
+}
+
+std::string Request::getFullRequest(void){
+	return _fullRequest;
 }
 
 void Request::writeFullRequestToFile(const char *filename){

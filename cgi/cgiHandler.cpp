@@ -90,6 +90,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 
 void	cgiHandler::_executeScript()
 {
+	
 	if (execve(_args[0], _args, _environment) < 0)
 	{
 		throw internalServerError();
@@ -100,14 +101,18 @@ void	cgiHandler::handleCGI()
 {
 	int pid = -1;
 	int fd[2];
-	pipe(fd);
+	int stdoutDup;
+	int stdinDup;
+	
+	if (pipe(fd) < 0)
+		throw internalServerError();
 
 	// throw internalServerError();
-	if (_messageBody != "")
-	{
-		int stdoutDup = dup(STDOUT_FILENO);
-		int stdinDup = dup(STDIN_FILENO);
-	}
+	// if (_messageBody != "")
+	// {
+	// 	stdoutDup = dup(STDOUT_FILENO);
+	// 	stdinDup = dup(STDIN_FILENO);
+	// }
 	pid = fork();
 	if (!pid)
 	{

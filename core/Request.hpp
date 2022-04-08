@@ -38,6 +38,7 @@ class Request
     int getError(void) const;
     std::map<std::string, std::string> &getParsedRequest(void);
     void printFullRequest(void);
+    std::string getFullRequest(void);
     void printFullParsedRequest(void);
     void writeFullRequestToFile(const char *filename);
     void writeStrToFile(const std::string &str, const char *filename);    

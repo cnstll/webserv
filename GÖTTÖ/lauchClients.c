@@ -14,7 +14,7 @@ int main (int argc, char ** argv, char **env)
 		if (!pid)
 		{
 			execve(args[0], args, env);
-			printf("sdfghbjnkml\n");
+			printf("EXECVE FAIL\n");
 			exit (1);
 		}
 	}

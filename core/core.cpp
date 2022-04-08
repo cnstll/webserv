@@ -92,17 +92,64 @@ bool check_error_flags(int event){
   return (true);
 }
 
+int is_request_done(Request *rq, int &contentLength, int &startOfBody)
+{
+  int lengthRecvd = rq->getFullRequest().length() - startOfBody;
+  if (contentLength == lengthRecvd)
+    return (1);
+  return 0;
+}
+
+int parseHeader(Request *rq)
+{
+  int contentLength = 0;
+
+  if (rq->getFullRequest().find("\r\n\r\n") != std::string::npos)
+  {
+    rq->parse();
+    if (rq->getHttpMethod() == "POST")
+      return (1);
+    else
+      return 2;
+  }
+  return 0;
+}
+
 int recv_request(const int &fd, Request *rq){
   int read_bytes;
   char request_buffer[REQUEST_READ_SIZE + 1];
+  static bool headerParsed = 0;
+  int parsed;
+  int contentSize;
+  int startOfBody;
+
   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
-  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0){
+  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
+  {
     rq->append(request_buffer, read_bytes);
-    if ((request_buffer[read_bytes - 1] == '\n' || request_buffer[read_bytes] == 0) && !(read_bytes == REQUEST_READ_SIZE)) 
-      break;
+    if (!headerParsed)
+    {
+      parsed = parseHeader(rq);
+      if (parsed)
+      {
+        if (parsed == 2)
+          return (read_bytes);
+        else
+        {
+          headerParsed = 1;
+          startOfBody = rq->getFullRequest().find("\r\n\r\n") + 4;
+          contentSize = atoi(rq->getParsedRequest()["Content-Length"].c_str());
+        }
+      }
+    }
+    if (is_request_done(rq, contentSize, startOfBody))
+    {
+      headerParsed = 0;
+      return (read_bytes);
+    }
     bzero(&request_buffer, REQUEST_READ_SIZE);
   }
-  return read_bytes;
+  return -1;
 }
 
 void print_events(struct epoll_event *events, int eventful_fds){
@@ -143,8 +190,7 @@ std::string get_extension(std::string uri)
   return (uri);
 }
 
-int main(){          // }
-          // wait(NULL);
+int main(){
 
   int server_fd;
   int count_response = 0;
@@ -175,7 +221,7 @@ int main(){          // }
       {
         check_error_flags(events[i].events);
         check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
-        make_fd_non_blocking(server_fd);
+        make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
         //  printf("Connexion accepted for fd: %d\n", connexion_fd);
       }
@@ -186,12 +232,11 @@ int main(){          // }
         //   request.clear();
         //   break;
         // }
-        if ((recv_bytes = recv_request(events[i].data.fd, &request)) < 0)
+        recv_bytes = recv_request(events[i].data.fd, &request);
+        
+        if (recv_bytes == -1)
         {
-          //perror("error while receiving data");
-          std::cerr << "\nERRNO AFTER RECV: " << std::strerror(errno);
-          request.clear();
-          break;
+          continue;
         }
         if (recv_bytes == 0)
         {
@@ -200,11 +245,10 @@ int main(){          // }
           close(events[i].data.fd);
           break;
         }
+        //! The parsing shouldn't need to take place again here
         if (request.parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
-      //std::cout << "Print parsed request..\n";
-      //request.printFullParsedRequest();
       if (events[i].events & EPOLLOUT) {
         if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
             std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
