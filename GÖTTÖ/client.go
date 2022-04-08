@@ -13,7 +13,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-	"time"
 )
 
 type test_data struct {
@@ -73,8 +72,8 @@ func HandleConnections(c net.Conn, request string) string {
 var wg *sync.WaitGroup
 
 func stressTest() {
-	nbOfConcurrentConnections := 20
-	nbOfRequests := 20
+	nbOfConcurrentConnections := 10
+	nbOfRequests := 100
 	var outb bytes.Buffer
 	server_root := os.Args[1]
 	contentPath := server_root + "/index.html"
@@ -90,8 +89,9 @@ func stressTest() {
 			cmd.Run()
 			if outb.String() != string(content) {
 				fmt.Println(string(content))
-				fmt.Print("\n\nVS\n\n")
+				fmt.Print("VS")
 				fmt.Println(string(outb.String()))
+				break
 			}
 			outb.Reset()
 		}
@@ -138,42 +138,18 @@ func hashMe(filename string) (sum []byte) {
 
 func uploadFiles() {
 
-	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "img.jpeg", "large_video_file.txt", "large_app_image_file.AppImage"}
+	//! the files here are prety small for ease of testing this tester out, they should be replaced with larger files
+	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "img.jpeg", "img.jpeg", "img.jpeg"}
 	OgContentRootPath := "/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"
 	uploadContentPath := "/mnt/nfs/homes/jescully/Documents/webserv/core/server_root/tmp/"
 
 	for _, file := range testFiles {
-
-		cmd := exec.Command("curl", "-F filename=@/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"+file+" http://localhost:18000/upload_resource.py")
+		cmd := exec.Command("curl", "-F", "filename=@/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"+file, "http://localhost:18000/upload_resource.py")
 		cmd.Run()
-		time.Sleep(1 * time.Second)
-
 		OgContent, _ := ioutil.ReadFile(OgContentRootPath + file)
 		UploadedContent, _ := ioutil.ReadFile(uploadContentPath + file)
 		if string(UploadedContent) != string(OgContent) {
-			fmt.Print("\n\nUPLOAD TEST FAIL\n\n")
-			fmt.Print("ON FILE: ")
-			fmt.Print(OgContentRootPath + file + "\n")
-			fmt.Print(UploadedContent)
-		}
-	}
-	fmt.Print("UPLOAD TEST FINISHED\n")
-}
 
-func uploadFiles2() {
-
-	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "img.jpeg", "large_video_file.txt", "large_app_image_file.AppImage"}
-	OgContentRootPath := "/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"
-	uploadContentPath := "/mnt/nfs/homes/jescully/Documents/webserv/core/server_root/tmp/"
-
-	for _, file := range testFiles {
-
-		cmd := exec.Command("curl", "-F filename=@/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"+file+" http://localhost:18000/upload_resource.py")
-		cmd.Run()
-		time.Sleep(10 * time.Second)
-		hashOG := hashMe(OgContentRootPath + file)
-		hashUP := hashMe(uploadContentPath + file)
-		if string(hashOG) != string(hashUP) {
 			fmt.Print("\n\nUPLOAD TEST FAIL\n\n")
 			fmt.Print("ON FILE: ")
 			fmt.Print(OgContentRootPath + file + "\n")
@@ -183,6 +159,10 @@ func uploadFiles2() {
 }
 
 func main() {
-	// stressTest()
-	uploadFiles2()
+	if os.Args[1] != "test" {
+		//	fmt.Print("I am here\n")
+		stressTest()
+	} else {
+		uploadFiles()
+	}
 }

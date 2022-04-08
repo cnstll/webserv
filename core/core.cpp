@@ -17,20 +17,22 @@
 #include "../cgi/cgiHandler.hpp"
 #include <sys/wait.h>
 #include <iostream>
-#define MAX_EVENTS 10000
+#define MAX_EVENTS 1000000
 #define READ_SIZE 30000
-#define REQUEST_READ_SIZE 4096
+#define REQUEST_READ_SIZE 8096
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
 std::string CGI_EXTENSION = ".py";
 
 int server_fd;
 
-void check (int return_value, std::string const &error_msg){
+int check (int return_value, std::string const &error_msg){
   if (return_value < 0){
     std::cerr << error_msg << std::endl;
-    exit(EXIT_FAILURE);
+    // exit(EXIT_FAILURE);
+    return -1;
   }
+  return 1;
 }
 
 int setup_server(int port, int backlog){
@@ -59,8 +61,12 @@ int accept_new_connexion(int server_fd){
   struct sockaddr_in connexion_address;
   int connexion_fd;
 
-  check(connexion_fd = accept(server_fd, (struct sockaddr *) &connexion_address, &addr_in_len), "failed accept");
-  return connexion_fd;
+  if (check(connexion_fd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
+  {
+    return connexion_fd;
+    std::cout << connexion_fd << std::endl;
+  }
+  return -1;
 }
 
 void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action){
@@ -220,18 +226,18 @@ int main(){
       if (events[i].data.fd == server_fd)
       {
         check_error_flags(events[i].events);
-        check((connexion_fd = accept_new_connexion(server_fd)), "accept error");
+        if (!check((connexion_fd = accept_new_connexion(server_fd)), "accept error"))
+          continue;
         make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-        //  printf("Connexion accepted for fd: %d\n", connexion_fd);
       }
       else if (events[i].events & EPOLLIN)
       {
-        // if (check_error_flags(events[i].events) < 0){
-        //   perror("error while receiving data");
-        //   request.clear();
-        //   break;
-        // }
+        if (check_error_flags(events[i].events) < 0){
+          perror("error while receiving data");
+          request.clear();
+          break;
+        }
         recv_bytes = recv_request(events[i].data.fd, &request);
         
         if (recv_bytes == -1)

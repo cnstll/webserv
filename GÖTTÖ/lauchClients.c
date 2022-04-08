@@ -7,8 +7,12 @@
 int main (int argc, char ** argv, char **env)
 {
 	int pid = -1;
-	char *args[5] = {"/usr/bin/go", "run", "client.go", "../core/server_root", NULL};
-	for (int i = 0; i < 10; i++)
+	int status;
+	int wpid;
+	char *args[5] = {"/usr/bin/go", "run", "client.go", "server_root_test", NULL};
+	char *argsForUploadTest[5] = {"/usr/bin/go", "run", "client.go", "test", NULL};
+
+	for (int i = 0; i < 8; i++)
 	{
 		pid = fork();
 		if (!pid)
@@ -18,6 +22,7 @@ int main (int argc, char ** argv, char **env)
 			exit (1);
 		}
 	}
-	wait(NULL);
+	while ((wpid = wait(&status)) > 0);
+	execve(args[0], argsForUploadTest, env);
 	return 0;
 }
