@@ -23,6 +23,7 @@ class Request
 {
 	public:
 		Request();
+		Request(int fd);
 		Request(std::string fullRequest);
 		Request( Request const & src );
 		~Request();
@@ -41,7 +42,10 @@ class Request
     std::string getFullRequest(void);
     void printFullParsedRequest(void);
     void writeFullRequestToFile(const char *filename);
-    void writeStrToFile(const std::string &str, const char *filename);    
+    void writeStrToFile(const std::string &str, const char *filename);
+    //!experimentation
+    void addFdInfo(int fd);
+    int fd;    
 	private:
 	
 		//  general-header = Cache-Control
