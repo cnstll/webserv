@@ -10,7 +10,9 @@
 std::string getErrorContent(int errCode)
 {
     std::map<int, std::string> ErrCodeMap =
-        {{300, "<Html> Multiple Choice </Html>\n"},
+        {{200, "OK"},
+         {201, "<Html> Created </Html>\n"},
+         {300, "<Html> Multiple Choice </Html>\n"},
          {301, "<Html> Moved Permanently </Html>\n"},
          {302, "<Html> Found </Html>\n"},
          {303, "<Html> See Other </Html>\n"},
@@ -54,8 +56,6 @@ std::string getErrorContent(int errCode)
          {510, "<Html> Not Extended </Html>\n"},
          {511, "<Html> Network Authentication Required </Html>\n"}};
 
-
-
     char buf[3];
     sprintf(buf, "%d", errCode);
     std::string errPathname = "." + std::string(ROOT_DIR) + "/" + buf + ".html"; 
@@ -71,7 +71,7 @@ std::string getErrorContent(int errCode)
 std::string Response::codeToReasonPhrase(int statusCode){
     // ! To be modified with a table of code
     (void)statusCode;
-    return "OK";
+    return getErrorContent(statusCode);
 }
 
 Response::Response(int code)
