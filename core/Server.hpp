@@ -4,6 +4,9 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <vector>
+# include <iterator>
+//# include <cstdio>
 
 class Server
 {
@@ -15,12 +18,13 @@ class Server
 
 		void displayServerConfig(std::ostream &o = std::cout) const;
 		configMap getServerConfig(void) const;
+		void parseConfig(const std::string &config);
 		class Location {
-			Location();
-			~Location();
 			public:
-				configMap parameters;
-
+				Location();
+				~Location();
+				configMap locationConfigFields;
+				std::string uriPath;
 		};
 		
 
@@ -29,9 +33,14 @@ class Server
 		//Server &		operator=( Server const & rhs );
 		//Server( Server const &src );
 		void initServerConfig(void);
+		void addLocationBlocConfig(void);
+		std::string findLocationPath(const std::string &line);
+		void parseLocationFields(const std::string& line);
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
-		configMap config;
+		configMap serverConfigFields;
+		std::vector<Location> locationConfigFields;
+		size_t countOfLocationBlocks; 
 };
 
 std::ostream &			operator<<( std::ostream & o, Server const & i );

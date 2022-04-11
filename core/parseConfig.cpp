@@ -142,31 +142,64 @@ size_t countVirtualServers(const std::string &config){
   }
   return counter;
 };
+
+bool checkLocationBloc(const std::string &config, size_t blocStart, size_t blocEnd){
+  size_t startBrace = config.substr( blocStart, blocEnd - blocStart).find("{");
+  //Location is not enclosed between {} or additionnal '{'
+  if ( startBrace == std::string::npos || startBrace != config.substr( blocStart, blocEnd - blocStart).rfind("{"))
+    return false;
+  else if (config.substr( blocStart, blocEnd - blocStart).find("}") != std::string::npos) //additionnal '}' in a location bloc
+    return false;
+  else
+    return true;
+}
+
 size_t findEndOfBloc(const std::string &config, size_t serverBlocStart){
   size_t braceFound = 0;
   size_t hasLocation = 0;
   size_t endOfBloc = 0;
-  braceFound = config.find("}", serverBlocStart); // What if no closing brace?
+  const std::string locationToken = "location";
+  size_t checkStart = serverBlocStart;
   while (1){
-    hasLocation = config.find("location", serverBlocStart, braceFound - serverBlocStart);
-    if (hasLocation == std::string::npos){
+    braceFound = config.find("}", checkStart); // go to next closing brace
+    hasLocation = config.substr(checkStart, braceFound - checkStart).find(locationToken);
+    hasLocation += checkStart; // To make locationToken absolut
+    //std::cout << "BF: " << braceFound << " - CS: " << checkStart << " - HL: " << hasLocation << std::endl;
+    if (hasLocation == std::string::npos || braceFound - checkStart <= 1){
+      if (config.substr(serverBlocStart, braceFound - serverBlocStart).find("server") != std::string::npos)
+        printErrorAndExit("ERROR: Wrong synthaxe for server bloc\n");
       endOfBloc = braceFound;
       break;
     }
-    else
-    {
-      if (config.find("{", hasLocation, braceFound) == std::string::npos) //Location is not enclosed between {}
+    else if (checkLocationBloc(config, hasLocation, braceFound) == false) 
         printErrorAndExit("ERROR: Wrong synthaxe for location bloc\n");
-      serverBlocStart = braceFound + 1;
-      braceFound = config.find("}", braceFound + 1); // go to next closing brace
-    }
+    else
+      checkStart = braceFound + 1;
   }
   return endOfBloc;
 }
 
-void parseServerBloc(const std::string &config, std::vector<Server> *Servers){
-  size_t endOfBloc = findEndOfBloc(config, 1);
-  std::cout << "EOB: " << endOfBloc << " Line: " << getLineFromPosition(config, endOfBloc);
+    // std::cout << "IN: " << config.substr(startOfBloc) << std::endl;
+    // std::cout <<  "EOB: " << endOfBloc << " Line: " << getLineFromPosition(config, endOfBloc) << std::endl;
+    // std::cout << "endOFBLOC: " << endOfBloc << std::endl;
+    // std::cout << "StartOFBLOC: " << startOfBloc << std::endl;
+
+void parseServerBloc(const std::string &config, std::vector<Server> servers, size_t countOfServers){
+  size_t startOfBloc = 0;
+  size_t endOfBloc;
+  const std::string serverToken = "server {";
+  size_t serverNum = 0;
+  while (serverNum < countOfServers){
+    startOfBloc += config.substr(startOfBloc).find(serverToken);
+    if (startOfBloc == std::string::npos)
+      printErrorAndExit("ERROR: Wrong synthaxe for server bloc\n");
+    endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length()); // search for end of server bloc after server token
+    servers.at(serverNum).parseConfig(std::string(config, startOfBloc, endOfBloc - startOfBloc + 1));
+    startOfBloc = endOfBloc + 1;
+    ++serverNum;
+  }
+  std::cout << servers[0];
+
 }
 
 int main (int argc, char *argv[]){
@@ -187,5 +220,5 @@ int main (int argc, char *argv[]){
   std::cout << "NB OF SERVER: " << countOfServers << std::endl;
   std::vector<Server> bunchOfServers;
   bunchOfServers.assign(countOfServers, Server());
-  parseServerBloc(config, &bunchOfServers);
+  parseServerBloc(config, bunchOfServers, countOfServers);
 }
