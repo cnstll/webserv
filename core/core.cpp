@@ -22,6 +22,7 @@
 #define REQUEST_READ_SIZE 8096
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
+#define TIMEOUT 100
 std::string CGI_EXTENSION = ".py";
 
 int server_fd;
@@ -101,8 +102,15 @@ bool check_error_flags(int event){
 int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 {
   int lengthRecvd = rq->getFullRequest().length() - startOfBody;
+  std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
+  std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
   if (contentLength == lengthRecvd)
     return (1);
+  else if (rq->getFullRequest().find(delimiter) != std::string::npos)
+  {
+    std::cout << delimiter << std::endl;
+    return (1);
+  }
   return 0;
 }
 
@@ -218,8 +226,8 @@ int main(){
 
   while (1)
   {
-    check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)), "epoll_wait error");
-    // print_events(events, count_of_fd_actualized);
+    int tmpCountFd = count_of_fd_actualized;
+    check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
       recv_bytes = 0;
@@ -233,13 +241,13 @@ int main(){
       }
       else if (events[i].events & EPOLLIN)
       {
+        request.addFdInfo(events[i].data.fd);
         if (check_error_flags(events[i].events) < 0){
           perror("error while receiving data");
           request.clear();
           break;
         }
         recv_bytes = recv_request(events[i].data.fd, &request);
-        
         if (recv_bytes == -1)
         {
           continue;
@@ -251,7 +259,7 @@ int main(){
           close(events[i].data.fd);
           break;
         }
-        //! The parsing shouldn't need to take place again here
+        //! The parsing shouldn't need to take place again here UPDATE it may be needed to "parse" the body.
         if (request.parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
@@ -286,8 +294,17 @@ int main(){
             resp.sendResponse(events[i].data.fd);
           }
         }
+        //! if requests exists, we clear it and send a timeout?
         request.clear();
       }
+    }
+    if (request.getFullRequest() != "" && !count_of_fd_actualized)
+    {
+      Response resp(request.getParsedRequest(), 408);
+      resp.addBody(request.getPathToFile());
+      resp.sendResponse(request.fd);
+      request.clear();
+      close(request.fd);
     }
   }
   close(server_fd);

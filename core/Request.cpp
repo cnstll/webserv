@@ -172,6 +172,11 @@ void Request::append(char *str, std::size_t readBytes){
 	_fullRequest.append(str, readBytes);
 }
 
+void Request::addFdInfo(int fd){
+	this->fd = fd;
+}
+
+
 void Request::printFullRequest(void){
 	std::cout << "\nBEGINNING OF FULL REQUEST -----------------\n";
 	std::cout << _fullRequest << std::endl;
