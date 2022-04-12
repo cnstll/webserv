@@ -22,7 +22,7 @@
 #define REQUEST_READ_SIZE 16000
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
-#define TIMEOUT 1000
+#define TIMEOUT 100000
 std::string CGI_EXTENSION = ".py";
 
 int server_fd;
@@ -99,18 +99,64 @@ bool check_error_flags(int event){
   return (true);
 }
 
+//get the first length, use it to read the second length, add them together
+
+int unchunckedRequest(Request *rq, int startOfBody) 
+{
+  std::size_t head = 0;
+	std::size_t tail = 0;
+  std::string finalBody;
+  std::string ogBody;
+  std::string sizeStr;
+  size_t chunckSize = 1;
+  size_t pos;
+
+  ogBody = rq->getFullRequest().substr(startOfBody);
+  // std::cout << ogBody << std::endl;
+
+  while (chunckSize)
+  {
+    head = ogBody.find("\r\n", tail);
+    chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
+    if (!chunckSize)
+    {
+      std::cout << finalBody << std::endl;
+      return 0;
+    }
+    head += 2;
+    finalBody.append(ogBody, head, chunckSize);
+    tail = head + chunckSize + 2;
+  }
+  std::cout << finalBody << std::endl;
+
+  return 0;
+}
+
 int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 {
+  if (rq->getParsedRequest()["Content-Length"] == "")
+  {
+    
+    if (rq->getFullRequest().find("\r\n0\r\n"))
+    {
+      unchunckedRequest(rq, startOfBody);
+      return 1;
+    }
+    else
+      return 0;
+  }
+
   int lengthRecvd = rq->getFullRequest().length() - startOfBody;
-  std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
-  std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
+  // std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
+  // std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
   if (contentLength == lengthRecvd)
     return (1);
-  else if (rq->getFullRequest().find(delimiter) != std::string::npos)
-  {
-    std::cout << delimiter << std::endl;
-    return (1);
-  }
+  
+  // else if (rq->getFullRequest().find(delimiter) != std::string::npos)
+  // {
+  //   std::cout << delimiter << std::endl;
+  //   return (1);
+  // }
   return 0;
 }
 
@@ -141,6 +187,7 @@ int recv_request(const int &fd, Request *rq){
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
     rq->append(request_buffer, read_bytes);
+    // std::cout << request_buffer << std::endl;
     if (!headerParsed)
     {
       parsed = parseHeader(rq);
@@ -229,7 +276,6 @@ int main(){
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      std::cout << events[i].data.fd << std::endl; 
       recv_bytes = 0;
       if (events[i].data.fd == server_fd)
       {
@@ -242,6 +288,7 @@ int main(){
       }
       else if (events[i].events & EPOLLIN)
       {
+        std::cout << "Events Happening on fd: " << events[i].data.fd << std::endl;
         request.addFdInfo(events[i].data.fd);
         if (check_error_flags(events[i].events) < 0){
           perror("error while receiving data");
