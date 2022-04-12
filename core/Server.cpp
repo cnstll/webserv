@@ -137,17 +137,20 @@ void Server::checkInstructionEOL(const std::string &line, bool hasLocationLineTo
 
 void Server::checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken){
 	//std::cerr << "ENTERED CHECK WITHESPACES\n";
-	const std::string forbiddenWhiteSpaces = "\t\r\v\f";
+	const std::string forbiddenWhiteSpaces = "\r\v\f\n";
 	size_t startOfToken =0, endOfToken =0;
 	size_t eol = (hasLocationLineToken ? line.find("{") : line.find(";"));
-	if (line.find_first_of(forbiddenWhiteSpaces) != std::string::npos)
+	if (line.find_first_of(forbiddenWhiteSpaces) != std::string::npos) // check for forbidden 
+		printErrorAndExit("ERROR: unauthorized whitespaces found - FaultyLine: \'" + line + "\'\n");
+	startOfToken = line.find_first_not_of(" ", endOfToken + 1);
+	if (line.find_first_of(forbiddenWhiteSpaces + "\t", startOfToken) != std::string::npos) // check for forbidden whitespaces + \t after first token
 		printErrorAndExit("ERROR: unauthorized whitespaces found - FaultyLine: \'" + line + "\'\n");
 	while (startOfToken < eol && endOfToken < eol){
-		startOfToken = line.find_first_not_of(" ", endOfToken + 1);
-		std::cerr << "EOL: " << eol << " START: " << startOfToken << " END: " << endOfToken << std::endl;
+		//std::cerr << "EOL: " << eol << " START: " << startOfToken << " END: " << endOfToken << std::endl;
 		if (endOfToken != 0 && startOfToken - endOfToken > 2)
 			printErrorAndExit("ERROR: too many spaces within instruction - FaultyLine: \'" + line + "\'\n");
 		endOfToken = line.find(" ", startOfToken) - 1;
+		startOfToken = line.find_first_not_of(" ", endOfToken + 1);
 	}
 }
 
