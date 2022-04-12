@@ -121,7 +121,7 @@ func checkSomeStatic(m model) tea.Cmd {
 				ret, err := c.Get(m.url)
 
 				if err != nil {
-					return statusMsg{1, "FUCK"}
+					return statusMsg{1, "OOPS something went wrong #500 internat server tester error"}
 				}
 				defer ret.Body.Close()
 				buf := new(bytes.Buffer)
@@ -143,6 +143,45 @@ func checkSomeStatic(m model) tea.Cmd {
 		return statusMsg{1, m.statuses[1]}
 	}
 }
+
+// func checkSomeStatic(m model) tea.Cmd {
+
+// 	contentPath := "./server_root_test/index.html"
+// 	content, _ := ioutil.ReadFile(contentPath)
+// 	fileRet, _ := os.Create("./log/ServerResponse.txt")
+// 	file, _ := os.Create("./log/OriginalFile.txt")
+// 	writer := bufio.NewWriter(file)
+// 	writerRet := bufio.NewWriter(fileRet)
+
+// 	return func() tea.Msg {
+// 		if m.toBeTested[1] {
+// 			if m.url != "" {
+// 				// c := &http.Client{Timeout: 5 * time.Second}
+// 				resp, err := http.PostForm(m.url+"/hash.html", url.Values{"key": {"Value"}, "id": {"123"}})
+
+// 				if err != nil {
+// 					return statusMsg{1, "OOPS something went wrong #500 internat server tester error"}
+// 				}
+// 				defer ret.Body.Close()
+// 				buf := new(bytes.Buffer)
+// 				buf.ReadFrom(ret.Body)
+// 				newStr := buf.String()
+// 				if newStr == string(content) {
+// 					return statusMsg{1, "PASS"}
+// 				} else {
+// 					writer.WriteString(string(content))
+// 					writerRet.WriteString(newStr)
+// 					writer.Flush()
+// 					writerRet.Flush()
+// 					return statusMsg{1, "FAIL"}
+// 				}
+// 			} else {
+// 				return statusMsg{1, "FAIL"}
+// 			}
+// 		}
+// 		return statusMsg{1, m.statuses[1]}
+// 	}
+// }
 
 func uploadFiles(m model) tea.Cmd {
 
@@ -228,7 +267,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) selectView() string {
 	s := ""
-	s += "What should we test today?\n\n"
+	// prompt := "WHat Should we test?"
+	s += fmt.Sprintf("What should we test today?\n\n")
 
 	for i, choice := range m.choices {
 		cursor := " "
@@ -252,12 +292,11 @@ func (m model) selectView() string {
 }
 
 func (m model) View() string {
-	s := ""
+	// s := ""
 	if m.typing {
 		return fmt.Sprintf("Enter Server URL:\n%s", m.textInput.View())
 	}
-	s = m.selectView()
-	return s
+	return fmt.Sprintf(m.selectView())
 }
 
 func main() {
