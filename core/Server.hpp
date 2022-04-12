@@ -1,6 +1,6 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
-
+# include "utils.hpp"
 # include <iostream>
 # include <string>
 # include <map>
@@ -36,6 +36,11 @@ class Server
 		void addLocationBlocConfig(void);
 		std::string findLocationPath(const std::string &line);
 		void parseLocationFields(const std::string& line);
+		void checkInstructionEOL(const std::string &line, bool hasLocationLineToken);
+		bool lineHasLocationToken(const std::string &line);
+		void checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken);
+		void parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfline);
+		void parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine);
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
 		configMap serverConfigFields;

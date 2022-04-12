@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "utils.hpp"
 #include <map>
 #include <vector>
 #include <iterator>
@@ -7,11 +8,6 @@
 #include <cstring>
 #include <fstream>
 #include <string>
-
-void printErrorAndExit(const std::string &errorMessage){
-    std::cerr << errorMessage;
-    exit(EXIT_FAILURE);
-}
 
 size_t countChar(const std::string &str, char c){
   size_t counter = 0;
@@ -22,21 +18,7 @@ size_t countChar(const std::string &str, char c){
   return counter;
 }
 
-size_t getLineFromPosition(const std::string &str, size_t pos){
-  size_t lineNum = 0, tail = 0, head = 0;
-
-  while (tail != std::string::npos){
-    tail = str.find("\n", head);
-    ++lineNum;
-    if (pos < tail)
-      break;
-    head = tail + 1;
-  }
-  return lineNum;
-}
-
 std::string configToString(char *filepath){
-
   std::ifstream configFile;
   std::string line;
   std::string config;
@@ -53,81 +35,6 @@ std::string configToString(char *filepath){
   return config;
 }
 
-// void checkMinimalConfigRequirements(const std::string &config){
-//   size_t found = 0;
-//   // Verify that at least 1 http block exists and is unique
-//   found = config.find("http {");
-//   if (found == std::string::npos || found != config.rfind("http {"))
-//     printErrorAndExit("ERROR: configuration does not meet minimal requirements\n");
-//   // Verify that at least 1 server block exists
-//   found = config.find("server {");
-//   if (found == std::string::npos)
-//     printErrorAndExit("ERROR: configuration does not meet minimal requirements\n");
-// }
-
-// void checkConfigurationSynthax(const std::string &config){
-//   size_t head = 0, tail = 0;
-//   size_t counter = 0;
-//   char buf[20];
-
-//   //Verify that open braces get closing one
-//   counter = countChar(config, '{');
-//   if (!counter || counter != countChar(config, '}'))
-//     printErrorAndExit("ERROR: Bad configuration synthax\n");
-//   //That each line is either empty, begins with spaces and hashtag or are tokens separated with space and ending with ';' or are block opening/closing
-//   while (1){
-//     tail = config.find("\n", head);
-//     if (tail == std::string::npos)
-//       break;
-//     if (tail - head == 0 || config.find_first_of("{};", tail - 1, 1) != std::string::npos)
-//       head = tail + 1;
-//     else {
-//       std::memset(buf, 0, 20);
-//       sprintf(buf, "%zu", getLineFromPosition(config, tail - 1));
-//       printErrorAndExit("ERROR: Bad configuration synthax at line " + std::string(buf) + " with char \'" + config.at(tail - 1) + "\'\n");
-//     }
-//     head = tail + 1;
-//   }
-// }
-// std::map<std::string, std::string> parseHttpBloc(const std::string &config){
-//   std::map<std::string, std::string> httpConfig;
-//   std::string validHttpFields[] = {"client_max_body_size", "index", ""};
-//   int i = 0;
-// 	//fill map with all possible allowed fields in http bloc
-// 	while (validHttpFields[i] != ""){
-// 		httpConfig[validHttpFields[i]] = std::string();
-//     std::cout << "Field: " << validHttpFields[i] << std::endl;
-// 		i++;
-// 	}
-//   std::map<std::string, std::string>::iterator it;
-
-//   size_t startOfLine = 0, endOfLine = 0, endOfHttpBloc = 0;
-//   size_t head = 0; //tail = 0;
-//   const std::string httpBlocInit = "http {";
-//   startOfLine = config.find(httpBlocInit, 0);
-//   startOfLine += httpBlocInit.length() + 1;
-//   endOfHttpBloc = config.find("}", startOfLine);
-//   endOfLine = config.find("\n", startOfLine);
-//   //std::cout << "FOUND: \'" << config[head] << "\'"<< std::endl;
-//   while ( startOfLine < endOfHttpBloc){
-//     std::cout << "STARTLINE: " << startOfLine << " ENDOFLINE: " << endOfLine << std::endl;
-//     it = httpConfig.begin();
-//     while ((!head || head == std::string::npos) && it != httpConfig.end()){
-//       head = config.find(it->first, startOfLine);
-//       ++it;
-//     }
-//     if (it == httpConfig.end())
-//       printErrorAndExit("ERROR: Unknown configuration parameter\n");
-//     else if (it->second != "")
-//       printErrorAndExit("ERROR: Repeating configuration parameter\n");
-//     else
-//       it->second = std::string(config, it->first.length());
-//     std::cout << "PARAMETER FOUND: " << it->first << " VALUE: " << it->second << std::endl;
-//     startOfLine = endOfLine + 1;
-//     endOfLine = config.find("\n", startOfLine);
-//   }
-//   return httpConfig;
-// }
 size_t countVirtualServers(const std::string &config){
   size_t counter = 0;
   size_t found = 0;
@@ -146,9 +53,9 @@ size_t countVirtualServers(const std::string &config){
 bool checkLocationBloc(const std::string &config, size_t blocStart, size_t blocEnd){
   size_t startBrace = config.substr( blocStart, blocEnd - blocStart).find("{");
   //Location is not enclosed between {} or additionnal '{'
-  if ( startBrace == std::string::npos || startBrace != config.substr( blocStart, blocEnd - blocStart).rfind("{"))
+  if (startBrace == std::string::npos || startBrace != config.substr( blocStart, blocEnd - blocStart).rfind("{")) // additionnal "{" in a location bloc
     return false;
-  else if (config.substr( blocStart, blocEnd - blocStart).find("}") != std::string::npos) //additionnal '}' in a location bloc
+  else if (config.substr(blocStart, blocEnd - blocStart).find("}") != std::string::npos) //additionnal '}' in a location bloc
     return false;
   else
     return true;
@@ -189,6 +96,7 @@ void parseServerBloc(const std::string &config, std::vector<Server> servers, siz
   size_t endOfBloc;
   const std::string serverToken = "server {";
   size_t serverNum = 0;
+  std::cerr << "ENTERED PARSE SERVER BLOC\n";
   while (serverNum < countOfServers){
     startOfBloc += config.substr(startOfBloc).find(serverToken);
     if (startOfBloc == std::string::npos)
@@ -196,10 +104,9 @@ void parseServerBloc(const std::string &config, std::vector<Server> servers, siz
     endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length()); // search for end of server bloc after server token
     servers.at(serverNum).parseConfig(std::string(config, startOfBloc, endOfBloc - startOfBloc + 1));
     startOfBloc = endOfBloc + 1;
+    std::cout << servers[serverNum];
     ++serverNum;
   }
-  std::cout << servers[0];
-
 }
 
 int main (int argc, char *argv[]){

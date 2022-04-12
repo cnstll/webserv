@@ -112,6 +112,7 @@ std::string Server::findLocationPath(const std::string &line){
 }
 
 void Server::parseLocationFields(const std::string& line){
+	//std::cerr << "ENTERED PARSED LOCATION FIELDS\n";
 	configMap::iterator it;
 	size_t matchField;
 	it =  locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.begin();
@@ -119,11 +120,6 @@ void Server::parseLocationFields(const std::string& line){
 		matchField = line.find(it->first);
 		if (matchField != std::string::npos){
 			matchField += it->first.length();
-			if (line[matchField] != ' '){
-				std::cout << "CHAR: " << line[matchField] << std::endl;
-				std::cerr << "ERROR: server fields should be separated by 1 whitespace\n";
-				exit(EXIT_FAILURE);
-			}
 			it->second = std::string(line, matchField + 1,  line.length() - (matchField + 2));
 			//std::cout << "FIELD: " << it->first << " VALUE: " << it->second << std::endl;
 			break;
@@ -132,57 +128,104 @@ void Server::parseLocationFields(const std::string& line){
 	}
 }
 
-void Server::parseConfig(const std::string &bloc){
-	size_t startOfLine, endOfLine, endOfBloc;
-	size_t matchField;
-	size_t foundBrace;
-	startOfLine = endOfLine = 0;
-	std::string line;
-	const std::string locationToken = "location";
-	endOfBloc = bloc.length();
-	//std::cout << "IN PARSING: \n" << bloc << std::endl;
-	configMap::iterator it;
-	while (endOfLine < endOfBloc){
+void Server::checkInstructionEOL(const std::string &line, bool hasLocationLineToken){
+	size_t eol = (hasLocationLineToken ? line.find("{") : line.find(";"));
+	if (line.substr(eol + 1).find_first_not_of("\n") != std::string::npos){
+		printErrorAndExit("ERROR: wrong synthax for eol - FaultyLine: \'" + line + "\'\n");
+	}
+}
+
+void Server::checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken){
+	//std::cerr << "ENTERED CHECK WITHESPACES\n";
+	const std::string forbiddenWhiteSpaces = "\t\r\v\f";
+	size_t startOfToken =0, endOfToken =0;
+	size_t eol = (hasLocationLineToken ? line.find("{") : line.find(";"));
+	if (line.find_first_of(forbiddenWhiteSpaces) != std::string::npos)
+		printErrorAndExit("ERROR: unauthorized whitespaces found - FaultyLine: \'" + line + "\'\n");
+	while (startOfToken < eol && endOfToken < eol){
+		startOfToken = line.find_first_not_of(" ", endOfToken + 1);
+		std::cerr << "EOL: " << eol << " START: " << startOfToken << " END: " << endOfToken << std::endl;
+		if (endOfToken != 0 && startOfToken - endOfToken > 2)
+			printErrorAndExit("ERROR: too many spaces within instruction - FaultyLine: \'" + line + "\'\n");
+		endOfToken = line.find(" ", startOfToken) - 1;
+	}
+}
+
+bool Server::lineHasLocationToken(const std::string &line){
+	std::string locationToken = "location";
+	if (line.find(locationToken) != std::string::npos)
+		return true;
+	else
+		return false;
+}
+
+void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
+	addLocationBlocConfig();
+	locationConfigFields[countOfLocationBlocks - 1].uriPath = findLocationPath(line);
+	// std::cout << "LOCATION_PATH: " << locationConfigFields[countOfLocationBlocks - 1].uriPath << std::endl;
+	size_t endOfLocationBloc = bloc.find("}", endOfLine + 1);
+	//std::cerr << "ENTERED PARSELOCATIONBLOC\n";
+	while (1)
+	{
 		startOfLine = bloc.find("\n", startOfLine) + 1;
 		endOfLine = bloc.find("\n", startOfLine);
-		it = serverConfigFields.begin();
+		if (endOfLine >= endOfLocationBloc)
+			break;
 		line = bloc.substr(startOfLine, endOfLine - startOfLine);
-		if (line.find(locationToken) != std::string::npos){
-			addLocationBlocConfig();
-			locationConfigFields[countOfLocationBlocks - 1].uriPath = findLocationPath(line);
-			//std::cout << "LOCATION_PATH: " << locationConfigFields[countOfLocationBlocks - 1].uriPath << std::endl;
-			size_t endOfLocationBloc = bloc.find("}", endOfLine + 1);
-			while (1){
-				startOfLine = bloc.find("\n", startOfLine) + 1;
-				endOfLine = bloc.find("\n", startOfLine);
-				if (endOfLine >= endOfLocationBloc)
-					break;
-				line = bloc.substr(startOfLine, endOfLine - startOfLine);
-				if (line[line.length() - 1] != ';'){
-					std::cerr << "ERROR: expected ';' at end of line\n";
-					std::cerr << "CHAR: " << line[line.length() - 1] << std::endl;
-					std::cerr << "LINE: " << line << std::endl;
-					exit(EXIT_FAILURE);
-				}
-				parseLocationFields(line);
-			}
+				// std::cerr << "LINE LENGTH: " << line.length() << std::endl;
+		// std::cerr << "LINE CHECKED: " << line << std::endl;
+		// std::cerr << "FIND RET FOR '{': " << line.find("{") << std::endl;
+		// std::cerr << "FIND RET FOR ';': " << line.find(";") << std::endl;
+		// std::cerr << "HAS LOCATION RET: " << lineHasLocationToken(line) << std::endl;
+		checkInstructionEOL(line, false);
+		checkWhitespacesInInstructionLine(line, false);
+		parseLocationFields(line);
+	}
+}
 
+void Server::parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
+	size_t matchField;
+	configMap::iterator it;
+	it = serverConfigFields.begin();
+	//std::cerr << "ENTERED Main INSTRUCTION PARSING\n";
+	while (it != serverConfigFields.end()){
+		matchField = bloc.substr(startOfLine, endOfLine - startOfLine).find(it->first);
+		if (matchField != std::string::npos){
+			matchField += it->first.length();
+			it->second = std::string(bloc, startOfLine + matchField + 1, endOfLine - (startOfLine + matchField + 2));
+			break;
+		}
+		++it;
+	}
+}
+
+void Server::parseConfig(const std::string &bloc){
+	size_t startOfLine, endOfLine, endOfBloc;
+	std::string line;
+	std::string lineNumber;
+	startOfLine = endOfLine = 0;
+	endOfBloc = bloc.length();
+	while (endOfLine <= endOfBloc){
+		startOfLine = bloc.find("\n", startOfLine) + 1;
+		endOfLine = bloc.find("\n", startOfLine);
+		if (endOfLine == std::string::npos)
+			break;
+		line = bloc.substr(startOfLine, endOfLine - startOfLine);
+		// std::cerr << "LINE LENGTH: " << line.length() << std::endl;
+		// std::cerr << "LINE CHECKED: " << line << std::endl;
+		// std::cerr << "FIND RET FOR '{': " << line.find("{") << std::endl;
+		// std::cerr << "FIND RET FOR ';': " << line.find(";") << std::endl;
+		// std::cerr << "EOB: " << endOfBloc << " SOL: " << startOfLine << " EOL: " << endOfLine << std::endl;
+		// std::cerr << "CHAR EOB: " << bloc[endOfBloc] << " SOL: " << bloc[startOfLine] << " EOL: " << endOfLine << std::endl;
+		// std::cerr << "HAS LOCATION RET: " << lineHasLocationToken(line) << std::endl;
+		if (line.length() == 0)
+			continue;
+		checkWhitespacesInInstructionLine(line, lineHasLocationToken(line));
+		checkInstructionEOL(line, lineHasLocationToken(line));
+		if (lineHasLocationToken(line)){
+			parseLocationBloc(bloc, line, startOfLine, endOfLine);
 		} else {
-			while (it != serverConfigFields.end()){
-				matchField = bloc.substr(startOfLine, endOfLine - startOfLine).find(it->first);
-				if (matchField != std::string::npos){
-					matchField += it->first.length();
-					if (bloc[startOfLine + matchField] != ' '){
-						std::cout << "CHAR: " << bloc[startOfLine + matchField] << std::endl;
-						std::cerr << "ERROR: server fields should be separated by 1 whitespace\n";
-						exit(EXIT_FAILURE);
-					}
-					it->second = std::string(bloc, startOfLine + matchField + 1, endOfLine - (startOfLine + matchField + 2));
-					//std::cout << "FIELD: " << it->first << " VALUE: " << it->second << std::endl;
-					break;
-				}
-				++it;
-			}
+			parseMainInstructionsFields(bloc, line, startOfLine, endOfLine);
 		}
 	}
 };
