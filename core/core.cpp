@@ -19,10 +19,10 @@
 #include <iostream>
 #define MAX_EVENTS 1000000
 #define READ_SIZE 30000
-#define REQUEST_READ_SIZE 8096
+#define REQUEST_READ_SIZE 16000
 #define SERVER_PORT 18000
 #define MAX_QUEUE 10000
-#define TIMEOUT 100
+#define TIMEOUT 1000
 std::string CGI_EXTENSION = ".py";
 
 int server_fd;
@@ -188,7 +188,6 @@ void print_events(struct epoll_event *events, int eventful_fds){
       printf("EPOLlPRI\n");    
     if (events[i].events & EPOLLWAKEUP)
       printf("EPOLLWAKEUP\n");    
-    //printf("something else happened\n");
     printf("\n\n");
   }
 }
@@ -230,6 +229,7 @@ int main(){
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
+      std::cout << events[i].data.fd << std::endl; 
       recv_bytes = 0;
       if (events[i].data.fd == server_fd)
       {
@@ -238,6 +238,7 @@ int main(){
           continue;
         make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
+
       }
       else if (events[i].events & EPOLLIN)
       {
@@ -294,7 +295,8 @@ int main(){
             resp.sendResponse(events[i].data.fd);
           }
         }
-        //! if requests exists, we clear it and send a timeout?
+        if (request.getParsedRequest()["Connection"] != "keep-alive")
+          close(events[i].data.fd);
         request.clear();
       }
     }
