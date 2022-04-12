@@ -51,7 +51,8 @@ size_t countVirtualServers(const std::string &config){
 };
 
 bool checkLocationBloc(const std::string &config, size_t blocStart, size_t blocEnd){
-  size_t startBrace = config.substr( blocStart, blocEnd - blocStart).find("{");
+  size_t startBrace = config.substr(blocStart, blocEnd - blocStart).find("{");
+  // std::cerr << "SB: " << startBrace << " L: " << config.substr(blocStart, blocEnd - blocStart) << std::endl;
   //Location is not enclosed between {} or additionnal '{'
   if (startBrace == std::string::npos || startBrace != config.substr( blocStart, blocEnd - blocStart).rfind("{")) // additionnal "{" in a location bloc
     return false;
@@ -70,15 +71,16 @@ size_t findEndOfBloc(const std::string &config, size_t serverBlocStart){
   while (1){
     braceFound = config.find("}", checkStart); // go to next closing brace
     hasLocation = config.substr(checkStart, braceFound - checkStart).find(locationToken);
-    hasLocation += checkStart; // To make locationToken absolut
-    //std::cout << "BF: " << braceFound << " - CS: " << checkStart << " - HL: " << hasLocation << std::endl;
-    if (hasLocation == std::string::npos || braceFound - checkStart <= 1){
+    // std::cerr << "BEFORE BF: " << braceFound << " - CS: " << checkStart << " - HL: " << hasLocation << std::endl;
+    // std::cerr << "BF: " << braceFound << " - CS: " << checkStart << " - HL: " << hasLocation << std::endl;
+    if (hasLocation == std::string::npos){
       if (config.substr(serverBlocStart, braceFound - serverBlocStart).find("server") != std::string::npos)
         printErrorAndExit("ERROR: Wrong synthaxe for server bloc\n");
       endOfBloc = braceFound;
       break;
     }
-    else if (checkLocationBloc(config, hasLocation, braceFound) == false) 
+    hasLocation += checkStart; // To make locationToken absolut
+    if (checkLocationBloc(config, hasLocation, braceFound) == false) 
         printErrorAndExit("ERROR: Wrong synthaxe for location bloc\n");
     else
       checkStart = braceFound + 1;

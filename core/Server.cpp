@@ -110,7 +110,7 @@ std::string Server::findLocationPath(const std::string &line){
 	locationPath = line.substr(startOfPath, c - startOfPath);
 	return locationPath;
 }
-
+// TODO: Check that field exist asa valid field | Check that field is not already saved to the map
 void Server::parseLocationFields(const std::string& line){
 	//std::cerr << "ENTERED PARSED LOCATION FIELDS\n";
 	configMap::iterator it;
@@ -137,7 +137,7 @@ void Server::checkInstructionEOL(const std::string &line, bool hasLocationLineTo
 
 void Server::checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken){
 	//std::cerr << "ENTERED CHECK WITHESPACES\n";
-	const std::string forbiddenWhiteSpaces = "\r\v\f\n";
+	const std::string forbiddenWhiteSpaces = "\r\v\f";
 	size_t startOfToken =0, endOfToken =0;
 	size_t eol = (hasLocationLineToken ? line.find("{") : line.find(";"));
 	if (line.find_first_of(forbiddenWhiteSpaces) != std::string::npos) // check for forbidden 
