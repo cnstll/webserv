@@ -43,6 +43,8 @@ class Request
     void printFullParsedRequest(void);
     void writeFullRequestToFile(const char *filename);
     void writeStrToFile(const std::string &str, const char *filename);
+    std::string unchunckedRequest(int startOfBody);
+
     //!experimentation
     void addFdInfo(int fd);
     int fd;    

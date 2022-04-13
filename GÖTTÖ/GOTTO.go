@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -145,20 +146,17 @@ func checkSomeStatic(m model) tea.Cmd {
 }
 
 // func checkSomeStatic(m model) tea.Cmd {
-
 // 	contentPath := "./server_root_test/index.html"
 // 	content, _ := ioutil.ReadFile(contentPath)
 // 	fileRet, _ := os.Create("./log/ServerResponse.txt")
 // 	file, _ := os.Create("./log/OriginalFile.txt")
 // 	writer := bufio.NewWriter(file)
 // 	writerRet := bufio.NewWriter(fileRet)
-
 // 	return func() tea.Msg {
 // 		if m.toBeTested[1] {
 // 			if m.url != "" {
 // 				// c := &http.Client{Timeout: 5 * time.Second}
 // 				resp, err := http.PostForm(m.url+"/hash.html", url.Values{"key": {"Value"}, "id": {"123"}})
-
 // 				if err != nil {
 // 					return statusMsg{1, "OOPS something went wrong #500 internat server tester error"}
 // 				}
@@ -186,7 +184,7 @@ func checkSomeStatic(m model) tea.Cmd {
 func uploadFiles(m model) tea.Cmd {
 
 	//! the files here are prety small for ease of testing this tester out, they should be replaced with larger files
-	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "img.jpeg", "img.jpeg", "img.jpeg"}
+	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "large_video_file.mp4", "img.jpeg", "img.jpeg"}
 	OgContentRootPath := "/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"
 	uploadContentPath := "/mnt/nfs/homes/jescully/Documents/webserv/core/server_root/tmp/"
 
@@ -194,6 +192,8 @@ func uploadFiles(m model) tea.Cmd {
 		if m.toBeTested[2] {
 
 			for _, file := range testFiles {
+				cmd := exec.Command("curl", "-F", "filename=@/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"+file, "http://localhost:18000/upload_resource.py")
+				cmd.Run()
 				OgContent, _ := ioutil.ReadFile(OgContentRootPath + file)
 				UploadedContent, _ := ioutil.ReadFile(uploadContentPath + file)
 				if string(UploadedContent) != string(OgContent) {
@@ -234,6 +234,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.selected[m.cursor] = struct{}{}
 			}
+		case "esc":
+			m.typing = true
 		case "enter":
 			if m.typing {
 				m.url = strings.TrimSpace(m.textInput.Value())
@@ -286,6 +288,7 @@ func (m model) selectView() string {
 	s += "\nTesting on URL: " + keyword(m.url) + "\n"
 	s += subtle("\nPress x to select\n")
 	s += subtle("\nPress enter to start\n")
+	s += subtle("\nPress esc to modify url\n")
 	s += subtle("\nPress q to quit.\n")
 
 	return s

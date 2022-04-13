@@ -88,6 +88,7 @@ public:
     ~Response();
     void sendResponse(int clientSocket);
     void addBody(std::string pathname);
+    void addBody();
     Response &operator=(const Response &newResponse);
 };
 #endif

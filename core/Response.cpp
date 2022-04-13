@@ -100,10 +100,20 @@ void Response::addBody(std::string pathname)
     _ContentLength = std::string(buf);
 }
 
-/**
- * @brief function used to send a Response to a client.
- * 
- */
+void Response::addBody()
+{
+    /*
+    if response code > 200
+    add body uses the content from the map in thhe response.
+    */
+    char buf[10];
+
+    if (_statusCode >= 300)
+        _Content = getErrorContent(_statusCode);    
+    sprintf(buf, "%lu", _Content.size());
+    _ContentLength = std::string(buf);
+}
+
 void Response::sendResponse(int clientSocket){
 
     std::string CRLF = "\n";

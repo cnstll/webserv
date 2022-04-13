@@ -1,4 +1,5 @@
 #include"cgiHandler.hpp"
+#include"../core/Response.hpp"
 #include<exception>
 
 #include"../core/Request.hpp"
@@ -13,6 +14,10 @@ int cgiHandler::strlen_list(char **strList) {
 const char * cgiHandler::internalServerError::what( void ) const throw()
 {
 	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
+}
+const char * cgiHandler::CgiError::what( void ) const throw()
+{
+	return ("EXECVE FAILED");
 }
 
 char **cgiHandler::str_add(std::string str_to_add)
@@ -47,6 +52,8 @@ char	**cgiHandler::_calloc_str_list(size_t size)
 	char	**str_list;
 
 	str_list = (char **)calloc(size, sizeof(char *));
+	if (!str_list)
+		throw internalServerError();
 	return (str_list);
 }
 
@@ -57,8 +64,8 @@ cgiHandler::cgiHandler(void)
 
 cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket) : _serverSocket(serverSocket)
 {
+	_parsedRequest = parsedRequest;
 	std::string CGI_EXECUTOR = "/usr/bin/python";
-
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	_args[1] = (char *)scriptPathname.c_str();
 	_args[2] = NULL;
@@ -90,14 +97,15 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 
 void	cgiHandler::_executeScript()
 {
-	
+	std::string CGI_EXECUTOR = "/usr/bin/python";
+	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	if (execve(_args[0], _args, _environment) < 0)
 	{
-		throw internalServerError();
+		throw CgiError();
 	}
 }
 
-void	cgiHandler::handleCGI()
+void	cgiHandler::cgiDispatch()
 {
 	int pid = -1;
 	int fd[2];
@@ -106,34 +114,42 @@ void	cgiHandler::handleCGI()
 	
 	if (pipe(fd) < 0)
 		throw internalServerError();
-
-	// throw internalServerError();
-	// if (_messageBody != "")
-	// {
-	// 	stdoutDup = dup(STDOUT_FILENO);
-	// 	stdinDup = dup(STDIN_FILENO);
-	// }
 	pid = fork();
 	if (!pid)
 	{
-		dup2(_serverSocket, STDOUT_FILENO);
-		dup2(fd[0], STDIN_FILENO);
+		if (dup2(_serverSocket, STDOUT_FILENO) == -1)
+			throw CgiError();
+		if (dup2(fd[0], STDIN_FILENO) == -1)
+			throw CgiError();
 		_executeScript();
 	}
-	write(fd[1], _messageBody.c_str(), _messageBody.length());
+	if (write(fd[1], _messageBody.c_str(), _messageBody.length()) == -1)
+		throw internalServerError();
 	close(fd[1]);
 }
 
-// void	cgiHandler::_writeBodyToScript()
-// {
-// 	int stdoutDup = dup(STDOUT_FILENO);
-// 	int stdinDup = dup(STDIN_FILENO);
-// 	dup2(_serverSocket, STDOUT_FILENO);
-// 	dup2(fd[0], STDIN_FILENO);
-// 	std::cerr << "Its alllz good for now. 2" << std::endl;
-// 	write(fd[1], _messageBody.c_str(), _messageBody.length());
-// 	std::cerr << "Its alllz good for now. 3" << std::endl;
-// }
+void cgiHandler::handleCGI(int fd)
+{
+	try
+	{
+		cgiDispatch();
+	}
+	catch (cgiHandler::internalServerError &e)
+	{
+		std::cerr << e.what() << '\n';
+		Response resp(_parsedRequest, 500);
+		resp.addBody();
+		resp.sendResponse(fd);
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+		Response resp(_parsedRequest, 500);
+		resp.addBody();
+		resp.sendResponse(fd);
+		exit(0);
+	}
+}
 
 cgiHandler::~cgiHandler(void)
 {

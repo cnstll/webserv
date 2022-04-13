@@ -23,13 +23,20 @@ class cgiHandler
         char **_calloc_str_list(size_t size);
         std::string _messageBody;
         int _serverSocket;
-
-        class internalServerError : public std::exception
-        {
-            virtual const char *what(void) const throw();
-        };
+        void cgiDispatch();
+        std::map<std::string, std::string> _parsedRequest;
 
     public:
+        class internalServerError : public std::exception
+        {
+        public:
+            virtual const char *what(void) const throw();
+        };
+        class CgiError : public std::exception
+        {
+        public:
+            virtual const char *what(void) const throw();
+        };
         char *_args[3];
         char **_environment;
         cgiHandler();
@@ -38,7 +45,7 @@ class cgiHandler
         cgiHandler &operator=(const cgiHandler &newenv);
         char **str_add(std::string  str_to_add);
         int strlen_list(char **str_list);
-        void    handleCGI();
+        void    handleCGI(int fd);
         
 
         std::map<std::string, std::string> requestToEnvMap =

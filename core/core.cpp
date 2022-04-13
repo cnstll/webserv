@@ -21,6 +21,8 @@
 #define READ_SIZE 30000
 #define REQUEST_READ_SIZE 16000
 #define SERVER_PORT 18000
+#define SERVER_PORT2 18000
+#define SERVER_PORT3 18000
 #define MAX_QUEUE 10000
 #define TIMEOUT 100000
 std::string CGI_EXTENSION = ".py";
@@ -51,7 +53,7 @@ int setup_server(int port, int backlog){
   bzero(&server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr.sin_port = htons(SERVER_PORT);
+  server_addr.sin_port = htons(port);
   check(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
   check(listen(server_fd, MAX_QUEUE), "listen error");
   return server_fd;
@@ -99,64 +101,18 @@ bool check_error_flags(int event){
   return (true);
 }
 
-//get the first length, use it to read the second length, add them together
-
-int unchunckedRequest(Request *rq, int startOfBody) 
-{
-  std::size_t head = 0;
-	std::size_t tail = 0;
-  std::string finalBody;
-  std::string ogBody;
-  std::string sizeStr;
-  size_t chunckSize = 1;
-  size_t pos;
-
-  ogBody = rq->getFullRequest().substr(startOfBody);
-  // std::cout << ogBody << std::endl;
-
-  while (chunckSize)
-  {
-    head = ogBody.find("\r\n", tail);
-    chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
-    if (!chunckSize)
-    {
-      std::cout << finalBody << std::endl;
-      return 0;
-    }
-    head += 2;
-    finalBody.append(ogBody, head, chunckSize);
-    tail = head + chunckSize + 2;
-  }
-  std::cout << finalBody << std::endl;
-
-  return 0;
-}
-
 int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 {
-  if (rq->getParsedRequest()["Content-Length"] == "")
+  if (rq->getParsedRequest()["Transfer-Encoding"] == "chunked")
   {
-    
-    if (rq->getFullRequest().find("\r\n0\r\n"))
-    {
-      unchunckedRequest(rq, startOfBody);
+    if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
       return 1;
-    }
     else
       return 0;
   }
-
   int lengthRecvd = rq->getFullRequest().length() - startOfBody;
-  // std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
-  // std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
   if (contentLength == lengthRecvd)
     return (1);
-  
-  // else if (rq->getFullRequest().find(delimiter) != std::string::npos)
-  // {
-  //   std::cout << delimiter << std::endl;
-  //   return (1);
-  // }
   return 0;
 }
 
@@ -187,7 +143,6 @@ int recv_request(const int &fd, Request *rq){
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
     rq->append(request_buffer, read_bytes);
-    // std::cout << request_buffer << std::endl;
     if (!headerParsed)
     {
       parsed = parseHeader(rq);
@@ -250,25 +205,46 @@ std::string get_extension(std::string uri)
   return (uri);
 }
 
+bool isSeverFd(int fd, int *serverFds)
+{
+  int i = 0;
+  while (serverFds[i] > 0)
+  {
+    if (fd == serverFds[i])
+      return 1;
+    i++;
+  }
+  return 0;
+}
+
 int main(){
 
-  int server_fd;
+  // int server_fd;
   int count_response = 0;
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
-  Request request;
-  server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
+  // Request request;
+  // server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
+  int serverFds[1000];
+  // int server_fd2 ;
+  int ports[3] = {18000, 18001, 18002};
+  int numberOfServers = 3;
+  std::map<int, Request*> m;
 
   // Prep a set of epoll event struct to register listened events
+  bzero(serverFds, 1000);
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
   // char yes='1'; // Solaris people use this
 
   // Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
-  // Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  
+  for (int i = 0; i < numberOfServers; i++) {
+    serverFds[i] = setup_server(ports[i], MAX_QUEUE);
+    monitor_socket_action(epoll_fd, serverFds[i], EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  }
 
   while (1)
   {
@@ -277,25 +253,26 @@ int main(){
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
       recv_bytes = 0;
-      if (events[i].data.fd == server_fd)
+      if (isSeverFd(events[i].data.fd, serverFds))
       {
         check_error_flags(events[i].events);
-        if (!check((connexion_fd = accept_new_connexion(server_fd)), "accept error"))
+        if (!check((connexion_fd = accept_new_connexion(events[i].data.fd)), "accept error"))
           continue;
         make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-
+        m[connexion_fd] = new Request;
       }
       else if (events[i].events & EPOLLIN)
       {
+        Request *request2 = m[events[i].data.fd];
         std::cout << "Events Happening on fd: " << events[i].data.fd << std::endl;
-        request.addFdInfo(events[i].data.fd);
+        // request.addFdInfo(events[i].data.fd);
         if (check_error_flags(events[i].events) < 0){
           perror("error while receiving data");
-          request.clear();
+          // request.clear();
           break;
         }
-        recv_bytes = recv_request(events[i].data.fd, &request);
+        recv_bytes = recv_request(events[i].data.fd, request2);
         if (recv_bytes == -1)
         {
           continue;
@@ -303,58 +280,47 @@ int main(){
         if (recv_bytes == 0)
         {
           printf("Closing connexion for fd: %d\n", events[i].data.fd);
-          request.clear();
+          // request.clear();
           close(events[i].data.fd);
           break;
         }
-        //! The parsing shouldn't need to take place again here UPDATE it may be needed to "parse" the body.
-        if (request.parse() < 0){
+        if (request2->parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
       if (events[i].events & EPOLLOUT) {
-        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
-            std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
-            cgiHandler cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
-            //! lots of exceptions left to throw
-            try
-            {
-              cgiParams.handleCGI();
-            }
-            catch (const std::exception &e)
-            {
-              std::cerr << e.what() << '\n';
-              Response resp(request.getParsedRequest(), 500);
-              resp.addBody(request.getPathToFile());
-              resp.sendResponse(events[i].data.fd);
-            }
-          }
-          else if (request.getHttpMethod() == "DELETE"){
-            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request.getRequestedUri();
+        if (get_extension(request2->getRequestedUri()) == CGI_EXTENSION) {
+            std::string script_pathname = "." + std::string(ROOT_DIR) + request2->getRequestedUri(); //! Should this be in the config file?
+            cgiHandler cgiParams(request2->getParsedRequest(), script_pathname, events[i].data.fd);
+            cgiParams.handleCGI(events[i].data.fd);
+        }
+          else if (request2->getHttpMethod() == "DELETE"){
+            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request2->getRequestedUri();
             if (std::remove(fileToBeDeleted.c_str()) != 0){
-              Response resp(request.getParsedRequest(), 204);
+              Response resp(request2->getParsedRequest(), 204);
               resp.sendResponse(events[i].data.fd);
             }
           }
           else
           {
-            Response resp(request.getParsedRequest(), request.getError());
-            resp.addBody(request.getPathToFile());
+            Response resp(request2->getParsedRequest(), request2->getError());
+            resp.addBody(request2->getPathToFile());
             resp.sendResponse(events[i].data.fd);
+            request2->clear();
           }
         }
-        if (request.getParsedRequest()["Connection"] != "keep-alive")
+        if (request2->getParsedRequest()["Connection"] != "keep-alive")
           close(events[i].data.fd);
-        request.clear();
+        request2->clear();
       }
     }
-    if (request.getFullRequest() != "" && !count_of_fd_actualized)
-    {
-      Response resp(request.getParsedRequest(), 408);
-      resp.addBody(request.getPathToFile());
-      resp.sendResponse(request.fd);
-      request.clear();
-      close(request.fd);
-    }
+    // if (request2->getFullRequest() != "" && !count_of_fd_actualized)
+    // {
+    //   Response resp(request.getParsedRequest(), 408);
+    //   resp.addBody(request.getPathToFile());
+    //   resp.sendResponse(request.fd);
+    //   request.clear();
+    //   close(request.fd);
+    // }
   }
   close(server_fd);
 }
