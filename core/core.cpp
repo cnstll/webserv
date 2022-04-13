@@ -21,6 +21,8 @@
 #define READ_SIZE 30000
 #define REQUEST_READ_SIZE 16000
 #define SERVER_PORT 18000
+#define SERVER_PORT2 18000
+#define SERVER_PORT3 18000
 #define MAX_QUEUE 10000
 #define TIMEOUT 100000
 std::string CGI_EXTENSION = ".py";
@@ -51,7 +53,7 @@ int setup_server(int port, int backlog){
   bzero(&server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr.sin_port = htons(SERVER_PORT);
+  server_addr.sin_port = htons(port);
   check(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
   check(listen(server_fd, MAX_QUEUE), "listen error");
   return server_fd;
@@ -99,53 +101,12 @@ bool check_error_flags(int event){
   return (true);
 }
 
-//get the first length, use it to read the second length, add them together
-
-int unchunckedRequest(Request *rq, int startOfBody) 
-{
-  std::size_t head = 0;
-	std::size_t tail = 0;
-  std::string finalBody;
-  std::string ogBody;
-  std::string sizeStr;
-  size_t chunckSize = 1;
-  size_t pos;
-
-  ogBody = rq->getFullRequest().substr(startOfBody);
-  // std::cout << ogBody << std::endl;
-
-  while (chunckSize)
-  {
-    head = ogBody.find("\r\n", tail);
-    // if (head == std::string::npos)
-    // {
-    //   std::cout << finalBody << std::endl;
-    //   return 0;
-    // }
-    chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
-    if (!chunckSize)
-    {
-      std::cout << finalBody << std::endl;
-      return 0;
-    }
-    head += 2;
-    finalBody.append(ogBody, head, chunckSize);
-    // std::cout << finalBody << std::endl;
-    std::cerr << rq->getFullRequest() << std::endl;
-    tail = head + chunckSize + 2;
-  }
-  // std::cout << finalBody << std::endl;
-
-  return 0;
-}
-
 int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 {
-  if (rq->getParsedRequest()["Content-Length"] == "")
+  if (rq->getParsedRequest()["Transfer-Encoding"] == "chunked")
   {
     if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
     {
-      unchunckedRequest(rq, startOfBody);
       return 1;
     }
     else
@@ -191,7 +152,6 @@ int recv_request(const int &fd, Request *rq){
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
     rq->append(request_buffer, read_bytes);
-    // std::cout << request_buffer << std::endl;
     if (!headerParsed)
     {
       parsed = parseHeader(rq);
@@ -254,26 +214,49 @@ std::string get_extension(std::string uri)
   return (uri);
 }
 
+bool isSeverFd(int fd, int *serverFds)
+{
+  int i = 0;
+  while (serverFds[i] > 0)
+  {
+    if (fd == serverFds[i])
+      return 1;
+    i++;
+  }
+  return 0;
+}
+
 int main(){
 
-  int server_fd;
+  // int server_fd;
   int count_response = 0;
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
   Request request;
-  server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
-  int server_fd2 = setup_server(18001, 14);
+  // server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
+  int serverFds[1000];
+  // int server_fd2 ;
+  int ports[3] = {18000, 18001, 18002};
+  int numberOfServers = 3;
 
   // Prep a set of epoll event struct to register listened events
+  bzero(serverFds, 1000);
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
   // char yes='1'; // Solaris people use this
 
   // Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
+  
+  for (int i = 0; i < numberOfServers; i++) {
+    serverFds[i] = setup_server(ports[i], MAX_QUEUE);
+    monitor_socket_action(epoll_fd, serverFds[i], EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  }
+
   // Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  // monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+  // monitor_socket_action(epoll_fd, server_fd2, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
 
   while (1)
   {
@@ -282,10 +265,10 @@ int main(){
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
       recv_bytes = 0;
-      if (events[i].data.fd == server_fd)
+      if (isSeverFd(events[i].data.fd, serverFds))
       {
         check_error_flags(events[i].events);
-        if (!check((connexion_fd = accept_new_connexion(server_fd)), "accept error"))
+        if (!check((connexion_fd = accept_new_connexion(events[i].data.fd)), "accept error"))
           continue;
         make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);

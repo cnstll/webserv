@@ -139,28 +139,44 @@ int Request::parse(void){
 			_parsedHttpRequest[field] = value;
 	}
 	//Next come msg-body
-	//if (_parsedHttpRequest["Content-Type"].compare("application/x-www-form-urlencoded") == 0){
 		head = tail + 4;
 		tail = _fullRequest.length();
-		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-		//writeStrToFile(_parsedHttpRequest["message-body"], "body.log");
-	//}
-	//std::string multipartType = "multipart/form-data;";
-	//if (_parsedHttpRequest["Content-Type"].compare(0, multipartType.length(), multipartType) == 0){
-	//	std::cout << "\nEntered in if\n";
-	//	head = tail + 4;
-	//	std::size_t beginSeparator = _parsedHttpRequest["Content-Type"].find("=", 0) + 1;
-	//	std::size_t endSeparator = _parsedHttpRequest["Content-Type"].find(";", beginSeparator);
-	//	if (endSeparator == std::string::npos)
-	//		endSeparator = _parsedHttpRequest["Content-Type"].length();
-	//	std::string partSeparator = std::string(_parsedHttpRequest["Content-Type"] , beginSeparator, endSeparator);
-	//	std::cout << "\n Separator: " << partSeparator << std::endl;
-	//	_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-	//}
-		//std::cout << "THIS IS MY BODY--------------------\n ";
-		//std::cout << _parsedHttpRequest["message-body"] << std::endl;
-		//std::cout << "----------------------END OF MY BODY\n";
+		if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
+		{
+			_parsedHttpRequest["message-body"] = unchunckedRequest(head);	
+		}
+		else
+		{
+			_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+		}
 	return 0;
+}
+
+std::string Request::unchunckedRequest(int startOfBody) 
+{
+  std::size_t head = 0;
+	std::size_t tail = 0;
+  std::string finalBody;
+  std::string ogBody;
+  std::string sizeStr;
+  size_t chunckSize = 1;
+  size_t pos;
+
+  ogBody = _fullRequest.substr(startOfBody);
+  while (chunckSize)
+  {
+    head = ogBody.find("\r\n", tail);
+    chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
+    if (!chunckSize)
+    {
+    //   std::cout << finalBody << std::endl;
+      return finalBody;
+    }
+    head += 2;
+    finalBody.append(ogBody, head, chunckSize);
+    tail = head + chunckSize + 2;
+  }
+  return finalBody;
 }
 
 /**
