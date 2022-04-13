@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include<sys/socket.h>
 #include <map>
+# include <dirent.h>
+#include <string.h>
+
 
 std::string Response::getErrorContent(int errCode)
 {
@@ -82,6 +85,49 @@ std::string Response::timeAsString()
     return (str);
 }
 
+bool isADir2(std::string directoryPath)
+{  
+  DIR *dh;
+  
+  dh = opendir (directoryPath.c_str());
+  
+  if ( !dh )
+    return 0;
+  closedir ( dh );
+  return 1;
+}
+
+
+
+std::string directoryContents ( std::string pathname )
+{  
+  DIR *dh;
+  struct dirent * contents;
+  std::string ret;
+  std::string newpath = pathname.substr(strlen(ROOT_DIR) + 2);
+  newpath += "/";
+
+  
+  dh = opendir ( pathname.c_str() );
+  
+//   if ( !dh )
+//   {
+//     std::cout << "The given directory is not found";
+//     return;
+//   }
+  ret += "<Html>\n <h1> This is Otto's index, he's very proud of it so don't be rude now... </h1> <h3>";
+  while ( ( contents = readdir ( dh ) ) != NULL )
+  {
+    //   <a href="message.html">A Message from Warren E. Buffett</a>
+    std::string name = "<li> <a href=\"" + std::string(contents->d_name) + "\">" + contents->d_name + "</a> </li>";
+    ret += name += "\n";
+  }
+  ret += "</h3>";
+  ret += "</Html>\n";
+  closedir ( dh );
+  return ret;
+}
+
 void Response::addBody(std::string pathname)
 {
     /*
@@ -90,15 +136,24 @@ void Response::addBody(std::string pathname)
     */
     char buf[10];
 
+    std::cout << "HERE I AM" << std::endl;
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
     else{
+        if (!isADir2(pathname))
+        {
         std::ifstream input_file(pathname.c_str());
         _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+        }
+        else {
+            _Content = directoryContents(pathname);
+        }
    }
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
 }
+
+
 
 void Response::addBody()
 {
@@ -107,7 +162,6 @@ void Response::addBody()
     add body uses the content from the map in thhe response.
     */
     char buf[10];
-
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
     sprintf(buf, "%lu", _Content.size());

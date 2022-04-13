@@ -8,6 +8,8 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+# include <dirent.h>
+
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -73,6 +75,19 @@ void Request::clear(){
  * @brief Parse Request and fill in the parsedHttpRequest map
  * 
  */
+
+bool isADir(std::string directoryPath)
+{  
+  DIR *dh;
+  
+  dh = opendir (directoryPath.c_str());
+  
+  if ( !dh )
+    return 0;
+  closedir ( dh );
+  return 1;
+}
+
 int Request::parse(void){
 	std::size_t head = 0;
 	std::size_t tail = 0;
@@ -105,6 +120,10 @@ int Request::parse(void){
 	if (!doesFileExist(getPathToFile())){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
 			_requestParsingError = 301;
+		else if (isADir(getPathToFile()))
+		{
+			//! here is where we check for autoindexing?
+		}
 		else
 			_requestParsingError = 404; //"Not Found" 
 		return -1;
