@@ -106,22 +106,13 @@ int is_request_done(Request *rq, int &contentLength, int &startOfBody)
   if (rq->getParsedRequest()["Transfer-Encoding"] == "chunked")
   {
     if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
-    {
       return 1;
-    }
     else
       return 0;
   }
   int lengthRecvd = rq->getFullRequest().length() - startOfBody;
-  // std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
-  // std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
   if (contentLength == lengthRecvd)
     return (1);
-  // else if (rq->getFullRequest().find(delimiter) != std::string::npos)
-  // {
-  //   std::cout << delimiter << std::endl;
-  //   return (1);
-  // }
   return 0;
 }
 

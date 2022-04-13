@@ -142,13 +142,9 @@ int Request::parse(void){
 		head = tail + 4;
 		tail = _fullRequest.length();
 		if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
-		{
 			_parsedHttpRequest["message-body"] = unchunckedRequest(head);	
-		}
 		else
-		{
 			_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-		}
 	return 0;
 }
 
@@ -168,10 +164,7 @@ std::string Request::unchunckedRequest(int startOfBody)
     head = ogBody.find("\r\n", tail);
     chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
     if (!chunckSize)
-    {
-    //   std::cout << finalBody << std::endl;
       return finalBody;
-    }
     head += 2;
     finalBody.append(ogBody, head, chunckSize);
     tail = head + chunckSize + 2;
