@@ -117,6 +117,11 @@ int unchunckedRequest(Request *rq, int startOfBody)
   while (chunckSize)
   {
     head = ogBody.find("\r\n", tail);
+    // if (head == std::string::npos)
+    // {
+    //   std::cout << finalBody << std::endl;
+    //   return 0;
+    // }
     chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
     if (!chunckSize)
     {
@@ -125,9 +130,11 @@ int unchunckedRequest(Request *rq, int startOfBody)
     }
     head += 2;
     finalBody.append(ogBody, head, chunckSize);
+    // std::cout << finalBody << std::endl;
+    std::cerr << rq->getFullRequest() << std::endl;
     tail = head + chunckSize + 2;
   }
-  std::cout << finalBody << std::endl;
+  // std::cout << finalBody << std::endl;
 
   return 0;
 }
@@ -136,8 +143,7 @@ int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 {
   if (rq->getParsedRequest()["Content-Length"] == "")
   {
-    
-    if (rq->getFullRequest().find("\r\n0\r\n"))
+    if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
     {
       unchunckedRequest(rq, startOfBody);
       return 1;
@@ -145,13 +151,11 @@ int is_request_done(Request *rq, int &contentLength, int &startOfBody)
     else
       return 0;
   }
-
   int lengthRecvd = rq->getFullRequest().length() - startOfBody;
   // std::size_t beginSeparator = rq->getParsedRequest()["Content-Type"].find("=", 0) + 1;
   // std::string delimiter = rq->getParsedRequest()["Content-Type"].substr(beginSeparator) + "--";
   if (contentLength == lengthRecvd)
     return (1);
-  
   // else if (rq->getFullRequest().find(delimiter) != std::string::npos)
   // {
   //   std::cout << delimiter << std::endl;
