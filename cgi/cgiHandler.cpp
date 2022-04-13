@@ -1,4 +1,5 @@
 #include"cgiHandler.hpp"
+#include"../core/Response.hpp"
 #include<exception>
 
 #include"../core/Request.hpp"
@@ -64,7 +65,7 @@ cgiHandler::cgiHandler(void)
 cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket) : _serverSocket(serverSocket)
 {
 	std::string CGI_EXECUTOR = "/usr/bin/python";
-
+	_parsedRequest = parsedRequest;
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	_args[1] = (char *)scriptPathname.c_str();
 	_args[2] = NULL;
@@ -96,14 +97,13 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 
 void	cgiHandler::_executeScript()
 {
-	
 	if (execve(_args[0], _args, _environment) < 0)
 	{
 		throw CgiError();
 	}
 }
 
-void	cgiHandler::handleCGI()
+void	cgiHandler::cgiDispatch()
 {
 	int pid = -1;
 	int fd[2];
@@ -124,6 +124,29 @@ void	cgiHandler::handleCGI()
 	if (write(fd[1], _messageBody.c_str(), _messageBody.length()) == -1)
 		throw internalServerError();
 	close(fd[1]);
+}
+
+void cgiHandler::handleCGI(int fd)
+{
+	try
+	{
+		cgiDispatch();
+	}
+	catch (cgiHandler::internalServerError &e)
+	{
+		std::cerr << e.what() << '\n';
+		Response resp(_parsedRequest, 500);
+		resp.addBody();
+		resp.sendResponse(fd);
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+		Response resp(_parsedRequest, 500);
+		resp.addBody();
+		resp.sendResponse(fd);
+		exit(0);
+	}
 }
 
 cgiHandler::~cgiHandler(void)

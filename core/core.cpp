@@ -246,10 +246,6 @@ int main(){
     monitor_socket_action(epoll_fd, serverFds[i], EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
   }
 
-  // Use epoll_ctl to add the server socket to epoll to monitor events from the server
-  // monitor_socket_action(epoll_fd, server_fd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
-  // monitor_socket_action(epoll_fd, server_fd2, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
-
   while (1)
   {
     int tmpCountFd = count_of_fd_actualized;
@@ -276,11 +272,8 @@ int main(){
           // request.clear();
           break;
         }
-        recv_bytes = recv_request(events[i].data.fd, request2);
-        if (recv_bytes == -1)
-        {
+        if (recv_bytes = recv_request(events[i].data.fd, request2) == -1)
           continue;
-        }
         if (recv_bytes == 0)
         {
           printf("Closing connexion for fd: %d\n", events[i].data.fd);
@@ -288,34 +281,14 @@ int main(){
           close(events[i].data.fd);
           break;
         }
-        //! The parsing shouldn't need to take place again here UPDATE it may be needed to "parse" the body.
         if (request2->parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
       if (events[i].events & EPOLLOUT) {
         if (get_extension(request2->getRequestedUri()) == CGI_EXTENSION) {
-            std::string script_pathname = "." + std::string(ROOT_DIR) + request2->getRequestedUri();
+            std::string script_pathname = "." + std::string(ROOT_DIR) + request2->getRequestedUri(); //! Should this be in the config file?
             cgiHandler cgiParams(request2->getParsedRequest(), script_pathname, events[i].data.fd);
-            //! lots of exceptions left to throw
-            try
-            {
-              cgiParams.handleCGI();
-            }
-            catch (cgiHandler::internalServerError &e)
-            {
-              std::cerr << e.what() << '\n';
-              Response resp(request2->getParsedRequest(), 500);
-              resp.addBody(request2->getPathToFile());
-              resp.sendResponse(events[i].data.fd);
-            }
-            catch (const std::exception &e)
-            {
-              std::cerr << e.what() << '\n';
-              Response resp(request2->getParsedRequest(), 500);
-              resp.addBody(request2->getPathToFile());
-              resp.sendResponse(events[i].data.fd);
-              exit(0);
-            }
+            cgiParams.handleCGI(events[i].data.fd);
         }
           else if (request2->getHttpMethod() == "DELETE"){
             const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request2->getRequestedUri();
