@@ -24,12 +24,17 @@ class cgiHandler
         std::string _messageBody;
         int _serverSocket;
 
+    public:
         class internalServerError : public std::exception
         {
+        public:
             virtual const char *what(void) const throw();
         };
-
-    public:
+        class CgiError : public std::exception
+        {
+        public:
+            virtual const char *what(void) const throw();
+        };
         char *_args[3];
         char **_environment;
         cgiHandler();

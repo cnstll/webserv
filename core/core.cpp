@@ -299,14 +299,22 @@ int main(){
             {
               cgiParams.handleCGI();
             }
-            catch (const std::exception &e)
+            catch (cgiHandler::internalServerError &e)
             {
               std::cerr << e.what() << '\n';
               Response resp(request.getParsedRequest(), 500);
               resp.addBody(request.getPathToFile());
               resp.sendResponse(events[i].data.fd);
             }
-          }
+            catch (const std::exception &e)
+            {
+              std::cerr << e.what() << '\n';
+              Response resp(request.getParsedRequest(), 500);
+              resp.addBody(request.getPathToFile());
+              resp.sendResponse(events[i].data.fd);
+              exit(0);
+            }
+        }
           else if (request.getHttpMethod() == "DELETE"){
             const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request.getRequestedUri();
             if (std::remove(fileToBeDeleted.c_str()) != 0){

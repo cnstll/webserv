@@ -14,6 +14,10 @@ const char * cgiHandler::internalServerError::what( void ) const throw()
 {
 	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
 }
+const char * cgiHandler::CgiError::what( void ) const throw()
+{
+	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
+}
 
 char **cgiHandler::str_add(std::string str_to_add)
 {
@@ -93,7 +97,7 @@ void	cgiHandler::_executeScript()
 	
 	if (execve(_args[0], _args, _environment) < 0)
 	{
-		throw internalServerError();
+		throw CgiError();
 	}
 }
 
@@ -106,34 +110,19 @@ void	cgiHandler::handleCGI()
 	
 	if (pipe(fd) < 0)
 		throw internalServerError();
-
-	// throw internalServerError();
-	// if (_messageBody != "")
-	// {
-	// 	stdoutDup = dup(STDOUT_FILENO);
-	// 	stdinDup = dup(STDIN_FILENO);
-	// }
 	pid = fork();
 	if (!pid)
 	{
-		dup2(_serverSocket, STDOUT_FILENO);
-		dup2(fd[0], STDIN_FILENO);
+		if (dup2(_serverSocket, STDOUT_FILENO) == -1)
+			throw CgiError();
+		if (dup2(fd[0], STDIN_FILENO) == -1)
+			throw CgiError();
 		_executeScript();
 	}
-	write(fd[1], _messageBody.c_str(), _messageBody.length());
+	if (write(fd[1], _messageBody.c_str(), _messageBody.length()) == -1)
+		throw internalServerError();
 	close(fd[1]);
 }
-
-// void	cgiHandler::_writeBodyToScript()
-// {
-// 	int stdoutDup = dup(STDOUT_FILENO);
-// 	int stdinDup = dup(STDIN_FILENO);
-// 	dup2(_serverSocket, STDOUT_FILENO);
-// 	dup2(fd[0], STDIN_FILENO);
-// 	std::cerr << "Its alllz good for now. 2" << std::endl;
-// 	write(fd[1], _messageBody.c_str(), _messageBody.length());
-// 	std::cerr << "Its alllz good for now. 3" << std::endl;
-// }
 
 cgiHandler::~cgiHandler(void)
 {
