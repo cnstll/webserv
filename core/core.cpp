@@ -225,12 +225,13 @@ int main(){
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
-  Request request;
+  // Request request;
   // server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
   int serverFds[1000];
   // int server_fd2 ;
   int ports[3] = {18000, 18001, 18002};
   int numberOfServers = 3;
+  std::map<int, Request*> m;
 
   // Prep a set of epoll event struct to register listened events
   bzero(serverFds, 1000);
@@ -263,18 +264,19 @@ int main(){
           continue;
         make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-
+        m[connexion_fd] = new Request;
       }
       else if (events[i].events & EPOLLIN)
       {
+        Request *request2 = m[events[i].data.fd];
         std::cout << "Events Happening on fd: " << events[i].data.fd << std::endl;
-        request.addFdInfo(events[i].data.fd);
+        // request.addFdInfo(events[i].data.fd);
         if (check_error_flags(events[i].events) < 0){
           perror("error while receiving data");
-          request.clear();
+          // request.clear();
           break;
         }
-        recv_bytes = recv_request(events[i].data.fd, &request);
+        recv_bytes = recv_request(events[i].data.fd, request2);
         if (recv_bytes == -1)
         {
           continue;
@@ -282,18 +284,18 @@ int main(){
         if (recv_bytes == 0)
         {
           printf("Closing connexion for fd: %d\n", events[i].data.fd);
-          request.clear();
+          // request.clear();
           close(events[i].data.fd);
           break;
         }
         //! The parsing shouldn't need to take place again here UPDATE it may be needed to "parse" the body.
-        if (request.parse() < 0){
+        if (request2->parse() < 0){
           std::cout << "\nError while parsing request!!!\n";
         }
       if (events[i].events & EPOLLOUT) {
-        if (get_extension(request.getRequestedUri()) == CGI_EXTENSION) {
-            std::string script_pathname = "." + std::string(ROOT_DIR) + request.getRequestedUri();
-            cgiHandler cgiParams(request.getParsedRequest(), script_pathname, events[i].data.fd);
+        if (get_extension(request2->getRequestedUri()) == CGI_EXTENSION) {
+            std::string script_pathname = "." + std::string(ROOT_DIR) + request2->getRequestedUri();
+            cgiHandler cgiParams(request2->getParsedRequest(), script_pathname, events[i].data.fd);
             //! lots of exceptions left to throw
             try
             {
@@ -302,46 +304,47 @@ int main(){
             catch (cgiHandler::internalServerError &e)
             {
               std::cerr << e.what() << '\n';
-              Response resp(request.getParsedRequest(), 500);
-              resp.addBody(request.getPathToFile());
+              Response resp(request2->getParsedRequest(), 500);
+              resp.addBody(request2->getPathToFile());
               resp.sendResponse(events[i].data.fd);
             }
             catch (const std::exception &e)
             {
               std::cerr << e.what() << '\n';
-              Response resp(request.getParsedRequest(), 500);
-              resp.addBody(request.getPathToFile());
+              Response resp(request2->getParsedRequest(), 500);
+              resp.addBody(request2->getPathToFile());
               resp.sendResponse(events[i].data.fd);
               exit(0);
             }
         }
-          else if (request.getHttpMethod() == "DELETE"){
-            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request.getRequestedUri();
+          else if (request2->getHttpMethod() == "DELETE"){
+            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + request2->getRequestedUri();
             if (std::remove(fileToBeDeleted.c_str()) != 0){
-              Response resp(request.getParsedRequest(), 204);
+              Response resp(request2->getParsedRequest(), 204);
               resp.sendResponse(events[i].data.fd);
             }
           }
           else
           {
-            Response resp(request.getParsedRequest(), request.getError());
-            resp.addBody(request.getPathToFile());
+            Response resp(request2->getParsedRequest(), request2->getError());
+            resp.addBody(request2->getPathToFile());
             resp.sendResponse(events[i].data.fd);
+            request2->clear();
           }
         }
-        if (request.getParsedRequest()["Connection"] != "keep-alive")
+        if (request2->getParsedRequest()["Connection"] != "keep-alive")
           close(events[i].data.fd);
-        request.clear();
+        request2->clear();
       }
     }
-    if (request.getFullRequest() != "" && !count_of_fd_actualized)
-    {
-      Response resp(request.getParsedRequest(), 408);
-      resp.addBody(request.getPathToFile());
-      resp.sendResponse(request.fd);
-      request.clear();
-      close(request.fd);
-    }
+    // if (request2->getFullRequest() != "" && !count_of_fd_actualized)
+    // {
+    //   Response resp(request.getParsedRequest(), 408);
+    //   resp.addBody(request.getPathToFile());
+    //   resp.sendResponse(request.fd);
+    //   request.clear();
+    //   close(request.fd);
+    // }
   }
   close(server_fd);
 }
