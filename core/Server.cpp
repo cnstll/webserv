@@ -160,8 +160,12 @@ void Server::checkWhitespacesInInstructionLine(const std::string &line, bool has
 	}
 }
 
+
+
 bool Server::lineHasLocationToken(const std::string &line){
 	std::string locationToken = "location";
+	size_t startOfToken = line.find_first_not_of(" \t");
+
 	if (line.find(locationToken) != std::string::npos)
 		return true;
 	else
