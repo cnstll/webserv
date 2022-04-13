@@ -17,7 +17,7 @@ const char * cgiHandler::internalServerError::what( void ) const throw()
 }
 const char * cgiHandler::CgiError::what( void ) const throw()
 {
-	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
+	return ("EXECVE FAILED");
 }
 
 char **cgiHandler::str_add(std::string str_to_add)
@@ -64,8 +64,8 @@ cgiHandler::cgiHandler(void)
 
 cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket) : _serverSocket(serverSocket)
 {
-	std::string CGI_EXECUTOR = "/usr/bin/python";
 	_parsedRequest = parsedRequest;
+	std::string CGI_EXECUTOR = "/usr/bin/python";
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	_args[1] = (char *)scriptPathname.c_str();
 	_args[2] = NULL;
@@ -97,6 +97,8 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 
 void	cgiHandler::_executeScript()
 {
+	std::string CGI_EXECUTOR = "/usr/bin/python";
+	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	if (execve(_args[0], _args, _environment) < 0)
 	{
 		throw CgiError();

@@ -272,8 +272,11 @@ int main(){
           // request.clear();
           break;
         }
-        if (recv_bytes = recv_request(events[i].data.fd, request2) == -1)
+        recv_bytes = recv_request(events[i].data.fd, request2);
+        if (recv_bytes == -1)
+        {
           continue;
+        }
         if (recv_bytes == 0)
         {
           printf("Closing connexion for fd: %d\n", events[i].data.fd);

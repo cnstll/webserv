@@ -114,10 +114,6 @@ void Response::addBody()
     _ContentLength = std::string(buf);
 }
 
-/**
- * @brief function used to send a Response to a client.
- * 
- */
 void Response::sendResponse(int clientSocket){
 
     std::string CRLF = "\n";
