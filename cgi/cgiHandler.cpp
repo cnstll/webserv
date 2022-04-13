@@ -51,6 +51,8 @@ char	**cgiHandler::_calloc_str_list(size_t size)
 	char	**str_list;
 
 	str_list = (char **)calloc(size, sizeof(char *));
+	if (!str_list)
+		throw internalServerError();
 	return (str_list);
 }
 
