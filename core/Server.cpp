@@ -111,6 +111,7 @@ std::string Server::findLocationPath(const std::string &line){
 	return locationPath;
 }
 // TODO: Check that field exist asa valid field | Check that field is not already saved to the map
+
 void Server::parseLocationFields(const std::string& line){
 	//std::cerr << "ENTERED PARSED LOCATION FIELDS\n";
 	configMap::iterator it;
@@ -120,12 +121,17 @@ void Server::parseLocationFields(const std::string& line){
 		matchField = line.find(it->first);
 		if (matchField != std::string::npos){
 			matchField += it->first.length();
+			if (it->second != "")
+				printErrorAndExit("ERROR: field already exists in location bloc - FaultyLine: \'" + line + "\'\n");
 			it->second = std::string(line, matchField + 1,  line.length() - (matchField + 2));
 			//std::cout << "FIELD: " << it->first << " VALUE: " << it->second << std::endl;
 			break;
 		}
 		++it;
 	}
+	if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
+		printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+
 }
 
 void Server::checkInstructionEOL(const std::string &line, bool hasLocationLineToken){
@@ -162,6 +168,13 @@ bool Server::lineHasLocationToken(const std::string &line){
 		return false;
 }
 
+bool Server::isEmptyLine(const std::string &line){
+	if (line.find_first_not_of(" ") == std::string::npos)
+		return true;
+	else
+		return false;
+}
+
 void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
 	addLocationBlocConfig();
 	locationConfigFields[countOfLocationBlocks - 1].uriPath = findLocationPath(line);
@@ -180,6 +193,8 @@ void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_
 		// std::cerr << "FIND RET FOR '{': " << line.find("{") << std::endl;
 		// std::cerr << "FIND RET FOR ';': " << line.find(";") << std::endl;
 		// std::cerr << "HAS LOCATION RET: " << lineHasLocationToken(line) << std::endl;
+		if (isEmptyLine(line))
+			continue;
 		checkInstructionEOL(line, false);
 		checkWhitespacesInInstructionLine(line, false);
 		parseLocationFields(line);
@@ -195,6 +210,8 @@ void Server::parseMainInstructionsFields(const std::string &bloc, std::string &l
 		matchField = bloc.substr(startOfLine, endOfLine - startOfLine).find(it->first);
 		if (matchField != std::string::npos){
 			matchField += it->first.length();
+			if (it->second != "")
+				printErrorAndExit("ERROR: field already exists in main server bloc - FaultyLine: \'" + line + "\'\n");
 			it->second = std::string(bloc, startOfLine + matchField + 1, endOfLine - (startOfLine + matchField + 2));
 			break;
 		}
@@ -221,7 +238,7 @@ void Server::parseConfig(const std::string &bloc){
 		// std::cerr << "EOB: " << endOfBloc << " SOL: " << startOfLine << " EOL: " << endOfLine << std::endl;
 		// std::cerr << "CHAR EOB: " << bloc[endOfBloc] << " SOL: " << bloc[startOfLine] << " EOL: " << endOfLine << std::endl;
 		// std::cerr << "HAS LOCATION RET: " << lineHasLocationToken(line) << std::endl;
-		if (line.length() == 0)
+		if (isEmptyLine(line))
 			continue;
 		checkWhitespacesInInstructionLine(line, lineHasLocationToken(line));
 		checkInstructionEOL(line, lineHasLocationToken(line));
@@ -260,6 +277,8 @@ std::string Server::validLocationFields[] = {
 		"methods",
 		"autoindex",
 		"client_max_body_size",
+		"upload_dir",
+		"cgi",
 		""
 };
 

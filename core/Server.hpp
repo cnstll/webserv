@@ -41,6 +41,7 @@ class Server
 		void checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken);
 		void parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfline);
 		void parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine);
+		bool isEmptyLine(const std::string &line);
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
 		configMap serverConfigFields;
