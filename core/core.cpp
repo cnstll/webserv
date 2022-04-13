@@ -264,6 +264,7 @@ int main(){
   int count_of_fd_actualized = 0;
   Request request;
   server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
+  int server_fd2 = setup_server(18001, 14);
 
   // Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
