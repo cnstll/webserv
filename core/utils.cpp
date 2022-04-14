@@ -1,12 +1,7 @@
 #include "utils.hpp"
-#include <cstdio>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 std::string readFileIntoString(const std::string& path) {
-    std::ifstream input_file(path);
+    std::ifstream input_file(path.c_str());
     if (!input_file.is_open()) {
         std::cerr << "Could not open the file - '"
              << path << "'" << std::endl;

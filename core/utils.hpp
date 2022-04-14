@@ -1,5 +1,10 @@
 #include <string>
 #include <sstream>
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+
 
 std::string readFileIntoString(const std::string& path);
 bool doesFileExist(const std::string &name);

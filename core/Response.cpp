@@ -9,6 +9,56 @@
 # include <dirent.h>
 #include <string.h>
 
+std::map<int, std::string> Response::initErrCodeMap()
+{
+    std::map<int, std::string> static ErrCodeMap;
+    ErrCodeMap[200] = "OK";
+    ErrCodeMap[201] = "Created";
+    ErrCodeMap[300] = "Multiple Choice";
+    ErrCodeMap[301] = "Moved Permanently";
+    ErrCodeMap[302] = "Found";
+    ErrCodeMap[303] = "See Other";
+    ErrCodeMap[304] = "Not Modified";
+    ErrCodeMap[307] = "Temporary Redirect";
+    ErrCodeMap[308] = "Permanent Redirect";
+    ErrCodeMap[400] = "Bad Request";
+    ErrCodeMap[401] = "Unauthorized";
+    ErrCodeMap[402] = "Payment Required";
+    ErrCodeMap[403] = "Forbiden";
+    ErrCodeMap[404] = "Not Found";
+    ErrCodeMap[405] = "Method Not Allowed";
+    ErrCodeMap[406] = "Not Acceptable";
+    ErrCodeMap[407] = "Proxy Authentication Required";
+    ErrCodeMap[408] = "Request Timeout";
+    ErrCodeMap[409] = "Conflict";
+    ErrCodeMap[410] = "Gone";
+    ErrCodeMap[411] = "Length Required";
+    ErrCodeMap[412] = "Precondition Failed";
+    ErrCodeMap[413] = "Payload Too Large";
+    ErrCodeMap[414] = "URI Too Long";
+    ErrCodeMap[415] = "Unsupported Media Type";
+    ErrCodeMap[416] = "Range Not Satisfiable";
+    ErrCodeMap[417] = "Expectation Failed";
+    ErrCodeMap[418] = "I'm a teapot";
+    ErrCodeMap[421] = "Misdirected Request";
+    ErrCodeMap[422] = "Unprocessable Entity";
+    ErrCodeMap[423] = "Locked";
+    ErrCodeMap[426] = "Upgrade Required";
+    ErrCodeMap[428] = "Precondition Required";
+    ErrCodeMap[429] = "Too Many Requests";
+    ErrCodeMap[431] = "Request Header Fields Too Large";
+    ErrCodeMap[451] = "Unavailable For Legal Reasons";
+    ErrCodeMap[500] = "Internal Server Error";
+    ErrCodeMap[501] = "Not Implemented";
+    ErrCodeMap[502] = "Bad Gateway";
+    ErrCodeMap[503] = "Service Unavailable";
+    ErrCodeMap[504] = "Gateway Timeout";
+    ErrCodeMap[505] = "HTTP Version Not Supported";
+    ErrCodeMap[506] = "Variant Also Negotiates";
+    ErrCodeMap[510] = "Not Extended";
+    ErrCodeMap[511] = "Network Authentication Required";
+    return ErrCodeMap;
+}
 
 std::string Response::getErrorContent(int errCode)
 {
@@ -22,8 +72,8 @@ std::string Response::getErrorContent(int errCode)
 
 std::string Response::getCodeStatus(int errCode)
 {
-    std::map<int, std::string>::iterator it = ErrCodeMap.find(errCode);
-    if (it != ErrCodeMap.end())
+    std::map<int, std::string>::iterator it = _ErrCodeMap.find(errCode);
+    if (it != _ErrCodeMap.end())
         return it->second;
     return "";
 }
@@ -47,28 +97,29 @@ Response::Response(int code)
 Response::Response(std::map<std::string, std::string> &parsedRequest, int errorCode)
     : _statusCode(errorCode),
       _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
-      _ContentType(parsedRequest["Content-Type"]), _Connection(parsedRequest["Connection"]){
+      _ContentType(parsedRequest["Content-Type"]), _Connection(parsedRequest["Connection"]), _Location("./index.html"){
 
     char buf[3];
+    _ErrCodeMap = initErrCodeMap();
     sprintf(buf,"%i", _statusCode);
     this->_ReasonPhrase = codeToReasonPhrase(errorCode);
     _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
 };
 
-Response::Response(const Response &newResponse)
-{
-    return;
-}
+// Response::Response(const Response &newResponse)
+// {
+//     return;
+// }
 
 Response::~Response(void)
 {
     return;
 }
 
-Response &Response::operator=(const Response &newResponse)
-{
-    return *this;
-}
+// Response &Response::operator=(const Response &newResponse)
+// {
+//     return *this;
+// }
 
 std::string Response::timeAsString()
 {
@@ -172,7 +223,7 @@ void Response::sendResponse(int clientSocket){
         packagedResponse += "Location: " + _Location + CRLF;
     packagedResponse = packagedResponse + CRLF + _Content;
     // ! Handle error here. 
-    size_t i;
+    int i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }

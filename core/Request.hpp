@@ -25,10 +25,10 @@ class Request
 		Request();
 		Request(int fd);
 		Request(std::string fullRequest);
-		Request( Request const & src );
+		// Request( Request const & src );
 		~Request();
 
-		Request &		operator=( Request const & rhs );
+		// Request &		operator=( Request const & rhs );
 		void append(char *str, std::size_t readBytes);
 		void clear(void);
 		int parse(void);
@@ -84,11 +84,10 @@ class Request
 		std::string _fullRequest;
     std::string _uri;
     std::string root_dir;
-    uint16_t _requestParsingError;
+    unsigned int _requestParsingError;
     std::map<std::string, std::string> _parsedHttpRequest;
     static std::string _validRequestFields[];
 };
 
-std::ostream &			operator<<( std::ostream & o, Request const & i );
 
 #endif /* ********************************************************* REQUEST_H */

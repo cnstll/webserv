@@ -69,7 +69,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	_args[1] = (char *)scriptPathname.c_str();
 	_args[2] = NULL;
-
+	requestToEnvMap = initRequestToEnvMap();
 	_environment = _calloc_str_list(1);
     str_add("GATEWAY_INTERFACE=CGI/1.1");
     str_add("SERVER_NAME=webserv");
@@ -109,8 +109,6 @@ void	cgiHandler::cgiDispatch()
 {
 	int pid = -1;
 	int fd[2];
-	int stdoutDup;
-	int stdinDup;
 	
 	if (pipe(fd) < 0)
 		throw internalServerError();
@@ -156,7 +154,7 @@ cgiHandler::~cgiHandler(void)
     return ;
 }
 
-cgiHandler& cgiHandler::operator=(const cgiHandler& newenv)
-{
-    return *this;
-}
+// cgiHandler& cgiHandler::operator=(const cgiHandler& newenv)
+// {
+//     return *this;
+// }

@@ -42,19 +42,24 @@ class cgiHandler
         cgiHandler();
         cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &, int serverSocket);
         ~cgiHandler();
-        cgiHandler &operator=(const cgiHandler &newenv);
+        // cgiHandler &operator=(const cgiHandler &newenv);
         char **str_add(std::string  str_to_add);
         int strlen_list(char **str_list);
         void    handleCGI(int fd);
         
 
-        std::map<std::string, std::string> requestToEnvMap =
-            {{"REQUEST_METHOD", "method"},
-             {"SCRIPT_NAME", "requestURI"},
-             {"CONTENT_TYPE", "Content-Type"},
-             {"QUERY_STRING", "queryString"},
-             {"HTTP_USER_AGENT", "User-Agent"},
-             {"HTTP_CONNECTION", "Connection"},
-             {"CONTENT_LENGTH", "Content-Length"}};
+        std::map<std::string, std::string> initRequestToEnvMap() {
+            std::map<std::string, std::string> requestToEnvMap;
+            requestToEnvMap["REQUEST_METHOD"] = "method";
+            requestToEnvMap["SCRIPT_NAME"] = "requestURI";
+            requestToEnvMap["CONTENT_TYPE"] = "Content-Type";
+            requestToEnvMap["QUERY_STRING"]  = "queryString";
+            requestToEnvMap["HTTP_USER_AGENT"] = "User-Agent";
+            requestToEnvMap["HTTP_CONNECTION"] = "Connection";
+            requestToEnvMap["CONTENT_LENGTH"] = "Content-Length";
+            return requestToEnvMap;
+        };
+
+        std::map<std::string, std::string> requestToEnvMap;
 };
 #endif

@@ -36,7 +36,6 @@ int check (int return_value, std::string const &error_msg){
 }
 
 int setup_server(int port, int backlog){
-  int connexion_fd;
   struct sockaddr_in server_addr;
 
   check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
@@ -52,7 +51,7 @@ int setup_server(int port, int backlog){
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(port);
   check(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
-  check(listen(server_fd, MAX_QUEUE), "listen error");
+  check(listen(server_fd, backlog), "listen error");
   return server_fd;
 }
 
@@ -115,8 +114,6 @@ int is_request_done(Request *rq, int &contentLength, int &startOfBody)
 
 int parseHeader(Request *rq)
 {
-  int contentLength = 0;
-
   if (rq->getFullRequest().find("\r\n\r\n") != std::string::npos)
   {
     rq->parse();
@@ -215,8 +212,6 @@ bool isSeverFd(int fd, int *serverFds)
 }
 
 int main(){
-
-  int count_response = 0;
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
@@ -241,7 +236,6 @@ int main(){
 
   while (1)
   {
-    int tmpCountFd = count_of_fd_actualized;
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
@@ -260,7 +254,7 @@ int main(){
         Request *request2 = m[events[i].data.fd];
         std::cout << "Events Happening on fd: " << events[i].data.fd << std::endl;
         // request.addFdInfo(events[i].data.fd);
-        if (check_error_flags(events[i].events) < 0){
+        if (check_error_flags(events[i].events) == false){
           perror("error while receiving data");
           // request.clear();
           break;

@@ -23,9 +23,9 @@ Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir
 	initParsedRequestMap();
 }
 
-Request::Request( const Request & src )
-{
-}
+// Request::Request( const Request & src )
+// {
+// }
 
 
 /*
@@ -41,20 +41,15 @@ Request::~Request()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-Request &				Request::operator=( Request const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
+// Request &				Request::operator=( Request const & rhs )
+// {
+// 	//if ( this != &rhs )
+// 	//{
+// 		//this->_value = rhs.getValue();
+// 	//}
+// 	return *this;
+// }
 
-std::ostream &			operator<<( std::ostream & o, Request const & i )
-{
-	//o << "Value = " << i.getValue();
-	return o;
-}
 
 
 /*
@@ -91,7 +86,10 @@ bool isADir(std::string directoryPath)
 int Request::parse(void){
 	std::size_t head = 0;
 	std::size_t tail = 0;
-	std::vector<std::string> methods = {"GET", "POST", "DELETE"};
+	std::vector<std::string> methods;
+	 methods.push_back("GET"); 
+	 methods.push_back("POST"); 
+	 methods.push_back("DELETE"); 
 	tail = _fullRequest.find(' ', head);
 	// printFullRequest();
 	//check if method is valid {"GET", "POST, "DELETE"}
@@ -152,8 +150,6 @@ int Request::parse(void){
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
 		//! The following two declarations are (annoyingly) only here for debbuging purposes
-		char *thisField = (char *)field.c_str();
-		char *thisValue = (char*)value.c_str();
 		if (_parsedHttpRequest.count(field) == 1)
 			_parsedHttpRequest[field] = value;
 	}
@@ -175,7 +171,6 @@ std::string Request::unchunckedRequest(int startOfBody)
   std::string ogBody;
   std::string sizeStr;
   size_t chunckSize = 1;
-  size_t pos;
 
   ogBody = _fullRequest.substr(startOfBody);
   while (chunckSize)
