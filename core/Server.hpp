@@ -18,7 +18,7 @@ class Server
 
 		void displayServerConfig(std::ostream &o = std::cout) const;
 		configMap getServerConfig(void) const;
-		void parseConfig(const std::string &config);
+		void parseServerConfigFields(const std::string &config);
 		class Location {
 			public:
 				Location();
