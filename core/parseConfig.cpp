@@ -9,15 +9,6 @@
 #include <fstream>
 #include <string>
 
-size_t countChar(const std::string &str, char c){
-  size_t counter = 0;
-  int i = 0;
-  while (str[i])
-    if (str[i++] == c)
-      counter++;
-  return counter;
-}
-
 std::string configToString(char *filepath){
   std::ifstream configFile;
   std::string line;
@@ -35,8 +26,8 @@ std::string configToString(char *filepath){
   return config;
 }
 
-size_t countServerBlocs(const std::string &config){
-  size_t counter = 0;
+int countServerBlocs(const std::string &config){
+  int counter = 0;
   size_t found = 0;
   size_t configLen = config.length();
   std::string serverToken = "server {";
@@ -52,35 +43,6 @@ size_t countServerBlocs(const std::string &config){
   return counter;
 };
 
-bool checkLocationBloc(const std::string &config, size_t blocStart, size_t blocEnd){
-  size_t startBrace = config.substr(blocStart, blocEnd - blocStart).find("{");
-  // std::cerr << "SB: " << startBrace << " L: " << config.substr(blocStart, blocEnd - blocStart) << std::endl;
-  //Location is not enclosed between {} or additionnal '{'
-  if (startBrace == std::string::npos || startBrace != config.substr( blocStart, blocEnd - blocStart).rfind("{")) // additionnal "{" in a location bloc
-    return false;
-  else if (config.substr(blocStart, blocEnd - blocStart).find("}") != std::string::npos) //additionnal '}' in a location bloc
-    return false;
-  else
-    return true;
-}
-
-// void parseServerBloc(const std::string &config, std::vector<Server> servers, size_t countOfServers){
-//   size_t startOfBloc = 0;
-//   size_t endOfBloc;
-//   size_t endOfLine;
-//   const std::string serverToken = "server {";
-//   size_t serverNum = 0;
-//   // std::cerr << "ENTERED PARSE SERVER BLOC\n";
-//   while (serverNum < countOfServers){
-//     startOfBloc = config.find(serverToken, startOfBloc);
-//     if (startOfBloc == std::string::npos)
-//       printErrorAndExit("ERROR: Wrong synthaxe for server bloc\n");
-//     endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length()); // search for end of server bloc after server token
-//     startOfBloc = endOfBloc + 1;
-//     ++serverNum;
-//   }
-// }
-
 bool chunkHasToken(const std::string &chunk, const std::string &token){
   return (chunk.find(token) != std::string::npos);
 }
@@ -93,35 +55,50 @@ size_t findEndOfBloc(const std::string &config, size_t serverBlocStart){
   const std::string locationToken = "location /";
   const std::string serverToken = "server {";
   size_t checkStart = serverBlocStart;
-  while (nextClosingBrace < configLen){
+  // std::cout << "START: " << serverBlocStart << std::endl;
+  while (checkStart < configLen){
     nextClosingBrace = config.find("}", checkStart);
     if (nextClosingBrace == std::string::npos)
       printErrorAndExit("ERROR: no closing brace for server bloc");
     // if another server is within the chunk > error
-    if (chunkHasToken(config.substr(checkStart, nextClosingBrace - checkStart), serverToken))
-      printErrorAndExit("ERROR: bad server bloc layout");
+    //std::cout << "CS: " << checkStart << " CS CHAR: " << config.at(checkStart) << " NB CHAR: " << config.at(nextClosingBrace) << " configLen: " << configLen << std::endl;
+
     //find if a location bloc is in the chunk
-    nextLocationBloc = config.substr(checkStart, nextClosingBrace).find(locationToken);
+    nextLocationBloc = config.substr(checkStart, nextClosingBrace - checkStart).find(locationToken);
+    // std::cout << "CS: " << checkStart << " CB: " << nextClosingBrace << " NEXTLOC: " << nextLocationBloc << std::endl;
     if (nextLocationBloc == std::string::npos){
-      if (chunkHasToken(config.substr(nextLocationBloc + locationToken.length(), nextClosingBrace - nextLocationBloc + locationToken.length()), locationToken))
       endOfBloc = nextClosingBrace;
+      // std::cout << "FOUND: " << endOfBloc << std::endl;
       break;
     } else {
+      if (chunkHasToken(config.substr(checkStart, nextClosingBrace - checkStart), serverToken))
+        printErrorAndExit("ERROR: server bloc enclosed in another server bloc\n");
+      nextLocationBloc += checkStart;
+      if (chunkHasToken(config.substr(nextLocationBloc + locationToken.length(), nextClosingBrace - nextLocationBloc - locationToken.length()), locationToken))
+        printErrorAndExit("ERROR: location bloc enclosed in another location bloc");
       checkStart = nextClosingBrace + 1;
     }
   }
   return endOfBloc;
 }
 
-void checkBlocsUnity(const std::string &config){
+void checkBlocsAndParse(const std::string &config, std::vector<Server> &servers){
   size_t startOfBloc = 0;
   size_t endOfBloc = 0;
   const std::string serverToken = "server {";
+  int potentialNumberOfServers = countServerBlocs(config);
   // std::cerr << "ENTERED PARSE SERVER BLOC\n";
-  while (endOfBloc < config.length()){
+  int i = 0;
+  // TODO: LOCATION BLOC OUTSIDE OF SERVER BLOC NOT HANDLED
+  while (potentialNumberOfServers > i){
     startOfBloc = config.find(serverToken, startOfBloc);
+    //Find end of server bloc and do multiple checks
     endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length() + 1);// search for end of server bloc after server token
+    servers.push_back(Server());
+    servers[i].parseServerConfigFields(config.substr(startOfBloc, endOfBloc));
+    std::cout << servers[i];
     startOfBloc = endOfBloc + 1;
+    i++;
   }
 }
     //servers.at(serverNum).parseConfig(std::string(config, startOfBloc, endOfBloc - startOfBloc + 1));
@@ -224,7 +201,7 @@ void preParsing(const std::string& config){
     checkBlocOpening(line);
     if (!isBlocOpeningLine(line) && !isBlocClosingLine(line))
       checkInstructionLineLayout(line);
-    std::cout << "SL: " << startOfLine << " - EL: " << endOfLine << " - LINE: " << line << std::endl;
+    //std::cout << "SL: " << startOfLine << " - EL: " << endOfLine << " - LINE: " << line << std::endl;
     startOfLine = endOfLine + 1;
   }
 }
@@ -236,17 +213,7 @@ int main (int argc, char *argv[]){
     exit(EXIT_FAILURE);
   }
   std::string config = configToString(argv[1]);
-  //std::string parsedConfig;
-  size_t countOfServers;
-
   preParsing(config);
-  checkBlocsUnity(config);
-  countOfServers = countServerBlocs(config);
-  std::cout << "CONFIG LEN: " << config.length() << std::endl;
-  if (countOfServers == 0)
-    printErrorAndExit("ERROR: Wrong synthaxe for server bloc\n");
-  std::cout << "NB OF SERVER: " << countOfServers << std::endl;
   std::vector<Server> bunchOfServers;
-  bunchOfServers.assign(countOfServers, Server());
-  //parseServerBloc(config, bunchOfServers, countOfServers);
+  checkBlocsAndParse(config, bunchOfServers);
 }

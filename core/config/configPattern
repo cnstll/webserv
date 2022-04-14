@@ -1,0 +1,6 @@
+// MAIN LINE = [SP|TAB](FIELD)(SP)(VALUE)(;)
+// MAIN LINE = 'server {'
+// MAIN LINE = '}'
+// MAIN LINE = [SP|TAB](location)(SP)(/)(PATH)(SP)({)
+// LOCATION LINE = [SP|TAB](FIELD)(SP)(VALUE)(;)
+// MAIN LINE | LOCATION LINE = ''
