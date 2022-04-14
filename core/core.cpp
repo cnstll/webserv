@@ -20,9 +20,6 @@
 #define MAX_EVENTS 1000000
 #define READ_SIZE 30000
 #define REQUEST_READ_SIZE 16000
-#define SERVER_PORT 18000
-#define SERVER_PORT2 18000
-#define SERVER_PORT3 18000
 #define MAX_QUEUE 10000
 #define TIMEOUT 100000
 std::string CGI_EXTENSION = ".py";
@@ -219,16 +216,12 @@ bool isSeverFd(int fd, int *serverFds)
 
 int main(){
 
-  // int server_fd;
   int count_response = 0;
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
-  // Request request;
-  // server_fd = setup_server(SERVER_PORT, MAX_QUEUE);
   int serverFds[1000];
-  // int server_fd2 ;
   int ports[3] = {18000, 18001, 18002};
   int numberOfServers = 3;
   std::map<int, Request*> m;

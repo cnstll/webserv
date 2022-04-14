@@ -31,6 +31,7 @@ private:
     std::string _Location = "/index.html";
     std::string timeAsString();
     const char *convertToCString();
+    std::string directoryContents (std::string pathname);
     std::map<int, std::string> ErrCodeMap =
         {{200, "OK"},
          {201, "Created"},

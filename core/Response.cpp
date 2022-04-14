@@ -99,7 +99,7 @@ bool isADir2(std::string directoryPath)
 
 
 
-std::string directoryContents ( std::string pathname )
+std::string Response::directoryContents ( std::string pathname )
 {  
   DIR *dh;
   struct dirent * contents;
@@ -110,15 +110,14 @@ std::string directoryContents ( std::string pathname )
   
   dh = opendir ( pathname.c_str() );
   
-//   if ( !dh )
-//   {
-//     std::cout << "The given directory is not found";
-//     return;
-//   }
+  if ( !dh )
+  {
+    _statusCode = 404;
+    return getErrorContent(404);
+  }
   ret += "<Html>\n <h1> This is Otto's index, he's very proud of it so don't be rude now... </h1> <h3>";
   while ( ( contents = readdir ( dh ) ) != NULL )
   {
-    //   <a href="message.html">A Message from Warren E. Buffett</a>
     std::string name = "<li> <a href=\"" + std::string(contents->d_name) + "\">" + contents->d_name + "</a> </li>";
     ret += name += "\n";
   }
@@ -130,13 +129,8 @@ std::string directoryContents ( std::string pathname )
 
 void Response::addBody(std::string pathname)
 {
-    /*
-    if response code > 200
-    add body uses the content from the map in thhe response.
-    */
     char buf[10];
 
-    std::cout << "HERE I AM" << std::endl;
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
     else{
@@ -153,14 +147,8 @@ void Response::addBody(std::string pathname)
     _ContentLength = std::string(buf);
 }
 
-
-
 void Response::addBody()
 {
-    /*
-    if response code > 200
-    add body uses the content from the map in thhe response.
-    */
     char buf[10];
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
@@ -186,6 +174,6 @@ void Response::sendResponse(int clientSocket){
     // ! Handle error here. 
     size_t i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
 }
