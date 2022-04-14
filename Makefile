@@ -4,13 +4,15 @@ SRCS = ./core/core.cpp  \
 		./core/Response.cpp \
 		./core/Request.cpp \
 		./cgi/cgiHandler.cpp \
-		./core/utils.cpp
+		./parsing/parseConfig.cpp \
+		./core/Server.cpp \
+		./utils/utils.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
 COMP=g++  -fdiagnostics-color=always -g #-std=c++98
 
-CFLAGS = #-Wall -Wextra -Werror
+CFLAGS = -std=c++98 -Wall -Wextra -Werror
 
 GFLAG = #-g3 -fsanitize=address
 

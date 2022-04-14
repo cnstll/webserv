@@ -1,13 +1,4 @@
-#include "Server.hpp"
-#include "utils.hpp"
-#include <map>
-#include <vector>
-#include <iterator>
-#include <iostream>
-#include <cstdio>
-#include <cstring>
-#include <fstream>
-#include <string>
+#include "parseConfig.hpp"
 
 std::string configToString(char *filepath){
   std::ifstream configFile;
@@ -204,16 +195,4 @@ void preParsing(const std::string& config){
     //std::cout << "SL: " << startOfLine << " - EL: " << endOfLine << " - LINE: " << line << std::endl;
     startOfLine = endOfLine + 1;
   }
-}
-
-int main (int argc, char *argv[]){
-  // test if config file exist, otherwise exit
-  if (argc != 2){
-    std::cerr << "Wrong Number of arguments\n";
-    exit(EXIT_FAILURE);
-  }
-  std::string config = configToString(argv[1]);
-  preParsing(config);
-  std::vector<Server> bunchOfServers;
-  checkBlocsAndParse(config, bunchOfServers);
 }

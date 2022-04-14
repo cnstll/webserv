@@ -1,8 +1,8 @@
 #include"cgiHandler.hpp"
 #include"../core/Response.hpp"
+#include"../core/Request.hpp"
 #include<exception>
 
-#include"../core/Request.hpp"
 
 int cgiHandler::strlen_list(char **strList) {
     int i = 0;

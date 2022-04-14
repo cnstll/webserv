@@ -1,12 +1,12 @@
 #include "core.hpp"
 #include "Response.hpp"
-#include "utils.hpp"
+#include "../utils/utils.hpp"
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 #include<sys/socket.h>
 #include <map>
-# include <dirent.h>
+#include <dirent.h>
 #include <string.h>
 
 std::map<int, std::string> Response::initErrCodeMap()

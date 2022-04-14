@@ -1,5 +1,5 @@
-#ifndef ENV_CPP
-# define ENV_CPP
+#ifndef CGIHANDLER_HPP
+# define CGIHANDLER_HPP
 
 #include <iostream>
 #include<stdio.h>

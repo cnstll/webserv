@@ -1,27 +1,5 @@
-#include <stdio.h>     // for fprintf()
-#include <unistd.h>    // for close(), read()
-#include <sys/epoll.h> // for epoll_create1(), epoll_ctl(), struct epoll_event
-#include <string.h>    // for strncmp
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cerrno>
 #include "core.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
-#include "../cgi/cgiHandler.hpp"
-#include <sys/wait.h>
-#include <iostream>
-#define MAX_EVENTS 1000000
-#define READ_SIZE 30000
-#define REQUEST_READ_SIZE 16000
-#define MAX_QUEUE 10000
-#define TIMEOUT 100000
+
 std::string CGI_EXTENSION = ".py";
 
 int server_fd;
@@ -211,16 +189,25 @@ bool isSeverFd(int fd, int *serverFds)
   return 0;
 }
 
-int main(){
+int main(int argc, char *argv[]){
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
   int serverFds[1000];
-  int ports[3] = {18000, 18001, 18002};
+  // int ports[3] = {18000, 18001, 18002};
   int numberOfServers = 3;
   std::map<int, Request*> m;
 
+  // test if config file exist, otherwise exit
+  if (argc != 2){
+    std::cerr << "Wrong Number of arguments\n";
+    exit(EXIT_FAILURE);
+  }
+  std::string config = configToString(argv[1]);
+  preParsing(config);
+  std::vector<Server> bunchOfServers;
+  checkBlocsAndParse(config, bunchOfServers);
   // Prep a set of epoll event struct to register listened events
   bzero(serverFds, 1000);
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
@@ -230,7 +217,7 @@ int main(){
   check((epoll_fd = epoll_create(1)), "epoll error");
   
   for (int i = 0; i < numberOfServers; i++) {
-    serverFds[i] = setup_server(ports[i], MAX_QUEUE);
+    serverFds[i] = setup_server(bunchOfServers[i].getServerPort(), MAX_QUEUE);
     monitor_socket_action(epoll_fd, serverFds[i], EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
   }
 

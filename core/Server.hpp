@@ -1,12 +1,11 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
-# include "utils.hpp"
+# include "../utils/utils.hpp"
 # include <iostream>
 # include <string>
 # include <map>
 # include <vector>
 # include <iterator>
-//# include <cstdio>
 
 class Server
 {
@@ -18,6 +17,7 @@ class Server
 
 		void displayServerConfig(std::ostream &o = std::cout) const;
 		configMap getServerConfig(void) const;
+		int getServerPort(void) const;
 		void parseServerConfigFields(const std::string &config);
 		class Location {
 			public:
@@ -42,11 +42,14 @@ class Server
 		void parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfline);
 		void parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine);
 		bool isEmptyLine(const std::string &line);
+		void parsePort(void);
+
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
 		configMap serverConfigFields;
 		std::vector<Location> locationConfigFields;
-		size_t countOfLocationBlocks; 
+		size_t countOfLocationBlocks;
+		int serverPort; 
 };
 
 std::ostream &			operator<<( std::ostream & o, Server const & i );

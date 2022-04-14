@@ -12,3 +12,4 @@ void printErrorAndExit(const std::string &errorMessage);
 size_t getLineFromPosition(const std::string &str, size_t pos);
 std::string numberToString(size_t &Number);
 std::string numberToString(int &Number);
+int stringToNumber(std::string str);
