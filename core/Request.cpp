@@ -83,7 +83,7 @@ bool isADir(std::string directoryPath)
   return 1;
 }
 
-int Request::parse(void){
+int Request::parse(Server &server){
 	std::size_t head = 0;
 	std::size_t tail = 0;
 	std::vector<std::string> methods;
@@ -115,7 +115,10 @@ int Request::parse(void){
 		_requestParsingError = 414; //"URI Too long"
 		return -1;
 	}
-	if (!doesFileExist(getPathToFile())){
+
+	
+
+	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
 			_requestParsingError = 301;
 		else if (isADir(getPathToFile()))

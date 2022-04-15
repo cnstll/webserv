@@ -4,6 +4,7 @@
 # include <iostream>
 #include <map>
 # include <string>
+# include "Server.hpp"
 # ifndef ROOT_DIR
 # define ROOT_DIR "/core/server_root"
 # endif
@@ -18,6 +19,7 @@
 //                  | entity-header ) CRLF)
 //                 CRLF
 //                 [ message-body ]
+class Server;
 
 class Request
 {
@@ -31,7 +33,7 @@ class Request
 		// Request &		operator=( Request const & rhs );
 		void append(char *str, std::size_t readBytes);
 		void clear(void);
-		int parse(void);
+		int parse(Server &);
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
