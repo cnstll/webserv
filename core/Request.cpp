@@ -115,19 +115,14 @@ int Request::parse(Server &server){
 		_requestParsingError = 414; //"URI Too long"
 		return -1;
 	}
-
-	
-
+	//! Here is we should check for redirects, before checking if the file exitsts as that won't be true if the file moved
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
 			_requestParsingError = 301;
 		else
 			_requestParsingError = 404; //"Not Found" 
 		return -1;
-	} else if (isADir(server.constructPath(_parsedHttpRequest["requestURI"]))) {
-		//!
 	}
-
 
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
