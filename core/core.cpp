@@ -75,71 +75,6 @@ bool check_error_flags(int event){
   return (true);
 }
 
-int is_request_done(Request *rq, int &contentLength, int &startOfBody)
-{
-  if (rq->getParsedRequest()["Transfer-Encoding"] == "chunked")
-  {
-    if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
-      return 1;
-    else
-      return 0;
-  }
-  int lengthRecvd = rq->getFullRequest().length() - startOfBody;
-  if (contentLength == lengthRecvd)
-    return (1);
-  return 0;
-}
-
-int parseHeader(Request *rq, Server &currentServer)
-{
-  if (rq->getFullRequest().find("\r\n\r\n") != std::string::npos)
-  {
-    rq->parse(currentServer);
-    if (rq->getHttpMethod() == "POST")
-      return (1);
-    else
-      return 2;
-  }
-  return 0;
-}
-
-int recv_request(const int &fd, Request *rq, Server &currentServer){
-  int read_bytes;
-  char request_buffer[REQUEST_READ_SIZE + 1];
-  static bool headerParsed = 0;
-  int parsed;
-  int contentSize;
-  int startOfBody;
-
-  bzero(&request_buffer, REQUEST_READ_SIZE + 1);
-  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
-  {
-    rq->append(request_buffer, read_bytes);
-    if (!headerParsed)
-    {
-      parsed = parseHeader(rq, currentServer);
-      if (parsed)
-      {
-        if (parsed == 2)
-          return (read_bytes);
-        else
-        {
-          headerParsed = 1;
-          startOfBody = rq->getFullRequest().find("\r\n\r\n") + 4;
-          contentSize = atoi(rq->getParsedRequest()["Content-Length"].c_str());
-        }
-      }
-    }
-    if (is_request_done(rq, contentSize, startOfBody))
-    {
-      headerParsed = 0;
-      return (read_bytes);
-    }
-    bzero(&request_buffer, REQUEST_READ_SIZE);
-  }
-  return -1;
-}
-
 void print_events(struct epoll_event *events, int eventful_fds){
   for (int i = 0; i < eventful_fds; i++)
   {
@@ -255,7 +190,7 @@ int main(int argc, char *argv[]){
           requestMap.erase(events[i].data.fd);
           break;
         }
-        recv_bytes = recv_request(events[i].data.fd, currentRequest, *currentServer);
+        recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest);//recv_request(events[i].data.fd, currentRequest, *currentServer);
         if (recv_bytes == -1)
         {
           continue;

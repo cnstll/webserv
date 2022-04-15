@@ -71,6 +71,72 @@ void Server::displayServerConfig(std::ostream &o) const{
   o << "---------------------------------------END OF SERVER CONFIG\n";
 }
 
+int Server::is_request_done(Request &request, int &contentLength, int &startOfBody)
+{
+  if (request.getParsedRequest()["Transfer-Encoding"] == "chunked")
+  {
+    if (request.getFullRequest().find("\r\n0\r\n") != std::string::npos)
+      return 1;
+    else
+      return 0;
+  }
+  int lengthRecvd = request.getFullRequest().length() - startOfBody;
+  if (contentLength == lengthRecvd)
+    return (1);
+  return 0;
+}
+
+int Server::parseHeader(Request &request)
+{
+  if (request.getFullRequest().find("\r\n\r\n") != std::string::npos)
+  {
+    request.parse(*this);
+    if (request.getHttpMethod() == "POST")
+      return (1);
+    else
+      return 2;
+  }
+  return 0;
+}
+
+
+int Server::recvRequest(const int &fd, Request &request){
+  int read_bytes;
+  char request_buffer[REQUEST_READ_SIZE + 1] = {};
+  static bool headerParsed = 0;
+  int parsed;
+  int contentSize;
+  int startOfBody;
+
+//   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
+  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
+  {
+    request.append(request_buffer, read_bytes);
+    if (!headerParsed)
+    {
+      parsed = parseHeader(request)	;
+      if (parsed)
+      {
+        if (parsed == 2)
+          return (read_bytes);
+        else
+        {
+          headerParsed = 1;
+          startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+          contentSize = atoi(request.getParsedRequest()["Content-Length"].c_str());
+        }
+      }
+    }
+    if (is_request_done(request, contentSize, startOfBody))
+    {
+      headerParsed = 0;
+      return (read_bytes);
+    }
+    // bzero(&request_buffer, REQUEST_READ_SIZE);
+  }
+  return -1;
+}
+
 void Server::initServerConfig(){
 	int i = 0;
 	//fill map with all possible allowed fields in server

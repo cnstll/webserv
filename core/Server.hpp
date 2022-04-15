@@ -4,10 +4,14 @@
 # include "Request.hpp"
 # include <iostream>
 # include <string>
-# include <map>
-# include <string>
-# include <vector>
-# include <iterator>
+#include <map>
+#include <string>
+#include <vector>
+#include <iterator>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#define REQUEST_READ_SIZE 16000
 
 class Request;
 
@@ -24,6 +28,9 @@ class Server
 		void parseServerConfigFields(const std::string &config);
 		std::map<int, Request*> requestMap;
 		std::string constructPath(std::string &uri);
+		int parseHeader(Request &request);
+		int recvRequest(const int &fd, Request &request);
+		int is_request_done(Request &Request, int &contentLength, int &startOfBody);
 		class Location {
 			public:
 				Location();
