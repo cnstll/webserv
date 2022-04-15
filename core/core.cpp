@@ -144,12 +144,6 @@ int main(int argc, char *argv[])
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);
-        if (currentRequest->getParsedRequest()["Connection"] != "keep-alive")
-        {
-          close(events[i].data.fd);
-          delete currentRequest;
-          currentServer->requestMap.erase(events[i].data.fd);
-        }
       }
     }
     //! Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
