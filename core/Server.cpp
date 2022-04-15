@@ -396,6 +396,14 @@ void Server::parseServerConfigFields(const std::string &bloc){
 		}
 	}
 	parsePort();
+	std::string uri = "/delete_resource.py";
+	std::string requested = "root";
+	std::cout << "GETTER: \'" << getLocationField(uri, requested) << "\'" << std::endl;
+	uri = "/delete_resource.py";
+	requested = "methods";
+	std::cout << "GETTER: \'" << getLocationField(uri, requested) << "\'" << std::endl;
+	uri += "lol";
+	std::string forYOUcoLOMBAN = getLocationField(uri, requested);
 };
 
 void Server::parsePort(void){
@@ -414,6 +422,17 @@ void Server::parsePort(void){
 
 	int Server::getServerPort(void) const {
 		return serverPort;
+	}
+
+	std::string Server::getLocationField(std::string &locationUri, std::string &requestedField){
+		std::map<std::string, Location>::iterator it = locationBlocs.find(locationUri);
+		configMap::iterator itLoc;
+		if (it == locationBlocs.end())
+			return std::string("");
+		else {
+			itLoc = it->second.fields.find(requestedField);
+			return (itLoc == it->second.fields.end() ? std::string("") : it->second.fields[requestedField]);
+		}
 	}
 
 /*
