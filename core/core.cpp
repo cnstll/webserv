@@ -4,8 +4,10 @@ std::string CGI_EXTENSION = ".py";
 
 int server_fd;
 
-int check (int return_value, std::string const &error_msg){
-  if (return_value < 0){
+int check(int return_value, std::string const &error_msg)
+{
+  if (return_value < 0)
+  {
     std::cerr << error_msg << std::endl;
     // exit(EXIT_FAILURE);
     return -1;
@@ -13,7 +15,8 @@ int check (int return_value, std::string const &error_msg){
   return 1;
 }
 
-int setup_server(int port, int backlog){
+int setup_server(int port, int backlog)
+{
   struct sockaddr_in server_addr;
 
   check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
@@ -33,37 +36,20 @@ int setup_server(int port, int backlog){
   return server_fd;
 }
 
-int accept_new_connexion(int server_fd){
-  socklen_t addr_in_len = sizeof(struct sockaddr_in);
-  struct sockaddr_in connexion_address;
-  int connexion_fd;
-
-  if (check(connexion_fd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
-  {
-    return connexion_fd;
-    std::cout << connexion_fd << std::endl;
-  }
-  return -1;
-}
-
-void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action){
-  //Set a epoll event object to parametrize monitored fds
+void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action)
+{
+  // Set a epoll event object to parametrize monitored fds
   struct epoll_event event_parameters;
-  //Fd that will be added to the epoll
+  // Fd that will be added to the epoll
   event_parameters.data.fd = fd_to_monitor;
   event_parameters.events = events_to_monitor;
-  //event_parameters.data.ptr = NULL;
+  // event_parameters.data.ptr = NULL;
   check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
 }
 
-void make_fd_non_blocking(int fd){
-  int flags;
-  check((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
-  flags |= O_NONBLOCK;
-  check((fcntl(fd, F_SETFL, flags)), "fcntl error");
-}
 
-bool check_error_flags(int event){
+bool check_error_flags(int event)
+{
   if (event & EPOLLHUP || event & EPOLLERR)
   {
     if (event & EPOLLHUP)
@@ -75,96 +61,7 @@ bool check_error_flags(int event){
   return (true);
 }
 
-int is_request_done(Request *rq, int &contentLength, int &startOfBody)
-{
-  if (rq->getParsedRequest()["Transfer-Encoding"] == "chunked")
-  {
-    if (rq->getFullRequest().find("\r\n0\r\n") != std::string::npos)
-      return 1;
-    else
-      return 0;
-  }
-  int lengthRecvd = rq->getFullRequest().length() - startOfBody;
-  if (contentLength == lengthRecvd)
-    return (1);
-  return 0;
-}
 
-int parseHeader(Request *rq, Server &currentServer)
-{
-  if (rq->getFullRequest().find("\r\n\r\n") != std::string::npos)
-  {
-    rq->parse(currentServer);
-    if (rq->getHttpMethod() == "POST")
-      return (1);
-    else
-      return 2;
-  }
-  return 0;
-}
-
-int recv_request(const int &fd, Request *rq, Server &currentServer){
-  int read_bytes;
-  char request_buffer[REQUEST_READ_SIZE + 1];
-  static bool headerParsed = 0;
-  int parsed;
-  int contentSize;
-  int startOfBody;
-
-  bzero(&request_buffer, REQUEST_READ_SIZE + 1);
-  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
-  {
-    rq->append(request_buffer, read_bytes);
-    if (!headerParsed)
-    {
-      parsed = parseHeader(rq, currentServer);
-      if (parsed)
-      {
-        if (parsed == 2)
-          return (read_bytes);
-        else
-        {
-          headerParsed = 1;
-          startOfBody = rq->getFullRequest().find("\r\n\r\n") + 4;
-          contentSize = atoi(rq->getParsedRequest()["Content-Length"].c_str());
-        }
-      }
-    }
-    if (is_request_done(rq, contentSize, startOfBody))
-    {
-      headerParsed = 0;
-      return (read_bytes);
-    }
-    bzero(&request_buffer, REQUEST_READ_SIZE);
-  }
-  return -1;
-}
-
-void print_events(struct epoll_event *events, int eventful_fds){
-  for (int i = 0; i < eventful_fds; i++)
-  {
-    printf("fd:    %i\n", events[i].data.fd);
-    if (events[i].events & EPOLLIN)
-      printf("EPOLLIN\n");
-    if (events[i].events & EPOLLOUT)
-      printf("EPOLLOUT\n");
-    if (events[i].events & EPOLLHUP)
-      printf("EPOLLHUP\n");
-    if (events[i].events & EPOLLERR)
-      printf("EPOLLERR\n");
-    if (events[i].events & EPOLLRDHUP)
-      printf("EPOLLRDHUP\n");
-    if (events[i].events & EPOLL_CLOEXEC)
-      printf("EPOLlCLOEXEC\n");    
-    if (events[i].events & EPOLLMSG)
-      printf("EPOLlMSG\n");    
-    if (events[i].events & EPOLLPRI)
-      printf("EPOLlPRI\n");    
-    if (events[i].events & EPOLLWAKEUP)
-      printf("EPOLLWAKEUP\n");    
-    printf("\n\n");
-  }
-}
 
 std::string get_extension(std::string uri)
 {
@@ -189,16 +86,49 @@ bool isSeverFd(int fd, std::map<int, Server> serverMap)
   return 0;
 }
 
-int main(int argc, char *argv[]){
+Server *portPicker(std::map<int, Server> &serverMap, int fd)
+{
+  Server *currentServer;
+  std::map<int, Server>::iterator iter = serverMap.begin();
+  while (iter != serverMap.end())
+  {
+    if (iter->second.requestMap.find(fd) != iter->second.requestMap.end())
+    {
+      // currentRequest = iter->second.requestMap[events[i].data.fd];
+      currentServer = &iter->second;
+      break;
+    }
+    ++iter;
+  }
+  return currentServer;
+}
+
+void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOfServers, int epollFd)
+{
+  std::vector<Server>::iterator servIter = bunchOfServers.begin();
+  while (servIter != bunchOfServers.end())
+  {
+    int tmpServerfd = setup_server(servIter->getServerPort(), MAX_QUEUE);
+    serverMap[tmpServerfd] = *servIter;
+    monitor_socket_action(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+    ++servIter;
+  }
+}
+
+int main(int argc, char *argv[])
+{
   int connexion_fd;
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
-  std::map<int, Request*> requestMap;
+  std::map<int, Request *> requestMap;
   std::map<int, Server> serverMap;
+  Request *currentRequest;
+  Server *currentServer;
 
   // test if config file exist, otherwise exit
-  if (argc != 2){
+  if (argc != 2)
+  {
     std::cerr << "Wrong Number of arguments\n";
     exit(EXIT_FAILURE);
   }
@@ -210,76 +140,50 @@ int main(int argc, char *argv[]){
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
   // Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
-  
-  std::vector<Server>::iterator servIter = bunchOfServers.begin();
-  while (servIter != bunchOfServers.end()) {
-    int tmpServerfd = setup_server(servIter->getServerPort(), MAX_QUEUE);
-    serverMap[tmpServerfd] = *servIter;
-    monitor_socket_action(epoll_fd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
-    ++servIter;
-  }
+  setupServers(serverMap, bunchOfServers, epoll_fd);
 
   while (1)
   {
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      recv_bytes = 0;
+      if (check_error_flags(events[i].events) == false)
+        continue;
       if (isSeverFd(events[i].data.fd, serverMap))
       {
         check_error_flags(events[i].events);
-        if (!check((connexion_fd = accept_new_connexion(events[i].data.fd)), "accept error"))
+        if (!check((connexion_fd = serverMap[events[i].data.fd].acceptNewConnexion(events[i].data.fd)), "accept error"))
           continue;
-        make_fd_non_blocking(connexion_fd);
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
-        serverMap[events[i].data.fd].requestMap[connexion_fd] = new Request;
       }
       else if (events[i].events & EPOLLIN)
       {
-        Request *currentRequest;
-        Server  *currentServer;
-        std::map<int, Server>::iterator iter = serverMap.begin();
-        while (iter != serverMap.end())
-        {
-          if (iter->second.requestMap.find(events[i].data.fd) != iter->second.requestMap.end())
-          {
-            currentRequest = iter->second.requestMap[events[i].data.fd];
-            currentServer = &iter->second;
-            break;
-          }
-          ++iter;
-        }
-        if (check_error_flags(events[i].events) == false){
-          perror("error while receiving data");
-          // delete currentRequest;
-          requestMap.erase(events[i].data.fd);
-          break;
-        }
-        recv_bytes = recv_request(events[i].data.fd, currentRequest, *currentServer);
+        currentServer = portPicker(serverMap, events[i].data.fd);
+        currentRequest = currentServer->requestMap[events[i].data.fd];
+        recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
         if (recv_bytes == -1)
-        {
           continue;
-        }
         if (recv_bytes == 0)
-        {
-          printf("Closing connexion for fd: %d\n", events[i].data.fd);
-          // delete currentRequest;
-          requestMap.erase(events[i].data.fd);
-          close(events[i].data.fd);
           break;
-        }
-        if (currentRequest->parse(*currentServer) < 0){
-          std::cout << "\nError while parsing currentRequest!!!\n";
-        }
-      if (events[i].events & EPOLLOUT) {
-        if (get_extension(currentRequest->getRequestedUri()) == CGI_EXTENSION) {
-            std::string script_pathname = "." + std::string(ROOT_DIR) + currentRequest->getRequestedUri(); //! Should this be in the config file?
-            cgiHandler cgiParams(currentRequest->getParsedRequest(), script_pathname, events[i].data.fd);
+        currentRequest->parse(*currentServer);
+        // if (currentRequest->parse(*currentServer) < 0)
+        // {
+        //   std::cout << "\nError while parsing currentRequest!!!\n";
+        // }
+        std::string requestedURI = currentRequest->getRequestedUri();
+        if (events[i].events & EPOLLOUT)
+        {
+          if (get_extension(currentRequest->getRequestedUri()) == CGI_EXTENSION)
+          {
+            std::string scriptPathname = currentServer->constructPath(requestedURI);
+            cgiHandler cgiParams(currentRequest->getParsedRequest(), scriptPathname, events[i].data.fd);
             cgiParams.handleCGI(events[i].data.fd);
-        }
-          else if (currentRequest->getHttpMethod() == "DELETE"){
+          }
+          else if (currentRequest->getHttpMethod() == "DELETE")
+          {
             const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + currentRequest->getRequestedUri();
-            if (std::remove(fileToBeDeleted.c_str()) != 0){
+            if (std::remove(fileToBeDeleted.c_str()) != 0)
+            {
               Response resp(currentRequest->getParsedRequest(), 204);
               resp.sendResponse(events[i].data.fd);
             }
@@ -287,14 +191,13 @@ int main(int argc, char *argv[]){
           else
           {
             Response resp(currentRequest->getParsedRequest(), currentRequest->getError());
-            std::string AH = currentRequest->getRequestedUri();
-            resp.addBody(currentServer->constructPath(AH));
+            resp.addBody(currentServer->constructPath(requestedURI));
             resp.sendResponse(events[i].data.fd);
             // delete currentRequest;
             // requestMap.erase(events[i].data.fd);
           }
           currentRequest->clear();
-      }
+        }
         if (currentRequest->getParsedRequest()["Connection"] != "keep-alive")
         {
           close(events[i].data.fd);
@@ -303,7 +206,7 @@ int main(int argc, char *argv[]){
         }
       }
     }
-    //!Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
+    //! Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
     // if (request2->getFullRequest() != "" && !count_of_fd_actualized)
     // {
     //   Response resp(request.getParsedRequest(), 408);
