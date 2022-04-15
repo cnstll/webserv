@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <dirent.h>
 
 std::string readFileIntoString(const std::string& path) {
     std::ifstream input_file(path.c_str());
@@ -23,10 +24,23 @@ const char *file_to_c_string(const std::string& path)
     return (c_str);
 }
 
+bool isADir(std::string directoryPath)
+{  
+  DIR *dh;
+  
+  dh = opendir (directoryPath.c_str());
+  
+  if ( !dh )
+    return 0;
+  closedir ( dh );
+  return 1;
+}
 
 bool doesFileExist (const std::string& name) {
     if (FILE *file = fopen(name.c_str(), "r+")) {
         fclose(file);
+        return true;
+    } else if (isADir(name)) {
         return true;
     } else {
         return false;

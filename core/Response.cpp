@@ -136,20 +136,6 @@ std::string Response::timeAsString()
     return (str);
 }
 
-bool isADir2(std::string directoryPath)
-{  
-  DIR *dh;
-  
-  dh = opendir (directoryPath.c_str());
-  
-  if ( !dh )
-    return 0;
-  closedir ( dh );
-  return 1;
-}
-
-
-
 std::string Response::directoryContents ( std::string pathname )
 {  
   DIR *dh;
@@ -185,13 +171,19 @@ void Response::addBody(std::string pathname)
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
     else{
-        if (!isADir2(pathname))
+        if (!isADir(pathname))
         {
         std::ifstream input_file(pathname.c_str());
         _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
         }
         else {
+            int autoindex = 1;
+            if (autoindex) {
             _Content = directoryContents(pathname);
+            } else {
+                _Content = "<Html>Is A directory, for more clarity, turn Autoindexing on in the server's config</Html>";
+            }
+            //! Here we gotta check the autoindexing...
         }
    }
     sprintf(buf, "%lu", _Content.size());

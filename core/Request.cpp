@@ -71,17 +71,17 @@ void Request::clear(){
  * 
  */
 
-bool isADir(std::string directoryPath)
-{  
-  DIR *dh;
+// bool isADir(std::string directoryPath)
+// {  
+//   DIR *dh;
   
-  dh = opendir (directoryPath.c_str());
+//   dh = opendir (directoryPath.c_str());
   
-  if ( !dh )
-    return 0;
-  closedir ( dh );
-  return 1;
-}
+//   if ( !dh )
+//     return 0;
+//   closedir ( dh );
+//   return 1;
+// }
 
 int Request::parse(Server &server){
 	std::size_t head = 0;
@@ -121,14 +121,13 @@ int Request::parse(Server &server){
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
 			_requestParsingError = 301;
-		else if (isADir(getPathToFile()))
-		{
-			//! here is where we check for autoindexing?
-		}
 		else
 			_requestParsingError = 404; //"Not Found" 
 		return -1;
+	} else if (isADir(server.constructPath(_parsedHttpRequest["requestURI"]))) {
+		//!
 	}
+
 
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
