@@ -43,8 +43,9 @@ class Server
 		int acceptNewConnexion(int serverFd);
 		void makeFdNonBlocking(int &fd);
 		int setupServer(int port, int backlog);
-		int respond(int fd);
+		void respond(int fd);
 		std::string getExtension(std::string &);
+		void	closeConnection(int fd);
 		bool isEndOfBloc(const std::string &line);
 		class Location {
 			public:

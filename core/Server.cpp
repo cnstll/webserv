@@ -144,7 +144,14 @@ std::string Server::getExtension(std::string &uri)
 	return (uri);
 }
 
-int Server::respond(int fd)
+void Server::closeConnection(int fd)
+{
+	close(fd);
+	delete _currentRequest;
+	requestMap.erase(fd);
+}
+
+void Server::respond(int fd)
 {
 	std::string cgiExtension = ".py";
 	_currentRequest = requestMap[fd];
@@ -153,14 +160,12 @@ int Server::respond(int fd)
 	std::string fullPath = constructPath(uri);
 	if (getExtension(extension) == cgiExtension)
 	{
-		// std::string scriptPathname = constructPath(_currentRequest->getRequestedUri());
 		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd);
 		cgiParams.handleCGI(fd);
 	}
 	else if (_currentRequest->getHttpMethod() == "DELETE")
 	{
-		const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + _currentRequest->getRequestedUri();
-		if (std::remove(fileToBeDeleted.c_str()) != 0)
+		if (std::remove(fullPath.c_str()) != 0)
 		{
 			Response resp(_currentRequest->getParsedRequest(), 204);
 			resp.sendResponse(fd);
@@ -171,11 +176,12 @@ int Server::respond(int fd)
 		Response resp(_currentRequest->getParsedRequest(), _currentRequest->getError());
 		resp.addBody(fullPath);
 		resp.sendResponse(fd);
-		// delete _currentRequest;
-		// requestMap.erase(events[i].data.fd);
 	}
-	_currentRequest->clear();
-	return 1;
+	if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
+		closeConnection(fd);
+	else
+		_currentRequest->clear();
+
 }
 
 int Server::setupServer(int port, int backlog)

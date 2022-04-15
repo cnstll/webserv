@@ -9,7 +9,6 @@ int check(int return_value, std::string const &error_msg)
   if (return_value < 0)
   {
     std::cerr << error_msg << std::endl;
-    // exit(EXIT_FAILURE);
     return -1;
   }
   return 1;
@@ -26,7 +25,6 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
   check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
 }
 
-
 bool check_error_flags(int event)
 {
   if (event & EPOLLHUP || event & EPOLLERR)
@@ -39,8 +37,6 @@ bool check_error_flags(int event)
   }
   return (true);
 }
-
-
 
 std::string get_extension(std::string uri)
 {
@@ -145,10 +141,6 @@ int main(int argc, char *argv[])
         if (recv_bytes == 0)
           break;
         currentRequest->parse(*currentServer);
-        // if (currentRequest->parse(*currentServer) < 0)
-        // {
-        //   std::cout << "\nError while parsing currentRequest!!!\n";
-        // }
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);
