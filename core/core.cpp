@@ -36,20 +36,6 @@ int setup_server(int port, int backlog)
   return server_fd;
 }
 
-int accept_new_connexion(int server_fd)
-{
-  socklen_t addr_in_len = sizeof(struct sockaddr_in);
-  struct sockaddr_in connexion_address;
-  int connexion_fd;
-
-  if (check(connexion_fd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
-  {
-    return connexion_fd;
-    std::cout << connexion_fd << std::endl;
-  }
-  return -1;
-}
-
 void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action)
 {
   // Set a epoll event object to parametrize monitored fds
@@ -61,13 +47,6 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
   check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
 }
 
-void make_fd_non_blocking(int fd)
-{
-  int flags;
-  check((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
-  flags |= O_NONBLOCK;
-  check((fcntl(fd, F_SETFL, flags)), "fcntl error");
-}
 
 bool check_error_flags(int event)
 {
@@ -82,32 +61,7 @@ bool check_error_flags(int event)
   return (true);
 }
 
-void print_events(struct epoll_event *events, int eventful_fds)
-{
-  for (int i = 0; i < eventful_fds; i++)
-  {
-    printf("fd:    %i\n", events[i].data.fd);
-    if (events[i].events & EPOLLIN)
-      printf("EPOLLIN\n");
-    if (events[i].events & EPOLLOUT)
-      printf("EPOLLOUT\n");
-    if (events[i].events & EPOLLHUP)
-      printf("EPOLLHUP\n");
-    if (events[i].events & EPOLLERR)
-      printf("EPOLLERR\n");
-    if (events[i].events & EPOLLRDHUP)
-      printf("EPOLLRDHUP\n");
-    if (events[i].events & EPOLL_CLOEXEC)
-      printf("EPOLlCLOEXEC\n");
-    if (events[i].events & EPOLLMSG)
-      printf("EPOLlMSG\n");
-    if (events[i].events & EPOLLPRI)
-      printf("EPOLlPRI\n");
-    if (events[i].events & EPOLLWAKEUP)
-      printf("EPOLLWAKEUP\n");
-    printf("\n\n");
-  }
-}
+
 
 std::string get_extension(std::string uri)
 {
