@@ -1,11 +1,15 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 # include "../utils/utils.hpp"
+# include "Request.hpp"
 # include <iostream>
 # include <string>
 # include <map>
+# include <string>
 # include <vector>
 # include <iterator>
+
+class Request;
 
 class Server
 {
@@ -14,11 +18,12 @@ class Server
 
 		Server();
 		~Server();
-
 		void displayServerConfig(std::ostream &o = std::cout) const;
 		configMap getServerConfig(void) const;
 		int getServerPort(void) const;
 		void parseServerConfigFields(const std::string &config);
+		std::map<int, Request*> requestMap;
+		std::string constructPath(std::string &uri);
 		class Location {
 			public:
 				Location();

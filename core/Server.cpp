@@ -136,8 +136,8 @@ void Server::parseLocationFields(const std::string& line){
 		}
 		++it;
 	}
-	if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
-		printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+	// if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
+	// 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
 
 }
 void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
@@ -172,8 +172,22 @@ void Server::parseMainInstructionsFields(const std::string &bloc, std::string &l
 		}
 		++it;
 	}
-	if (it == serverConfigFields.end())
-		printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+	// if (it == serverConfigFields.end())
+	// 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+}
+
+std::string Server::constructPath(std::string &uri) {
+	std::string fullPath;
+	// configMap::iterator iter = serverConfigFields.begin();
+	fullPath = serverConfigFields["root"] + uri;
+	return fullPath;
+	// while (iter != serverConfigFields.end()) 
+	// {
+	// 	iter->first["root"]
+	// 	++iter;
+	// }
+
+	
 }
 
 void Server::parseServerConfigFields(const std::string &bloc){
