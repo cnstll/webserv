@@ -99,6 +99,40 @@ int Server::parseHeader(Request &request)
   return 0;
 }
 
+int check2(int return_value, std::string const &error_msg)
+{
+  if (return_value < 0)
+  {
+    std::cerr << error_msg << std::endl;
+    // exit(EXIT_FAILURE);
+    return -1;
+  }
+  return 1;
+}
+
+void Server::makeFdNonBlocking(int &fd)
+{
+  int flags;
+  check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
+  flags |= O_NONBLOCK;
+  check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
+}
+
+int Server::acceptNewConnexion(int server_fd)
+{
+  socklen_t addr_in_len = sizeof(struct sockaddr_in);
+  struct sockaddr_in connexion_address;
+  int connexionFd;
+
+  if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
+  {
+	  makeFdNonBlocking(connexionFd);
+	  requestMap[connexionFd] = new Request;
+	  return connexionFd;
+  }
+  return -1;
+}
+
 
 int Server::recvRequest(const int &fd, Request &request){
   int read_bytes;

@@ -11,6 +11,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>    // for close(), read()
+#include <sys/epoll.h> // for epoll_create1(), epoll_ctl(), struct epoll_event
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+
 
 #define REQUEST_READ_SIZE 16000
 
@@ -32,6 +37,8 @@ class Server
 		int parseHeader(Request &request);
 		int recvRequest(const int &fd, Request &request);
 		int is_request_done(Request &Request, int &contentLength, int &startOfBody);
+		int acceptNewConnexion(int serverFd);
+		void makeFdNonBlocking(int &fd);
 		class Location {
 			public:
 				Location();
