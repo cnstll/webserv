@@ -2,6 +2,8 @@
 # define SERVER_HPP
 # include "../utils/utils.hpp"
 # include "Request.hpp"
+# include "Response.hpp"
+# include "../cgi/cgiHandler.hpp"
 # include <iostream>
 # include <string>
 #include <map>
@@ -15,6 +17,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <string.h>
 
 
 #define REQUEST_READ_SIZE 16000
@@ -39,6 +42,9 @@ class Server
 		int is_request_done(Request &Request, int &contentLength, int &startOfBody);
 		int acceptNewConnexion(int serverFd);
 		void makeFdNonBlocking(int &fd);
+		int setupServer(int port, int backlog);
+		int respond(int fd);
+		std::string getExtension(std::string &);
 		class Location {
 			public:
 				Location();
@@ -49,7 +55,7 @@ class Server
 		
 
 	private:
-
+		Request *_currentRequest;
 		//Server &		operator=( Server const & rhs );
 		//Server( Server const &src );
 		void initServerConfig(void);

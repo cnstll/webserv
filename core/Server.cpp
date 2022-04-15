@@ -133,6 +133,71 @@ int Server::acceptNewConnexion(int server_fd)
   return -1;
 }
 
+std::string Server::getExtension(std::string &uri)
+{
+	if (uri != "")
+	{
+		size_t pos = uri.find_last_of(".");
+		if (pos != std::string::npos)
+			return (uri.substr(pos));
+	}
+	return (uri);
+}
+
+int Server::respond(int fd)
+{
+	std::string cgiExtension = ".py";
+	_currentRequest = requestMap[fd];
+	std::string extension = _currentRequest->getRequestedUri();
+	std::string uri = _currentRequest->getRequestedUri();
+	std::string fullPath = constructPath(uri);
+	if (getExtension(extension) == cgiExtension)
+	{
+		// std::string scriptPathname = constructPath(_currentRequest->getRequestedUri());
+		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd);
+		cgiParams.handleCGI(fd);
+	}
+	else if (_currentRequest->getHttpMethod() == "DELETE")
+	{
+		const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + _currentRequest->getRequestedUri();
+		if (std::remove(fileToBeDeleted.c_str()) != 0)
+		{
+			Response resp(_currentRequest->getParsedRequest(), 204);
+			resp.sendResponse(fd);
+		}
+	}
+	else
+	{
+		Response resp(_currentRequest->getParsedRequest(), _currentRequest->getError());
+		resp.addBody(fullPath);
+		resp.sendResponse(fd);
+		// delete _currentRequest;
+		// requestMap.erase(events[i].data.fd);
+	}
+	_currentRequest->clear();
+	return 1;
+}
+
+int Server::setupServer(int port, int backlog)
+{
+  struct sockaddr_in server_addr;
+  int serverFd;
+
+  check2((serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
+  int yes = 1;
+  if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+  {
+    perror("setsockopt");
+    exit(1);
+  }
+  bzero(&server_addr, sizeof(server_addr));
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  server_addr.sin_port = htons(port);
+  check2(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
+  check2(listen(serverFd, backlog), "listen error");
+  return serverFd;
+}
 
 int Server::recvRequest(const int &fd, Request &request){
   int read_bytes;
