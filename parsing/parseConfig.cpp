@@ -57,13 +57,13 @@ size_t findEndOfBloc(const std::string &config, size_t serverBlocStart){
     //find if a location bloc is in the chunk
     nextLocationBloc = config.substr(checkStart, nextClosingBrace - checkStart).find(locationToken);
     // std::cout << "CS: " << checkStart << " CB: " << nextClosingBrace << " NEXTLOC: " << nextLocationBloc << std::endl;
+    if (chunkHasToken(config.substr(checkStart, nextClosingBrace - checkStart), serverToken))
+      printErrorAndExit("ERROR: server bloc enclosed in another server bloc\n");
     if (nextLocationBloc == std::string::npos){
       endOfBloc = nextClosingBrace;
       // std::cout << "FOUND: " << endOfBloc << std::endl;
       break;
     } else {
-      if (chunkHasToken(config.substr(checkStart, nextClosingBrace - checkStart), serverToken))
-        printErrorAndExit("ERROR: server bloc enclosed in another server bloc\n");
       nextLocationBloc += checkStart;
       if (chunkHasToken(config.substr(nextLocationBloc + locationToken.length(), nextClosingBrace - nextLocationBloc - locationToken.length()), locationToken))
         printErrorAndExit("ERROR: location bloc enclosed in another location bloc");
@@ -74,15 +74,17 @@ size_t findEndOfBloc(const std::string &config, size_t serverBlocStart){
 }
 
 void checkBlocsAndParse(const std::string &config, std::vector<Server> &servers){
-  size_t startOfBloc = 0;
-  size_t endOfBloc = 0;
+  size_t startOfBloc = 0, endOfBloc = 0;
   const std::string serverToken = "server {";
+  const std::string locationToken = "location /";
   int potentialNumberOfServers = countServerBlocs(config);
   // std::cerr << "ENTERED PARSE SERVER BLOC\n";
   int i = 0;
   // TODO: LOCATION BLOC OUTSIDE OF SERVER BLOC NOT HANDLED
   while (potentialNumberOfServers > i){
     startOfBloc = config.find(serverToken, startOfBloc);
+    if (chunkHasToken(config.substr(endOfBloc, startOfBloc - endOfBloc), locationToken))
+      printErrorAndExit("ERROR: location bloc out of server bloc\n");
     //Find end of server bloc and do multiple checks
     endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length() + 1);// search for end of server bloc after server token
     servers.push_back(Server());
@@ -91,6 +93,9 @@ void checkBlocsAndParse(const std::string &config, std::vector<Server> &servers)
     startOfBloc = endOfBloc + 1;
     i++;
   }
+  if (chunkHasToken(config.substr(startOfBloc, config.length() - startOfBloc), locationToken))
+    printErrorAndExit("ERROR: location bloc out of server bloc\n");
+
 }
     //servers.at(serverNum).parseConfig(std::string(config, startOfBloc, endOfBloc - startOfBloc + 1));
     //std::cout << servers[serverNum];
@@ -172,6 +177,8 @@ bool isBlocOpeningLine(const std::string &line){
 
 bool isBlocClosingLine(const std::string &line){
   size_t closingBracePos = line.find_first_not_of(" \t");
+  if (closingBracePos == std::string::npos)
+    return false;
   return (line.at(closingBracePos) == '}');
 }
 

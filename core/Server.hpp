@@ -45,6 +45,7 @@ class Server
 		int setupServer(int port, int backlog);
 		int respond(int fd);
 		std::string getExtension(std::string &);
+		bool isEndOfBloc(const std::string &line);
 		class Location {
 			public:
 				Location();

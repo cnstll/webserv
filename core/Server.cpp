@@ -274,6 +274,16 @@ bool Server::isEmptyLine(const std::string &line){
 	return (line.find_first_not_of(" \t") == std::string::npos);
 }
 
+bool Server::isEndOfBloc(const std::string &line){
+	size_t pos = line.find_first_not_of(" \t");
+	if (pos == std::string::npos)
+		return false;
+	else if (line.at(pos) == '}')
+		return true;
+	else
+		return false;
+}
+
 std::string Server::findLocationPath(const std::string &line){
 	std::string locationPath;
 	const std::string locationToken = "location";
@@ -308,8 +318,8 @@ void Server::parseLocationFields(const std::string& line){
 		}
 		++it;
 	}
-	// if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
-	// 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+	if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
+	 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
 
 }
 void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
@@ -344,8 +354,8 @@ void Server::parseMainInstructionsFields(const std::string &bloc, std::string &l
 		}
 		++it;
 	}
-	// if (it == serverConfigFields.end())
-	// 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+	if (it == serverConfigFields.end())
+		printErrorAndExit("ERROR: unknown field in server bloc - FaultyLine: \'" + line + "\'\n");
 }
 
 std::string Server::constructPath(std::string &uri) {
@@ -374,7 +384,7 @@ void Server::parseServerConfigFields(const std::string &bloc){
 		if (endOfLine == std::string::npos)
 			break;
 		line = bloc.substr(startOfLine, endOfLine - startOfLine);
-		if (isEmptyLine(line))
+		if (isEmptyLine(line) || isEndOfBloc(line))
 			continue;
 		if (lineHasLocationToken(line)){
 			parseLocationBloc(bloc, line, startOfLine, endOfLine);
@@ -408,6 +418,7 @@ void Server::parsePort(void){
 */
 std::string Server::validServerFields[] = {
 
+		"index",
 		"listen",
 		"server_name",
 		"root",
@@ -417,13 +428,11 @@ std::string Server::validServerFields[] = {
 
 std::string Server::validLocationFields[] = {
 
-		"index",
 		"root",
 		"methods",
 		"autoindex",
 		"client_max_body_size",
 		"upload_dir",
-		"cgi",
 		""
 };
 
