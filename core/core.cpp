@@ -132,6 +132,35 @@ bool isSeverFd(int fd, std::map<int, Server> serverMap)
   return 0;
 }
 
+Server *portPicker(std::map<int, Server> &serverMap, int fd)
+{
+  Server *currentServer;
+  std::map<int, Server>::iterator iter = serverMap.begin();
+  while (iter != serverMap.end())
+  {
+    if (iter->second.requestMap.find(fd) != iter->second.requestMap.end())
+    {
+      // currentRequest = iter->second.requestMap[events[i].data.fd];
+      currentServer = &iter->second;
+      break;
+    }
+    ++iter;
+  }
+  return currentServer;
+}
+
+void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOfServers, int epollFd)
+{
+  std::vector<Server>::iterator servIter = bunchOfServers.begin();
+  while (servIter != bunchOfServers.end())
+  {
+    int tmpServerfd = setup_server(servIter->getServerPort(), MAX_QUEUE);
+    serverMap[tmpServerfd] = *servIter;
+    monitor_socket_action(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+    ++servIter;
+  }
+}
+
 int main(int argc, char *argv[])
 {
   int connexion_fd;
@@ -157,59 +186,36 @@ int main(int argc, char *argv[])
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
   // Set up an epoll instance
   check((epoll_fd = epoll_create(1)), "epoll error");
-
-  std::vector<Server>::iterator servIter = bunchOfServers.begin();
-  while (servIter != bunchOfServers.end())
-  {
-    int tmpServerfd = setup_server(servIter->getServerPort(), MAX_QUEUE);
-    serverMap[tmpServerfd] = *servIter;
-    monitor_socket_action(epoll_fd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
-    ++servIter;
-  }
+  setupServers(serverMap, bunchOfServers, epoll_fd);
 
   while (1)
   {
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      recv_bytes = 0;
+      if (check_error_flags(events[i].events) == false)
+        continue;
       if (isSeverFd(events[i].data.fd, serverMap))
       {
-        currentServer = &serverMap[events[i].data.fd];
         check_error_flags(events[i].events);
-        if (!check((connexion_fd = currentServer->acceptNewConnexion(events[i].data.fd)), "accept error"))
+        if (!check((connexion_fd = serverMap[events[i].data.fd].acceptNewConnexion(events[i].data.fd)), "accept error"))
           continue;
         monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
       }
       else if (events[i].events & EPOLLIN)
       {
-        std::map<int, Server>::iterator iter = serverMap.begin();
-        while (iter != serverMap.end())
-        {
-          if (iter->second.requestMap.find(events[i].data.fd) != iter->second.requestMap.end())
-          {
-            currentRequest = iter->second.requestMap[events[i].data.fd];
-            currentServer = &iter->second;
-            break;
-          }
-          ++iter;
-        }
-        if (check_error_flags(events[i].events) == false)
-        {
-          perror("error while receiving data");
-          // delete currentRequest;
-          requestMap.erase(events[i].data.fd);
-          break;
-        }
+        currentServer = portPicker(serverMap, events[i].data.fd);
+        currentRequest = currentServer->requestMap[events[i].data.fd];
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
         if (recv_bytes == -1)
           continue;
         if (recv_bytes == 0)
           break;
-        if (currentRequest->parse(*currentServer) < 0)
-        {
-          std::cout << "\nError while parsing currentRequest!!!\n";
-        }
+        currentRequest->parse(*currentServer);
+        // if (currentRequest->parse(*currentServer) < 0)
+        // {
+        //   std::cout << "\nError while parsing currentRequest!!!\n";
+        // }
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
         {
