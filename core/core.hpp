@@ -5,7 +5,7 @@
 #include "Response.hpp"
 #include "Server.hpp"
 #include "../cgi/cgiHandler.hpp"
-#include "../parsing/parseConfig.hpp"
+#include "../parsing/parsing.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

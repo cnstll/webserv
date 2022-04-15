@@ -5,6 +5,7 @@ SRCS = ./core/core.cpp  \
 		./core/Request.cpp \
 		./cgi/cgiHandler.cpp \
 		./parsing/parseConfig.cpp \
+		./parsing/preParsing.cpp \
 		./core/Server.cpp \
 		./utils/utils.cpp
 
