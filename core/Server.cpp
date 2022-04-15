@@ -46,26 +46,27 @@ std::ostream &			operator<<( std::ostream & o, Server const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 void Server::displayServerConfig(std::ostream &o) const{
-  std::map<std::string, std::string>::const_iterator it = serverConfigFields.begin();
-  size_t i = 0;
+  configMap::const_iterator itServ = serverConfigFields.begin();
+  std::map<std::string, Location>::const_iterator itLoc = locationBlocs.begin();
+	size_t i = 0;
 	o << "BEGINNING OF SERVER CONFIG---------------------------------\n";
-	while(it != serverConfigFields.end()){
-		if (it->second != "")
-    	o << "Field: " << it->first << " - Value: " << it->second << std::endl;
-    ++it;
+	while(itServ != serverConfigFields.end()){
+		if (itServ->second != "")
+    	o << "Field: " << itServ->first << " - Value: " << itServ->second << std::endl;
+    ++itServ;
   }
 	if (countOfLocationBlocks)
 		o << "\nTOTAL NUMBER OF LOCATION BLOCS: " << countOfLocationBlocks;
-	while (i < countOfLocationBlocks){
+	while (itLoc != locationBlocs.end()){
 		o << "\nLOCATION FIELD no " << i << std::endl;
-		o << "Uri path attached to location: " << locationConfigFields[i].uriPath << std::endl;
-		it = locationConfigFields[i].locationConfigFields.begin();
-		while(it != locationConfigFields[i].locationConfigFields.end()){
-			if (it->second != "")
-  	  	o << "Field: " << it->first << " - Value: " << it->second << std::endl;
-  	  ++it;
+		o << "Uri path attached to location: " << itLoc->first << std::endl;
+		configMap::const_iterator itLocFields = itLoc->second.fields.begin();
+		while(itLocFields != itLoc->second.fields.end()){
+			if (itLocFields->second != "")
+  	  	o << "Field: " << itLocFields->first << " - Value: " << itLocFields->second << std::endl;
+  	  ++itLocFields;
   	}
-		++i;
+		++itLoc;
 	}
 
   o << "---------------------------------------END OF SERVER CONFIG\n";
@@ -259,15 +260,15 @@ void Server::initServerConfig(){
 	countOfLocationBlocks = 0;
 }
 
-void Server::addLocationBlocConfig(){
+void Server::addLocationBlocConfig(std::string &uri){
 	int i = 0;
 	Location newLocation;
 	//fill map with all possible allowed fields in server
 	while (Server::validLocationFields[i] != ""){
-		newLocation.locationConfigFields[Server::validLocationFields[i]] = std::string();
+		newLocation.fields[Server::validLocationFields[i]] = std::string();
 		i++;
 	}
-	locationConfigFields.push_back(newLocation);
+	locationBlocs[uri] = newLocation;
 	++countOfLocationBlocks;
 }
 
@@ -309,11 +310,11 @@ std::string Server::findLocationPath(const std::string &line){
 	return locationPath;
 }
 
-void Server::parseLocationFields(const std::string& line){
+void Server::parseLocationFields(const std::string& line, const std::string &uri){
 	configMap::iterator it;
 	size_t matchField;
-	it =  locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.begin();
-	while (it != locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end()){
+	it =  locationBlocs[uri].fields.begin();
+	while (it != locationBlocs[uri].fields.end()){
 		matchField = line.find(it->first);
 		if (matchField != std::string::npos){
 			matchField += it->first.length();
@@ -324,13 +325,13 @@ void Server::parseLocationFields(const std::string& line){
 		}
 		++it;
 	}
-	if (it == locationConfigFields[countOfLocationBlocks - 1].locationConfigFields.end())
+	if (it == locationBlocs[uri].fields.end())
 	 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
 
 }
 void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
-	addLocationBlocConfig();
-	locationConfigFields[countOfLocationBlocks - 1].uriPath = findLocationPath(line);
+	std::string uri = findLocationPath(line);
+	addLocationBlocConfig(uri);
 	size_t endOfLocationBloc = bloc.find("}", endOfLine + 1);
 	while (1)
 	{
@@ -341,7 +342,7 @@ void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_
 		line = bloc.substr(startOfLine, endOfLine - startOfLine);
 		if (isEmptyLine(line))
 			continue;
-		parseLocationFields(line);
+		parseLocationFields(line, uri);
 	}
 }
 
@@ -366,16 +367,12 @@ void Server::parseMainInstructionsFields(const std::string &bloc, std::string &l
 
 std::string Server::constructPath(std::string &uri) {
 	std::string fullPath;
-	// configMap::iterator iter = serverConfigFields.begin();
-	fullPath = serverConfigFields["root"] + uri;
-	return fullPath;
-	// while (iter != serverConfigFields.end()) 
-	// {
-	// 	iter->first["root"]
-	// 	++iter;
-	// }
-
-	
+	std::map<std::string, Location>::iterator it;
+	it = locationBlocs.find(uri);
+	if (it == locationBlocs.end())
+		return serverConfigFields["root"] + uri;
+	else
+		return it->second.fields["root"] + uri;
 }
 
 void Server::parseServerConfigFields(const std::string &bloc){
@@ -439,6 +436,7 @@ std::string Server::validLocationFields[] = {
 		"autoindex",
 		"client_max_body_size",
 		"upload_dir",
+		"return",
 		""
 };
 

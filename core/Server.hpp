@@ -51,19 +51,17 @@ class Server
 			public:
 				Location();
 				~Location();
-				configMap locationConfigFields;
-				std::string uriPath;
+				configMap fields;
 		};
-		
 
 	private:
 		Request *_currentRequest;
 		//Server &		operator=( Server const & rhs );
 		//Server( Server const &src );
 		void initServerConfig(void);
-		void addLocationBlocConfig(void);
+		void addLocationBlocConfig(std::string &uri);
 		std::string findLocationPath(const std::string &line);
-		void parseLocationFields(const std::string& line);
+		void parseLocationFields(const std::string& line, const std::string &uri);
 		void checkInstructionEOL(const std::string &line, bool hasLocationLineToken);
 		bool lineHasLocationToken(const std::string &line);
 		void checkWhitespacesInInstructionLine(const std::string &line, bool hasLocationLineToken);
@@ -75,7 +73,7 @@ class Server
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
 		configMap serverConfigFields;
-		std::vector<Location> locationConfigFields;
+		std::map<std::string, Location> locationBlocs;
 		size_t countOfLocationBlocks;
 		int serverPort; 
 };
