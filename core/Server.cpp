@@ -236,6 +236,7 @@ void Server::parsePort(void){
 */
 std::string Server::validServerFields[] = {
 
+		"index",
 		"listen",
 		"server_name",
 		"root",
@@ -245,13 +246,11 @@ std::string Server::validServerFields[] = {
 
 std::string Server::validLocationFields[] = {
 
-		"index",
 		"root",
 		"methods",
 		"autoindex",
 		"client_max_body_size",
 		"upload_dir",
-		"cgi",
 		""
 };
 
