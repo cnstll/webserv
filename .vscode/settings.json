@@ -59,7 +59,7 @@
       {
         "cwd": "/mnt/nfs/homes/calle/42projects/webserv",
         "binaryPath": "/mnt/nfs/homes/calle/42projects/webserv/webserv",
-        "binaryArgs": []
+        "binaryArgs": ["core/config/minimal.config"]
       }
     ]
 }

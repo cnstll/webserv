@@ -39,6 +39,7 @@ class Server
 		int is_request_done(Request &Request, int &contentLength, int &startOfBody);
 		int acceptNewConnexion(int serverFd);
 		void makeFdNonBlocking(int &fd);
+		bool isEndOfBloc(const std::string &line);
 		class Location {
 			public:
 				Location();
