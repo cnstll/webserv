@@ -15,27 +15,6 @@ int check(int return_value, std::string const &error_msg)
   return 1;
 }
 
-int setup_server(int port, int backlog)
-{
-  struct sockaddr_in server_addr;
-
-  check((server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
-  int yes = 1;
-
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
-  {
-    perror("setsockopt");
-    exit(1);
-  }
-  bzero(&server_addr, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr.sin_port = htons(port);
-  check(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
-  check(listen(server_fd, backlog), "listen error");
-  return server_fd;
-}
-
 void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action)
 {
   // Set a epoll event object to parametrize monitored fds
@@ -108,7 +87,7 @@ void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOf
   std::vector<Server>::iterator servIter = bunchOfServers.begin();
   while (servIter != bunchOfServers.end())
   {
-    int tmpServerfd = setup_server(servIter->getServerPort(), MAX_QUEUE);
+    int tmpServerfd = servIter->setupServer(servIter->getServerPort(), MAX_QUEUE);
     serverMap[tmpServerfd] = *servIter;
     monitor_socket_action(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
     ++servIter;
@@ -172,32 +151,7 @@ int main(int argc, char *argv[])
         // }
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
-        {
-          if (get_extension(currentRequest->getRequestedUri()) == CGI_EXTENSION)
-          {
-            std::string scriptPathname = currentServer->constructPath(requestedURI);
-            cgiHandler cgiParams(currentRequest->getParsedRequest(), scriptPathname, events[i].data.fd);
-            cgiParams.handleCGI(events[i].data.fd);
-          }
-          else if (currentRequest->getHttpMethod() == "DELETE")
-          {
-            const std::string fileToBeDeleted = "." + std::string(ROOT_DIR) + currentRequest->getRequestedUri();
-            if (std::remove(fileToBeDeleted.c_str()) != 0)
-            {
-              Response resp(currentRequest->getParsedRequest(), 204);
-              resp.sendResponse(events[i].data.fd);
-            }
-          }
-          else
-          {
-            Response resp(currentRequest->getParsedRequest(), currentRequest->getError());
-            resp.addBody(currentServer->constructPath(requestedURI));
-            resp.sendResponse(events[i].data.fd);
-            // delete currentRequest;
-            // requestMap.erase(events[i].data.fd);
-          }
-          currentRequest->clear();
-        }
+          currentServer->respond(events[i].data.fd);
         if (currentRequest->getParsedRequest()["Connection"] != "keep-alive")
         {
           close(events[i].data.fd);

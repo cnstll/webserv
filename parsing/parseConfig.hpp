@@ -11,6 +11,9 @@
 # include <fstream>
 # include <string>
 
+class Server;
+
+
 std::string configToString(char *filepath);
 int countServerBlocs(const std::string &config);
 bool chunkHasToken(const std::string &chunk, const std::string &token);
