@@ -89,6 +89,15 @@ void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOf
     ++servIter;
   }
 }
+bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
+{
+  for (int i = 0; i < countOfFdActualized; i++)
+  {
+    if (events[i].data.fd == fd)
+      return true;
+  }
+  return false;
+}
 
 int main(int argc, char *argv[])
 {
@@ -146,7 +155,21 @@ int main(int argc, char *argv[])
           currentServer->respond(events[i].data.fd);
       }
     }
+    // closeInnactiveConnections
+    //   std::map<int, Server>::iterator iterServ = serverMap.begin();
+    //   while (iterServ != serverMap.end())
+    //   {
+    //     std::map<int,   Request*>::iterator iterReq = requestMap.begin();
+    //     while (iterReq != requestMap.end())
+    //     {
+    //         if (!isInUpdatedFds(events, iterReq->first, count_of_fd_actualized))
+    //           iterServ->second.closeConnection(iterReq->first);
+    //         ++iterReq;
+    //     }
+    //     ++iterServ;
+    //   }
     //! Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
+    // Iterate through All open requests, check that against actualized fd's, if one isn't thereclose the connection and delete the request?
     // if (request2->getFullRequest() != "" && !count_of_fd_actualized)
     // {
     //   Response resp(request.getParsedRequest(), 408);
