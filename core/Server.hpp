@@ -10,6 +10,7 @@
 #include <iterator>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>    // for close(), read()
 
 #define REQUEST_READ_SIZE 16000
 

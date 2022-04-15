@@ -192,24 +192,19 @@ int main(int argc, char *argv[]){
         }
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest);//recv_request(events[i].data.fd, currentRequest, *currentServer);
         if (recv_bytes == -1)
-        {
           continue;
-        }
         if (recv_bytes == 0)
-        {
-          printf("Closing connexion for fd: %d\n", events[i].data.fd);
-          // delete currentRequest;
-          requestMap.erase(events[i].data.fd);
-          close(events[i].data.fd);
           break;
-        }
         if (currentRequest->parse(*currentServer) < 0){
           std::cout << "\nError while parsing currentRequest!!!\n";
         }
-      if (events[i].events & EPOLLOUT) {
-        if (get_extension(currentRequest->getRequestedUri()) == CGI_EXTENSION) {
-            std::string script_pathname = "." + std::string(ROOT_DIR) + currentRequest->getRequestedUri(); //! Should this be in the config file?
-            cgiHandler cgiParams(currentRequest->getParsedRequest(), script_pathname, events[i].data.fd);
+        std::string requestedURI = currentRequest->getRequestedUri();
+        if (events[i].events & EPOLLOUT)
+        {
+          if (get_extension(currentRequest->getRequestedUri()) == CGI_EXTENSION)
+          {
+            std::string scriptPathname = currentServer->constructPath(requestedURI);
+            cgiHandler cgiParams(currentRequest->getParsedRequest(), scriptPathname, events[i].data.fd);
             cgiParams.handleCGI(events[i].data.fd);
         }
           else if (currentRequest->getHttpMethod() == "DELETE"){
@@ -222,8 +217,7 @@ int main(int argc, char *argv[]){
           else
           {
             Response resp(currentRequest->getParsedRequest(), currentRequest->getError());
-            std::string AH = currentRequest->getRequestedUri();
-            resp.addBody(currentServer->constructPath(AH));
+            resp.addBody(currentServer->constructPath(requestedURI));
             resp.sendResponse(events[i].data.fd);
             // delete currentRequest;
             // requestMap.erase(events[i].data.fd);

@@ -134,7 +134,14 @@ int Server::recvRequest(const int &fd, Request &request){
     }
     // bzero(&request_buffer, REQUEST_READ_SIZE);
   }
-  return -1;
+  if (read_bytes == 0)
+  {
+	  printf("Closing connexion for fd: %d\n", fd);
+	  // delete currentRequest;
+	  requestMap.erase(fd);
+	  close(fd);
+  }
+  return read_bytes;
 }
 
 void Server::initServerConfig(){
