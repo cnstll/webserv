@@ -9,18 +9,21 @@
 #include <fstream>
 #include <algorithm>
 # include <dirent.h>
+# include <ctime>
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
 	initParsedRequestMap();
-
+	_birth = time(0);
 };
 
 Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR), _requestParsingError(200)
 {
 	initParsedRequestMap();
+	_birth = time(0);
+	_inactiveTime = 0;
 }
 
 // Request::Request( const Request & src )

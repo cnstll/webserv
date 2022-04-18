@@ -8,6 +8,7 @@
 # ifndef ROOT_DIR
 # define ROOT_DIR "/core/server_root"
 # endif
+#include <ctime>
 
 # ifndef URI_MAX_LEN
 # define URI_MAX_LEN 128
@@ -48,9 +49,20 @@ class Request
     std::string unchunckedRequest(int startOfBody);
 
     //!experimentation
+    bool timeout()
+    {
+      _inactiveTime = std::difftime(time(0), _birth);
+      return _inactiveTime > 1;
+    }
+   
+   
     void addFdInfo(int fd);
     int fd;    
-	private:
+	
+  
+    time_t _inactiveTime;
+  private:
+    time_t _birth;
 	
 		//  general-header = Cache-Control
     //                 | Connection       

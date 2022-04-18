@@ -235,7 +235,7 @@ void Response::sendResponse(int clientSocket){
         "Server: " + _Server + CRLF +
         "Content-Length: " + _ContentLength + CRLF +
         "Content-Type: " + contype + CRLF +
-        "Connection: " + _Connection + CRLF;
+        "Connection: " + "close" + CRLF;
 
 
     if (_statusCode >= 300 && _statusCode < 400)

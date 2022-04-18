@@ -99,6 +99,34 @@ bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
   return false;
 }
 
+void print_events(struct epoll_event *events, int eventful_fds){
+  for (int i = 0; i < eventful_fds; i++)
+  {
+    printf("fd:    %i\n", events[i].data.fd);
+    if (events[i].events & EPOLLIN)
+      printf("EPOLLIN\n");
+    if (events[i].events & EPOLLOUT)
+      printf("EPOLLOUT\n");
+    if (events[i].events & EPOLLHUP)
+      printf("EPOLLHUP\n");
+    if (events[i].events & EPOLLERR)
+      printf("EPOLLERR\n");
+    if (events[i].events & EPOLLRDHUP)
+      printf("EPOLLRDHUP\n");
+    if (events[i].events & EPOLL_CLOEXEC)
+      printf("EPOLlCLOEXEC\n");    
+    if (events[i].events & EPOLLMSG)
+      printf("EPOLlMSG\n");    
+    if (events[i].events & EPOLLPRI)
+      printf("EPOLlPRI\n");    
+    if (events[i].events & EPOLLWAKEUP)
+      printf("EPOLLWAKEUP\n");    
+    //printf("something else happened\n");
+    printf("\n\n");
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   int connexion_fd;
@@ -129,6 +157,8 @@ int main(int argc, char *argv[])
   while (1)
   {
     check((count_of_fd_actualized = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)), "epoll_wait error");
+
+    // print_events(events, count_of_fd_actualized);
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
       if (check_error_flags(events[i].events) == false)
@@ -156,18 +186,38 @@ int main(int argc, char *argv[])
       }
     }
     // closeInnactiveConnections
-    //   std::map<int, Server>::iterator iterServ = serverMap.begin();
-    //   while (iterServ != serverMap.end())
-    //   {
-    //     std::map<int,   Request*>::iterator iterReq = requestMap.begin();
-    //     while (iterReq != requestMap.end())
-    //     {
-    //         if (!isInUpdatedFds(events, iterReq->first, count_of_fd_actualized))
-    //           iterServ->second.closeConnection(iterReq->first);
-    //         ++iterReq;
-    //     }
-    //     ++iterServ;
-    //   }
+      std::map<int, Server>::iterator iterServ = serverMap.begin();
+      while (iterServ != serverMap.end())
+      {
+        std::map<int,   Request*>::iterator iterReq = iterServ->second.requestMap.begin();
+        while (iterReq != iterServ->second.requestMap.end())
+        {
+          // std::cout << iterReq->first << std::endl;
+          if (!isInUpdatedFds(events, iterReq->first, count_of_fd_actualized))
+          {
+            if (iterReq->second->timeout())
+            {
+              std::cout << iterReq->first << std::endl;
+              Response resp(iterReq->second->getParsedRequest(), 408);
+              resp.addBody();
+              resp.sendResponse(iterReq->first);
+              if (close(iterReq->first) == -1)
+                perror("EEEERNO:");
+              iterServ->second.requestMap.erase(iterReq->first);
+              iterReq = iterServ->second.requestMap.begin();
+              std::cout << "connection timed out" << std::endl;
+              break ;
+            }
+          }
+          else{
+            iterReq->second->_inactiveTime = 0;
+            // std::cout << iterReq->second->timeout() << std::endl;
+          }
+          ++iterReq;
+        }
+        ++iterServ;
+      }
+ 
     //! Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
     // Iterate through All open requests, check that against actualized fd's, if one isn't thereclose the connection and delete the request?
     // if (request2->getFullRequest() != "" && !count_of_fd_actualized)

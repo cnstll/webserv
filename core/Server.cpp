@@ -159,7 +159,7 @@ void Server::respond(int fd)
 	std::string extension = _currentRequest->getRequestedUri();
 	std::string uri = _currentRequest->getRequestedUri();
 	std::string fullPath = constructPath(uri);
-	if (getExtension(extension) == cgiExtension)
+	if (getExtension(extension) == cgiExtension && _currentRequest->getError() <= 300)
 	{
 		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd, *this);
 		cgiParams.handleCGI(fd);
@@ -230,6 +230,8 @@ int Server::recvRequest(const int &fd, Request &request){
           headerParsed = 1;
           startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
           contentSize = atoi(request.getParsedRequest()["Content-Length"].c_str());
+		  if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")))
+		  	return (read_bytes);
         }
       }
     }
