@@ -185,7 +185,6 @@ void Response::addBody(std::string pathname)
             } else {
                 _Content = "<Html>Is A directory, for more clarity, turn Autoindexing on in the server's config</Html>";
             }
-            //! Here we gotta check the autoindexing...
         }
    }
     sprintf(buf, "%lu", _Content.size());
@@ -197,23 +196,23 @@ void Response::addBody(std::string pathname, Server *currentServer)
     char buf[10];
 
     if (_statusCode >= 300)
-        _Content = getErrorContent(_statusCode);    
-    else{
+        _Content = getErrorContent(_statusCode);
+    else
+    {
         if (!isADir(pathname))
         {
-        std::ifstream input_file(pathname.c_str());
-        _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+            std::ifstream input_file(pathname.c_str());
+            _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
         }
-        else {           
+        else
+        {
             std::string autoindex = currentServer->getLocationField(_uri, "autoindex");
-            if (autoindex == "on") {
-            _Content = directoryContents(pathname);
-            } else {
+            if (autoindex == "on")
+                _Content = directoryContents(pathname);
+            else
                 _Content = "<Html>Is A directory, for more clarity, turn Autoindexing on in the server's config</Html>";
-            }
-            //! Here we gotta check the autoindexing...
         }
-   }
+    }
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
 }

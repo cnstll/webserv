@@ -65,7 +65,7 @@ valid_body = " <!DOCTYPE html>\
 </html> "
 
 # Listing server files
-root = "/core/server_root"
+root = "./forest/"
 # Accessing form data
 try:
   form = cgi.FieldStorage()
@@ -86,7 +86,7 @@ else:
     # Checking for leading path and striping it
     fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
     # Copying uploaded files
-    open("." + root + '/tmp/' + fn, 'wb').write(fileitem.file.read())
+    open("." + root + 'iAmUploadDir/' + fn, 'wb').write(fileitem.file.read())
     # Response Header and Body sent to stdout
     print("HTTP/1.1 200 OK")
     currentDate.printFormatedCurrentDate()

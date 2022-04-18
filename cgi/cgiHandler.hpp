@@ -11,6 +11,7 @@
 #include<exception>
 #include<map>
 #include <sys/wait.h>
+#include "../core/Server.hpp"
 
 
 class cgiHandler
@@ -20,10 +21,12 @@ class cgiHandler
         void    _setUpEnv();
         void    _setUpArgs();
         void    _executeScript();
+        void    _serverRoot();
         char **_calloc_str_list(size_t size);
         std::string _messageBody;
         int _serverSocket;
         void cgiDispatch();
+        Server &_currentServer;
         std::map<std::string, std::string> _parsedRequest;
 
     public:
@@ -39,8 +42,8 @@ class cgiHandler
         };
         char *_args[3];
         char **_environment;
-        cgiHandler();
-        cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &, int serverSocket);
+        // cgiHandler();
+        cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &, int serverSocket, Server &);
         ~cgiHandler();
         // cgiHandler &operator=(const cgiHandler &newenv);
         char **str_add(std::string  str_to_add);

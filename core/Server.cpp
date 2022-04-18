@@ -161,7 +161,7 @@ void Server::respond(int fd)
 	std::string fullPath = constructPath(uri);
 	if (getExtension(extension) == cgiExtension)
 	{
-		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd);
+		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd, *this);
 		cgiParams.handleCGI(fd);
 	}
 	else if (_currentRequest->getHttpMethod() == "DELETE")
@@ -416,30 +416,37 @@ void Server::parsePort(void){
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
-	Server::configMap Server::getServerConfig(void) const{
-		return serverConfigFields;
-	};
-
-	int Server::getServerPort(void) const {
-		return serverPort;
+Server::configMap Server::getServerConfig(void) const{
+	return serverConfigFields;
+};
+int Server::getServerPort(void) const {
+	return serverPort;
+}
+/**
+ * @brief Retrieve a field in a specific location bloc
+ * 
+ * @param locationUri path directly following the location token used to identify the correct bloc
+ * @param requestedField field to find in a location bloc
+ * @return std::string either an empty string if the field is not found, or the corresponding string value
+ */
+std::string Server::getLocationField(const std::string &locationUri, const std::string &requestedField)
+{
+	std::map<std::string, Location>::iterator it = locationBlocs.find(locationUri);
+	configMap::iterator itLoc;
+	if (it == locationBlocs.end())
+		return std::string("");
+	else
+	{
+		itLoc = it->second.fields.find(requestedField);
+		return (itLoc == it->second.fields.end() ? std::string("") : it->second.fields[requestedField]);
 	}
-	/**
-	 * @brief Retrieve a field in a specific location bloc
-	 * 
-	 * @param locationUri path directly following the location token used to identify the correct bloc
-	 * @param requestedField field to find in a location bloc
-	 * @return std::string either an empty string if the field is not found, or the corresponding string value
-	 */
-	std::string Server::getLocationField(const std::string &locationUri, const std::string &requestedField){
-		std::map<std::string, Location>::iterator it = locationBlocs.find(locationUri);
-		configMap::iterator itLoc;
-		if (it == locationBlocs.end())
-			return std::string("");
-		else {
-			itLoc = it->second.fields.find(requestedField);
-			return (itLoc == it->second.fields.end() ? std::string("") : it->second.fields[requestedField]);
-		}
-	}
+}
+std::string Server::getServerConfigField(const std::string &requestedField)
+{
+	configMap::iterator it;
+	it = serverConfigFields.find(requestedField);
+	return (it == serverConfigFields.end() ? std::string("") : serverConfigFields[requestedField]);
+}
 
 /*
 ** --------------------------------- STATIC ---------------------------------

@@ -57,12 +57,12 @@ char	**cgiHandler::_calloc_str_list(size_t size)
 	return (str_list);
 }
 
-cgiHandler::cgiHandler(void)
-{
-    return ;
-}
+// cgiHandler::cgiHandler(void) : _currentServer()
+// {
+//     return ;
+// }
 
-cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket) : _serverSocket(serverSocket)
+cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket, Server &currentServer) : _serverSocket(serverSocket), _currentServer(currentServer)
 {
 	_parsedRequest = parsedRequest;
 	std::string CGI_EXECUTOR = "/usr/bin/python";
@@ -75,6 +75,8 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
     str_add("SERVER_NAME=webserv");
     str_add("SERVER_PROTOCOL=HTTP/1.1");
     str_add("SERVER_SOFTWARE=webserv");
+	std::string path_info = "PATH_INFO=" + _currentServer.getServerConfigField("root");
+    str_add(path_info.c_str());
 
 
 	_messageBody = parsedRequest["message-body"];
