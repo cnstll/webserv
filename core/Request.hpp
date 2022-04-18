@@ -33,8 +33,8 @@ class Request
 		// Request &		operator=( Request const & rhs );
 		void append(char *str, std::size_t readBytes);
 		void clear(void);
-    int parseBody(Server &server);
-    int parseHeader(void);
+    int parseBody(void);
+    int parseHeader(Server &server);
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
