@@ -75,7 +75,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
     str_add("SERVER_NAME=webserv");
     str_add("SERVER_PROTOCOL=HTTP/1.1");
     str_add("SERVER_SOFTWARE=webserv");
-	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(scriptPathname, "upload_dir");
+	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
     str_add(path_info.c_str());
 
 

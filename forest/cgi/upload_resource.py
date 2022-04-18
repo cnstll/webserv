@@ -14,30 +14,12 @@ error_body = " <!DOCTYPE html>\
 <html>\
   <head>\
     <h1>\
-    Error 400 :(\
+    Error PLACEHOLDER :(\
     </head>\
       </h1>\
 <body>\
 \
-<p> Did you send a file ?</p>\
-  <button onclick=\"window.location.href='http://localhost:18000/';\">\
-  Home </button>\
-  <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
-  Send again</button>\
-\
-</body>\
-</html> "
-
-exception_body = " <!DOCTYPE html>\
-<html>\
-  <head>\
-    <h1>\
-    Error 500 :(\
-    </head>\
-      </h1>\
-<body>\
-\
-<p> Something went wrong :(</p>\
+MESSAGE\
   <button onclick=\"window.location.href='http://localhost:18000/';\">\
   Home </button>\
   <button onclick=\"window.location.href='http://localhost:18000/upload_resource.html';\">\
@@ -65,39 +47,60 @@ valid_body = " <!DOCTYPE html>\
 </html> "
 
 # Listing server files
-root = "./forest/"
+upload_dir = os.environ.get("PATH_INFO")
 # Accessing form data
 try:
   form = cgi.FieldStorage()
-  # eprint("INFO: " + str(form))
+  # eprint("INFO: " + str(env))
   # Retrieving filename
   fileitem = form["filename"]
 except:
   # if no file has been sent, error msg
-  print("HTTP/1.1 500 Internal Server Error")
+  error = "500 Internal Server Error"
+  error_body = error_body.replace("PLACEHOLDER", str(error))
+  error_body = error_body.replace(
+      "MESSAGE", str("<p></p>"))
+  print("HTTP/1.1" + error)
   currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
-  print("Content-Length: " + str(len(exception_body)))
+  print("Content-Length: " + str(len(error_body)))
   print("\n")
-  print(exception_body)
+  print(error_body)
 else:
   if fileitem.filename:
     # Checking for leading path and striping it
     fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
     # Copying uploaded files
-    open("." + root + 'iAmUploadDir/' + fn, 'wb').write(fileitem.file.read())
+    try:
+      open(upload_dir + "/" + fn, 'wb').write(fileitem.file.read())
     # Response Header and Body sent to stdout
-    print("HTTP/1.1 200 OK")
-    currentDate.printFormatedCurrentDate()
-    print("Connection: Keep-Alive")
-    print("Content-Type: text/html")
-    print("Content-Length: " + str(len(valid_body)))
-    print("\n")
-    print(valid_body)
+    except:
+      error = "502 Bad Gateway"
+      error_body = error_body.replace("PLACEHOLDER", str(error))
+      error_body = error_body.replace("MESSAGE", str("<p></p>"))
+      print("HTTP/1.1 " + error)
+      currentDate.printFormatedCurrentDate()
+      print("Connection: Keep-Alive")
+      print("Content-Type: text/html")
+      print("Content-Length: " + str(len(error_body)))
+      print("\n")
+      print(error_body)
+    else:
+      print("HTTP/1.1 200 OK")
+      currentDate.printFormatedCurrentDate()
+      print("Connection: Keep-Alive")
+      print("Content-Type: text/html")
+      print("Content-Length: " + str(len(valid_body)))
+      print("\n")
+      print(valid_body)
+
   else:
       # if no file has been sent, error msg
-    print("HTTP/1.1 400 Bad Request")
+    error = "400 Bad Request"
+    error_body = error_body.replace("PLACEHOLDER", str(error))
+    error_body = error_body.replace("MESSAGE", str("<p>Did you upload a file ?</p>"))
+    print("HTTP/1.1" + error)
     currentDate.printFormatedCurrentDate()
     print("Connection: Keep-Alive")
     print("Content-Type: text/html")
