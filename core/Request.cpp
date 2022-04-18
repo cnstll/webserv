@@ -83,7 +83,7 @@ void Request::clear(){
 //   return 1;
 // }
 
-int Request::parse(Server &server){
+int Request::parseHeader(Server &server){
 	std::size_t head = 0;
 	std::size_t tail = 0;
 	std::vector<std::string> methods;
@@ -150,8 +150,14 @@ int Request::parse(Server &server){
 		if (_parsedHttpRequest.count(field) == 1)
 			_parsedHttpRequest[field] = value;
 	}
-	//Next come msg-body
-		head = tail + 4;
+	return 0;
+}
+
+int Request::parseBody(void){
+
+		size_t tail =0, head =0;
+		std::size_t endOfHeader = _fullRequest.find("\r\n\r\n", 0);
+		head = endOfHeader + 4;
 		tail = _fullRequest.length();
 		if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
 			_parsedHttpRequest["message-body"] = unchunckedRequest(head);	
@@ -256,6 +262,15 @@ std::map<std::string, std::string> &Request::getParsedRequest(void){
 
 std::string Request::donneMoiTonCorpsBabe(void){
 	return _parsedHttpRequest["message-body"];
+}
+
+void Request::setErrorCode(int code){
+	_requestParsingError = code;
+}
+
+int Request::getErrorCode(){
+
+	return _requestParsingError;
 }
 
 /* ************************************************************************** */
