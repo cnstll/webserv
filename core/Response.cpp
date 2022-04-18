@@ -235,8 +235,7 @@ void Response::sendResponse(int clientSocket){
         "Server: " + _Server + CRLF +
         "Content-Length: " + _ContentLength + CRLF +
         "Content-Type: " + contype + CRLF +
-        "Connection: " + "close" + CRLF;
-
+        "Connection: " + _Connection + CRLF;
 
     if (_statusCode >= 300 && _statusCode < 400)
         packagedResponse += "Location: " + _Location + CRLF;

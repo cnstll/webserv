@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
           continue;
         if (recv_bytes == 0)
           break;
-        currentRequest->parse(*currentServer);
+        currentRequest->parseBody();
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);

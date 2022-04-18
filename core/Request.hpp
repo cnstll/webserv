@@ -55,7 +55,7 @@ class Request
     bool timeout()
     {
       _inactiveTime = std::difftime(time(0), _birth);
-      return _inactiveTime > 1;
+      return _inactiveTime > 3;
     }
    
    

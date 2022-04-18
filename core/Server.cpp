@@ -91,7 +91,7 @@ int Server::parseHeader(Request &request)
 {
   if (request.getFullRequest().find("\r\n\r\n") != std::string::npos)
   {
-    request.parse(*this);
+    request.parseHeader(*this);
     if (request.getHttpMethod() == "POST")
       return (1);
     else
@@ -148,7 +148,6 @@ std::string Server::getExtension(std::string &uri)
 void Server::closeConnection(int fd)
 {
 	close(fd);
-	delete _currentRequest;
 	requestMap.erase(fd);
 }
 
@@ -229,9 +228,12 @@ int Server::recvRequest(const int &fd, Request &request){
         {
           headerParsed = 1;
           startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-          contentSize = atoi(request.getParsedRequest()["Content-Length"].c_str());
-		  if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")))
-		  	return (read_bytes);
+          contentSize = stringToNumber((request.getParsedRequest()["Content-Length"].c_str()));
+		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size"))) {
+			request.setErrorCode(413);
+			closeConnection(fd);
+		  	return (-1);
+		}
         }
       }
     }
@@ -251,6 +253,10 @@ int Server::recvRequest(const int &fd, Request &request){
   }
   return read_bytes;
 }
+
+// void Server::closeConnection() {
+
+// }
 
 void Server::initServerConfig(){
 	int i = 0;
