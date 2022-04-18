@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include "../core/Server.hpp"
 
+class Server;
 
 class cgiHandler
 {
