@@ -160,13 +160,15 @@ int Request::parseBody(void){
 
 		size_t tail =0, head =0;
 		std::size_t endOfHeader = _fullRequest.find("\r\n\r\n", 0);
+		if (endOfHeader == std::string::npos)
+			return 0;
 		head = endOfHeader + 4;
 		tail = _fullRequest.length();
 		if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
 			_parsedHttpRequest["message-body"] = unchunckedRequest(head);	
 		else
 			_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
-	return 0;
+		return 0;
 }
 
 std::string Request::unchunckedRequest(int startOfBody) 
