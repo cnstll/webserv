@@ -409,6 +409,8 @@ void Server::parseServerConfigFields(const std::string &bloc){
 void Server::parsePort(void){
 	std::cerr << "LISTEN: " << serverConfigFields["listen"] << std::endl;
 	size_t findport = serverConfigFields["listen"].find(":");
+	if (findport == std::string::npos)
+		printErrorAndExit("ERROR: bad synthax for listen instruction\n");
 	serverPort = stringToNumber(serverConfigFields["listen"].substr(findport+1));
 	if (!serverPort)
 		printErrorAndExit("ERROR: invalid server port");
