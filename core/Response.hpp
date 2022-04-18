@@ -3,6 +3,7 @@
 
 
 #include "core.hpp"
+#include "Server.hpp"
 
 
 # include <iostream>
@@ -62,6 +63,7 @@
 //          {510, "Not Extended"},
 //          {511, "Network Authentication Required"}};
 
+class Server;
 
 class Response
 {
@@ -76,6 +78,7 @@ private:
     std::string _ContentType;
     std::string _Content;
     std::string _Connection;
+    std::string _uri;
     //! this obviously shouldn't be hardcoded... where should this info come from? the config file probably?
     std::string _Location;
     std::string timeAsString();
@@ -94,6 +97,7 @@ public:
     ~Response();
     void sendResponse(int clientSocket);
     void addBody(std::string pathname);
+    void addBody(std::string pathname, Server *);
     void addBody();
     // Response &operator=(const Response &newResponse);
 };

@@ -99,6 +99,7 @@ Response::Response(std::map<std::string, std::string> &parsedRequest, int errorC
       _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
       _ContentType(parsedRequest["Content-Type"]), _Connection(parsedRequest["Connection"]), _Location("./index.html"){
 
+    _uri = parsedRequest["requestURI"];
     char buf[3];
     _ErrCodeMap = initErrCodeMap();
     sprintf(buf,"%i", _statusCode);
@@ -177,8 +178,35 @@ void Response::addBody(std::string pathname)
         _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
         }
         else {
+
             int autoindex = 1;
             if (autoindex) {
+            _Content = directoryContents(pathname);
+            } else {
+                _Content = "<Html>Is A directory, for more clarity, turn Autoindexing on in the server's config</Html>";
+            }
+            //! Here we gotta check the autoindexing...
+        }
+   }
+    sprintf(buf, "%lu", _Content.size());
+    _ContentLength = std::string(buf);
+}
+
+void Response::addBody(std::string pathname, Server *currentServer)
+{
+    char buf[10];
+
+    if (_statusCode >= 300)
+        _Content = getErrorContent(_statusCode);    
+    else{
+        if (!isADir(pathname))
+        {
+        std::ifstream input_file(pathname.c_str());
+        _Content = std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+        }
+        else {           
+            std::string autoindex = currentServer->getLocationField(_uri, "autoindex");
+            if (autoindex == "on") {
             _Content = directoryContents(pathname);
             } else {
                 _Content = "<Html>Is A directory, for more clarity, turn Autoindexing on in the server's config</Html>";

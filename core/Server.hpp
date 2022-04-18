@@ -45,7 +45,7 @@ class Server
 		int setupServer(int port, int backlog);
 		void respond(int fd);
 		std::string getExtension(std::string &);
-		std::string getLocationField(std::string &locationUri, std::string &requestedField);
+		std::string getLocationField(const std::string &locationUri, const std::string &requestedField);
 		void	closeConnection(int fd);
 		bool isEndOfBloc(const std::string &line);
 		class Location {
