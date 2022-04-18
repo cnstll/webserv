@@ -31,7 +31,7 @@ error_body = " <!DOCTYPE html>\
 <html>\
   <head>\
     <h1>\
-    Error 400 :(\
+    Error ERROR_PLACEHOLDER :(\
     </head>\
       </h1>\
 <body>\
@@ -41,24 +41,6 @@ error_body = " <!DOCTYPE html>\
   Home </button>\
   <button onclick=\"window.location.href='http://localhost:18000/delete_resource.html';\">\
   Try Again</button>\
-\
-</body>\
-</html> "
-
-exception_body = " <!DOCTYPE html>\
-<html>\
-  <head>\
-    <h1>\
-    Error 500 :(\
-    </head>\
-      </h1>\
-<body>\
-\
-<p> Oh woowww... something went slightly horribly wrong :S</p>\
-  <button onclick=\"window.location.href='http://localhost:18000/';\">\
-  Home </button>\
-  <button onclick=\"window.location.href='http://localhost:18000/delete_resource.html';\">\
-  Try again</button>\
 \
 </body>\
 </html> "
@@ -85,24 +67,28 @@ valid_body = " <!DOCTYPE html>\
 try:
   form = cgi.FieldStorage()
 except:
-  print("HTTP/1.1 500 Internal Server Error")
+  error = "500 Internal Server Error"
+  error_body = error_body.replace("ERROR_PLACEHOLDER", str(error))
+  error_body = error_body.replace("MESSAGE_PLACEHOLDER", str("<p> Oh woowww... something went slightly horribly wrong :S</p>"))
+  print("HTTP/1.1" + error)
   currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
-  print("Content-Length: " + str(len(exception_body)))
+  print("Content-Length: " + str(len(error_body)))
   print("\n")
-  print(exception_body)
+  print(error_body)
 else:
   if check_form_fields(form) < 0:
-    ready_body = error_body.replace("MESSAGE_PLACEHOLDER", "Did you forget to put a file by any chance?")
-    eprint("This is an error here")
-    print("HTTP/1.1 400 Bad Request")
+    error = "400 Bad Request"
+    error_body = error_body.replace("ERROR_PLACEHOLDER", str(error))
+    error_body = error_body.replace("MESSAGE_PLACEHOLDER", str("<p></p>"))
+    print("HTTP/1.1" + error)
     currentDate.printFormatedCurrentDate()
     print("Connection: Keep-Alive")
     print("Content-Type: text/html")
-    print("Content-Length: " + str(len(ready_body)))
+    print("Content-Length: " + str(len(error_body)))
     print("\n")
-    print(ready_body)
+    print(error_body)
 
   else:
     tmp_folder = "/core/server_root/tmp"
@@ -110,15 +96,16 @@ else:
     path =  "." + tmp_folder + "/" + str(filename)
     status = delete_resource(path)
     if (status < 0):
-      ready_body = error_body.replace("MESSAGE_PLACEHOLDER", "Is your filename right?")
-      eprint("This is an error here")
-      print("HTTP/1.1 400 Bad Request")
+      error = "400 Bad Request"
+      error_body = error_body.replace("ERROR_PLACEHOLDER", str(error))
+      error_body = error_body.replace("MESSAGE_PLACEHOLDER", str("<p></p>"))
+      print("HTTP/1.1" + error)
       currentDate.printFormatedCurrentDate()
       print("Connection: Keep-Alive")
       print("Content-Type: text/html")
-      print("Content-Length: " + str(len(ready_body)))
+      print("Content-Length: " + str(len(error_body)))
       print("\n")
-      print(ready_body)
+      print(error_body)
     else:
       print("HTTP/1.1 200 OK")
       currentDate.printFormatedCurrentDate()
