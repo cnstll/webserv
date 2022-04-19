@@ -14,20 +14,12 @@
 # define URI_MAX_LEN 128
 # endif
 
-// Request       = Request-Line            
-//                 *(( general-header      
-//                  | request-header       
-//                  | entity-header ) CRLF)
-//                 CRLF
-//                 [ message-body ]
 class Server;
 
 class Request
 {
 	public:
-		Request();
-		Request(int fd);
-		Request(std::string fullRequest);
+		Request(std::string fullRequest, Server &serv);
 		// Request( Request const & src );
 		~Request();
 
@@ -50,55 +42,23 @@ class Request
     void writeFullRequestToFile(const char *filename);
     void writeStrToFile(const std::string &str, const char *filename);
     std::string unchunckedRequest(int startOfBody);
-
     //!experimentation
     bool timeout()
     {
       _inactiveTime = std::difftime(time(0), _birth);
       return _inactiveTime > 3;
     }
-   
-   
     void addFdInfo(int fd);
     int fd;    
-	
-  
     time_t _inactiveTime;
+  
   private:
-    time_t _birth;
-	
-		//  general-header = Cache-Control
-    //                 | Connection       
-    //                 | Date             
-    //                 | Pragma           
-    //                 | Trailer          
-    //                 | Transfer-Encoding
-    //                 | Upgrade          
-    //                 | Via              
-    //                 | Warning          
-		//Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
-		// request-header = Accept          
-                  //  | Accept-Charset  
-                  //  | Accept-Encoding 
-                  //  | Accept-Language 
-                  //  | Authorization   
-                  //  | Expect          
-                  //  | From            
-                  //  | Host            
-                  //  | If-Match        
-                  //  | If-Modified-Sinc
-                  //  | If-None-Match   
-                  //  | If-Range        
-                  //  | If-Unmodified-Si
-                  //  | Max-Forwards    
-                  //  | Proxy-Authorizat
-                  //  | Range           
-                  //  | Referer         
-                  //  | TE              
-                  //  | User-Agent     
+
+    time_t _birth; 
 		void extractUri( void );
     void initParsedRequestMap(void);
 		std::string _fullRequest;
+    Server &_currentServer;
     std::string _uri;
     std::string root_dir;
     unsigned int _requestParsingError;

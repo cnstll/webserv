@@ -128,7 +128,7 @@ int Server::acceptNewConnexion(int server_fd)
   if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
   {
 	  makeFdNonBlocking(connexionFd);
-	  requestMap[connexionFd] = new Request;
+	  requestMap[connexionFd] = new Request("", *this);
 	  return connexionFd;
   }
   return -1;
