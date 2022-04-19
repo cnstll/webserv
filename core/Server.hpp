@@ -47,6 +47,7 @@ class Server
 		std::string getExtension(std::string &);
 		std::string getLocationField(const std::string &locationUri, const std::string &requestedField);
 		std::string getServerConfigField(const std::string &requestedField);
+		std::string *getImplementedMethods(void);
 		void	closeConnection(int fd);
 		bool isEndOfBloc(const std::string &line);
 		class Location {
@@ -75,7 +76,7 @@ class Server
 
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
-		static std::string methodsAllowed[];
+		static std::string implementedMethods[];
 		configMap serverConfigFields;
 		std::map<std::string, Location> locationBlocs;
 		size_t countOfLocationBlocks;

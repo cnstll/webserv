@@ -5,9 +5,6 @@
 #include <map>
 # include <string>
 # include "Server.hpp"
-# ifndef ROOT_DIR
-# define ROOT_DIR "/core/server_root"
-# endif
 #include <ctime>
 
 # ifndef URI_MAX_LEN
@@ -31,7 +28,6 @@ class Request
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
-    std::string donneMoiTonCorpsBabe(void);
     int getError(void) const;
     std::map<std::string, std::string> &getParsedRequest(void);
     void setErrorCode(int code);
@@ -42,12 +38,8 @@ class Request
     void writeFullRequestToFile(const char *filename);
     void writeStrToFile(const std::string &str, const char *filename);
     std::string unchunckedRequest(int startOfBody);
-    //!experimentation
-    bool timeout()
-    {
-      _inactiveTime = std::difftime(time(0), _birth);
-      return _inactiveTime > 3;
-    }
+    //!experimentation -> is it still an experimentation now ?
+    bool timeout(void);
     void addFdInfo(int fd);
     int fd;    
     bool headerParsed;
@@ -58,10 +50,12 @@ class Request
     time_t _birth; 
 		void extractUri( void );
     void initParsedRequestMap(void);
+    int checkMethodInLocationBloc(void);
+    int checkIfMethodIsImplemented(Server &server);
+    void TrimQueryString(size_t endOfURI);
 		std::string _fullRequest;
     Server &_currentServer;
     std::string _uri;
-    std::string root_dir;
     unsigned int _requestParsingError;
     std::map<std::string, std::string> _parsedHttpRequest;
     static std::string _validRequestFields[];

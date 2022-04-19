@@ -327,8 +327,8 @@ std::string Server::findLocationPath(const std::string &line){
 // void Server::checkMethodsInLocation(const std::string &values){
 
 // 	int i = 0;
-// 	while (methodsAllowed[i] != ""){
-// 		if (methodsAllowed[i])
+// 	while (implementedMethods[i] != ""){
+// 		if (implementedMethods[i])
 // 		i++;
 // 	}
 // } 
@@ -352,8 +352,8 @@ void Server::parseLocationFields(const std::string& line, const std::string &uri
 				itVec = v.begin();
 				while (itVec != v.end()){
 					i = 0;
-					while (methodsAllowed[i] != ""){
-						if (*itVec == methodsAllowed[i])
+					while (implementedMethods[i] != ""){
+						if (*itVec == implementedMethods[i])
 							break;
 						++i;
 					}
@@ -483,6 +483,10 @@ std::string Server::getServerConfigField(const std::string &requestedField)
 	return (it == serverConfigFields.end() ? std::string("") : serverConfigFields[requestedField]);
 }
 
+std::string *Server::getImplementedMethods(void){
+	return implementedMethods;
+}
+
 /*
 ** --------------------------------- STATIC ---------------------------------
 */
@@ -507,7 +511,7 @@ std::string Server::validLocationFields[] = {
 		""
 };
 
-std::string Server::methodsAllowed[] = {
+std::string Server::implementedMethods[] = {
 	"GET",
 	"POST",
 	"DELETE",

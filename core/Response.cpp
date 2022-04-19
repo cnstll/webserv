@@ -122,7 +122,7 @@ std::string Response::directoryContents ( std::string pathname )
   DIR *dh;
   struct dirent * contents;
   std::string ret;
-  std::string newpath = pathname.substr(strlen(ROOT_DIR) + 2);
+  std::string newpath = pathname.substr(strlen(_currentServer.getServerConfigField("root").c_str()) + 2);
   newpath += "/";
 
   

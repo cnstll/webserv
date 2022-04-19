@@ -16,16 +16,12 @@
 */
 
 Request::Request(std::string fullRequest, Server &serv) :
-_fullRequest(fullRequest), _currentServer(serv), root_dir(ROOT_DIR), _requestParsingError(200)
+_fullRequest(fullRequest), _currentServer(serv), _requestParsingError(200)
 {
 	initParsedRequestMap();
 	_birth = time(0);
 	_inactiveTime = 0;
 }
-
-// Request::Request( const Request & src )
-// {
-// }
 
 
 /*
@@ -40,16 +36,6 @@ Request::~Request()
 /*
 ** --------------------------------- OVERLOAD ---------------------------------
 */
-
-// Request &				Request::operator=( Request const & rhs )
-// {
-// 	//if ( this != &rhs )
-// 	//{
-// 		//this->_value = rhs.getValue();
-// 	//}
-// 	return *this;
-// }
-
 
 
 /*
@@ -66,11 +52,6 @@ void Request::clear(){
 	_requestParsingError = 200;
 }
 
-/**
- * @brief Parse Request and fill in the parsedHttpRequest map
- * 
- */
-
 // bool isADir(std::string directoryPath)
 // {  
 //   DIR *dh;
@@ -82,32 +63,57 @@ void Request::clear(){
 //   closedir ( dh );
 //   return 1;
 // }
+int Request::checkMethodInLocationBloc(){
+	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
+	if (localMethods != ""){
+		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){	
+			_requestParsingError = 405; // Method Not implemented
+			return -1;
+		}
+	}
+	return 0;
+}
 
+int Request::checkIfMethodIsImplemented(Server &server){
+	
+	std::string *methods = server.getImplementedMethods();
+	int i = 0;
+	while (methods[i] != ""){
+		if (methods[i] != _parsedHttpRequest["method"])
+			return 0;
+		++i;
+	}
+	if (i == 3)
+		_requestParsingError = 405; // Method Not implemented
+	return -1;
+}
+
+void Request::TrimQueryString(size_t endOfURI){
+		std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
+	if (queryPos != std::string::npos){
+		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, endOfURI - (queryPos + 1));
+		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
+		std::cout << "QUERY: " << _parsedHttpRequest["queryString"] << std::endl;
+	}
+}
+/**
+ * @brief Parse Request and fill in the parsedHttpRequest map
+ * 
+ */
 int Request::parseHeader(Server &server){
 	std::size_t head = 0;
 	std::size_t tail = 0;
-	std::vector<std::string> methods;
-	 methods.push_back("GET"); 
-	 methods.push_back("POST"); 
-	 methods.push_back("DELETE"); 
-	tail = _fullRequest.find(' ', head);
-	// printFullRequest();
 	//check if method is valid {"GET", "POST, "DELETE"}
+	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
-	std::vector<std::string>::iterator it;
-	it = std::find(methods.begin(), methods.end(), _parsedHttpRequest["method"]);
-	if (it == methods.end()){
-		_requestParsingError = 405; // Method Not implemented
+	if (checkIfMethodIsImplemented(server) < 0)
 		return -1;
-	}
 	head = tail + 1;
 	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
-	std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
-	if (queryPos != std::string::npos){
-		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, tail - (queryPos + 1));
-		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
-	}
+	std::cout << "BF URI: " << _parsedHttpRequest["requestURI"] << std::endl;
+	TrimQueryString(tail);
+	std::cout << "URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 		_parsedHttpRequest["requestURI"] = "/index.html";
 	}
@@ -124,15 +130,7 @@ int Request::parseHeader(Server &server){
 		return -1;
 	}
 	// check if method is valid for the location bloc attached to the uri of the request
-	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
-	
-	if (localMethods != ""){
-		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){	
-			_requestParsingError = 405; // Method Not implemented
-			std::cout << "NOT IMPLEMENTED\n";
-			return -1;
-		}
-	}
+	checkMethodInLocationBloc();
 	//! Here is we should check for redirects, before checking if the file exitsts as that won't be true if the file moved
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
@@ -141,11 +139,9 @@ int Request::parseHeader(Server &server){
 			_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}
-
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
-	
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){
 		_requestParsingError = 505; // std::vector<std::string>::iterator it
@@ -164,7 +160,6 @@ int Request::parseHeader(Server &server){
 		head = tail + 2;
 		tail = _fullRequest.find("\r\n", head);
 		value = std::string(_fullRequest, head, tail - head);
-		//! The following two declarations are (annoyingly) only here for debbuging purposes
 		if (_parsedHttpRequest.count(field) == 1)
 			_parsedHttpRequest[field] = value;
 	}
@@ -184,6 +179,12 @@ int Request::parseBody(void){
 		else
 			_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
 		return 0;
+}
+
+bool Request::timeout(void)
+{
+	_inactiveTime = std::difftime(time(0), _birth);
+	return _inactiveTime > 3;
 }
 
 std::string Request::unchunckedRequest(int startOfBody) 
@@ -239,9 +240,7 @@ void Request::printFullParsedRequest(void){
 	std::cout << "-----------------------------END FULL PARSED REQUEST\n";
 }
 
-std::string Request::getFullRequest(void){
-	return _fullRequest;
-}
+
 
 void Request::writeFullRequestToFile(const char *filename){
 	std::ofstream ofs(filename, std::ios_base::app);
@@ -264,10 +263,6 @@ std::string Request::getRequestedUri(){
 	return _parsedHttpRequest["requestURI"];
 }
 
-std::string Request::getPathToFile(void){
-	return "." + root_dir + _parsedHttpRequest["requestURI"];
-}
-
 std::string Request::getHttpMethod(void){
 	return _parsedHttpRequest["method"];
 }
@@ -280,10 +275,6 @@ std::map<std::string, std::string> &Request::getParsedRequest(void){
 	return _parsedHttpRequest;
 }
 
-std::string Request::donneMoiTonCorpsBabe(void){
-	return _parsedHttpRequest["message-body"];
-}
-
 void Request::setErrorCode(int code){
 	_requestParsingError = code;
 }
@@ -291,6 +282,10 @@ void Request::setErrorCode(int code){
 int Request::getErrorCode(){
 
 	return _requestParsingError;
+}
+
+std::string Request::getFullRequest(void){
+	return _fullRequest;
 }
 
 /* ************************************************************************** */
