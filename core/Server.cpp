@@ -82,7 +82,7 @@ int Server::is_request_done(Request &request, int &contentLength, int &startOfBo
       return 0;
   }
   int lengthRecvd = request.getFullRequest().length() - startOfBody;
-  if (contentLength == lengthRecvd)
+  if (contentLength <= lengthRecvd)
     return (1);
   return 0;
 }
@@ -249,7 +249,7 @@ int Server::recvRequest(const int &fd, Request &request){
   {
 	  printf("Closing connexion for fd: %d\n", fd);
 	  closeConnection(fd);
-	  return (-1);
+	//   return (-1);
   }
   return read_bytes;
 }
