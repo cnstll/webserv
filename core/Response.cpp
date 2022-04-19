@@ -82,10 +82,10 @@ std::string Response::codeToReasonPhrase(int statusCode){
     return getCodeStatus(statusCode);
 }
 
-Response::Response(int code)
+Response::Response(int code, Server &serv)
     : _statusCode(code),
-      _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
-      _ContentType("text/html"), _Connection("Keep-Alive"){
+      _Date(timeAsString()), _ServerName(_currentServer.getServerConfigField("server_name")), _ContentLength(""),
+      _ContentType("text/html"), _Connection("Keep-Alive"), _currentServer(serv){
     
 
     char buf[3];
@@ -94,10 +94,12 @@ Response::Response(int code)
     _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
 };
 
-Response::Response(std::map<std::string, std::string> &parsedRequest, int errorCode)
+Response::Response(std::map<std::string, std::string> &parsedRequest, int errorCode, Server &serv)
     : _statusCode(errorCode),
-      _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
-      _ContentType(parsedRequest["Content-Type"]), _Connection(parsedRequest["Connection"]), _Location("./index.html"){
+      _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
+      _ContentLength(""), _ContentType(parsedRequest["Content-Type"]),
+      _Connection(parsedRequest["Connection"]),
+      _Location("./index.html"),  _currentServer(serv){
 
     _uri = parsedRequest["requestURI"];
     char buf[3];
@@ -220,6 +222,7 @@ void Response::addBody(std::string pathname, Server *currentServer)
 void Response::addBody()
 {
     char buf[10];
+    bzero(buf, 10);
     if (_statusCode >= 300)
         _Content = getErrorContent(_statusCode);    
     sprintf(buf, "%lu", _Content.size());
@@ -232,7 +235,7 @@ void Response::sendResponse(int clientSocket){
     std::string contype;
     std::string packagedResponse = _Status + CRLF +
         "Date: " + _Date + CRLF +
-        "Server: " + _Server + CRLF +
+        "Server: " + _ServerName + CRLF +
         "Content-Length: " + _ContentLength + CRLF +
         "Content-Type: " + contype + CRLF +
         "Connection: " + _Connection + CRLF;
@@ -246,3 +249,9 @@ void Response::sendResponse(int clientSocket){
         exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
 }
+
+void Response::sendErrorResponse(int clientSocket, int errorCode){
+    _statusCode = errorCode;
+    addBody();
+    sendResponse(clientSocket);
+};

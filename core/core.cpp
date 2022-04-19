@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
             if (iterReq->second->timeout())
             {
               std::cout << iterReq->first << std::endl;
-              Response resp(iterReq->second->getParsedRequest(), 408);
+              Response resp(iterReq->second->getParsedRequest(), 408, *currentServer);
               resp.addBody();
               resp.sendResponse(iterReq->first);
               if (close(iterReq->first) == -1)

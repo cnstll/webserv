@@ -72,7 +72,7 @@ private:
     std::string _Status;
     std::string _ReasonPhrase;
     std::string _Date;
-    std::string _Server;
+    std::string _ServerName;
     std::string _Type;
     std::string _ContentLength;
     std::string _ContentType;
@@ -86,16 +86,18 @@ private:
     std::string directoryContents (std::string pathname);
     std::map<int, std::string>  _ErrCodeMap;
     std::map<int, std::string> initErrCodeMap();
+    Server &_currentServer;
 
 public:
     std::string getErrorContent(int errCode);
     std::string getCodeStatus(int errCode);
-    Response(int code = 500);
     std::string codeToReasonPhrase(int);
     // Response(const Response &newResponse);
-    Response(std::map<std::string, std::string> &parsedRequest, int errorCode);
+    Response(int code, Server &serv);
+    Response(std::map<std::string, std::string> &parsedRequest, int errorCode, Server &serv);
     ~Response();
     void sendResponse(int clientSocket);
+    void sendErrorResponse(int clientSocket, int errorCode);
     void addBody(std::string pathname);
     void addBody(std::string pathname, Server *);
     void addBody();
