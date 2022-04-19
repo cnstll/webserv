@@ -111,7 +111,7 @@ void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> 
       {
         if (iterReq->second->timeout())
         {
-          Response resp(iterReq->second->getParsedRequest(), 408);
+          Response resp(408, iterServ->second);
           resp.addBody();
           resp.sendResponse(iterReq->first);
           if (close(iterReq->first) == -1)

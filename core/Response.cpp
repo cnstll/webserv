@@ -86,7 +86,7 @@ std::string Response::codeToReasonPhrase(int statusCode){
 
 Response::Response(int code, Server &serv)
     : _statusCode(code),
-      _Date(timeAsString()), _ServerName(_currentServer.getServerConfigField("server_name")), _ContentLength(""),
+      _Date(timeAsString()), _ServerName(serv.getServerConfigField("server_name")), _ContentLength(""),
       _ContentType("text/html"), _Connection("Keep-Alive"), _currentServer(serv){
     
     char buf[3];
