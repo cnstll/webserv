@@ -123,7 +123,7 @@ int Request::parseHeader(Server &server){
 		tokenizedMethods = tokenizeValues(localMethods);
 		iterVec = tokenizedMethods.begin();
 		while (iterVec != tokenizedMethods.end()){
-			if (*iterVec == _parsedHttpRequest["requestURI"])
+			if (*iterVec == _parsedHttpRequest["method"])
 				break;
 			++iterVec;
 		}
