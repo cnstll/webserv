@@ -87,7 +87,6 @@ Response::Response(int code)
       _Date(timeAsString()), _Server("Webserv"), _ContentLength(""),
       _ContentType("text/html"), _Connection("Keep-Alive"){
     
-
     char buf[3];
     sprintf(buf,"%i", _statusCode);
     this->_ReasonPhrase = Response::codeToReasonPhrase(code);

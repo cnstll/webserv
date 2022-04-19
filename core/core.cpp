@@ -99,33 +99,37 @@ bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
   return false;
 }
 
-void print_events(struct epoll_event *events, int eventful_fds){
-  for (int i = 0; i < eventful_fds; i++)
+void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> &serverMap, int actualizedFdCount)
+{
+  std::map<int, Server>::iterator iterServ = serverMap.begin();
+  while (iterServ != serverMap.end())
   {
-    printf("fd:    %i\n", events[i].data.fd);
-    if (events[i].events & EPOLLIN)
-      printf("EPOLLIN\n");
-    if (events[i].events & EPOLLOUT)
-      printf("EPOLLOUT\n");
-    if (events[i].events & EPOLLHUP)
-      printf("EPOLLHUP\n");
-    if (events[i].events & EPOLLERR)
-      printf("EPOLLERR\n");
-    if (events[i].events & EPOLLRDHUP)
-      printf("EPOLLRDHUP\n");
-    if (events[i].events & EPOLL_CLOEXEC)
-      printf("EPOLlCLOEXEC\n");    
-    if (events[i].events & EPOLLMSG)
-      printf("EPOLlMSG\n");    
-    if (events[i].events & EPOLLPRI)
-      printf("EPOLlPRI\n");    
-    if (events[i].events & EPOLLWAKEUP)
-      printf("EPOLLWAKEUP\n");    
-    //printf("something else happened\n");
-    printf("\n\n");
+    std::map<int, Request *>::iterator iterReq = iterServ->second.requestMap.begin();
+    while (iterReq != iterServ->second.requestMap.end())
+    {
+      if (!isInUpdatedFds(events, iterReq->first, actualizedFdCount))
+      {
+        if (iterReq->second->timeout())
+        {
+          Response resp(iterReq->second->getParsedRequest(), 408);
+          resp.addBody();
+          resp.sendResponse(iterReq->first);
+          if (close(iterReq->first) == -1)
+            perror("error:");
+          iterServ->second.requestMap.erase(iterReq->first);
+          iterReq = iterServ->second.requestMap.begin();
+          return;
+        }
+      }
+      else
+      {
+        iterReq->second->_inactiveTime = 0;
+      }
+      ++iterReq;
+    }
+    ++iterServ;
   }
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -133,7 +137,6 @@ int main(int argc, char *argv[])
   int epoll_fd;
   int recv_bytes;
   int count_of_fd_actualized = 0;
-  std::map<int, Request *> requestMap;
   std::map<int, Server> serverMap;
   Request *currentRequest;
   Server *currentServer;
@@ -186,48 +189,7 @@ int main(int argc, char *argv[])
       }
     }
     // closeInnactiveConnections
-      std::map<int, Server>::iterator iterServ = serverMap.begin();
-      while (iterServ != serverMap.end())
-      {
-        std::map<int,   Request*>::iterator iterReq = iterServ->second.requestMap.begin();
-        while (iterReq != iterServ->second.requestMap.end())
-        {
-          // std::cout << iterReq->first << std::endl;
-          if (!isInUpdatedFds(events, iterReq->first, count_of_fd_actualized))
-          {
-            if (iterReq->second->timeout())
-            {
-              std::cout << iterReq->first << std::endl;
-              Response resp(iterReq->second->getParsedRequest(), 408);
-              resp.addBody();
-              resp.sendResponse(iterReq->first);
-              if (close(iterReq->first) == -1)
-                perror("EEEERNO:");
-              iterServ->second.requestMap.erase(iterReq->first);
-              iterReq = iterServ->second.requestMap.begin();
-              std::cout << "connection timed out" << std::endl;
-              break ;
-            }
-          }
-          else{
-            iterReq->second->_inactiveTime = 0;
-            // std::cout << iterReq->second->timeout() << std::endl;
-          }
-          ++iterReq;
-        }
-        ++iterServ;
-      }
- 
-    //! Gotta check whatever request that exists has had events happen and otherwise timeouts, we should be easily able to check for, or actually how do we iterate over a map?
-    // Iterate through All open requests, check that against actualized fd's, if one isn't thereclose the connection and delete the request?
-    // if (request2->getFullRequest() != "" && !count_of_fd_actualized)
-    // {
-    //   Response resp(request.getParsedRequest(), 408);
-    //   resp.addBody(request.getPathToFile());
-    //   resp.sendResponse(request.fd);
-    //   request.clear();
-    //   close(request.fd);
-    // }
+    closeInactiveConnections(events, serverMap, count_of_fd_actualized);
   }
   close(server_fd);
 }

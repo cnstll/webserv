@@ -230,9 +230,7 @@ int Server::recvRequest(const int &fd, Request &request){
           startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
           contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
 		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "") {
-			request.setErrorCode(413);
-			Response resp(_currentRequest->getParsedRequest(), 413);
-			resp.addBody();
+			Response resp(413);
 			resp.sendResponse(fd);
 			closeConnection(fd);
 			headerParsed = 0;
@@ -246,14 +244,12 @@ int Server::recvRequest(const int &fd, Request &request){
       headerParsed = 0;
       return (read_bytes);
     }
-    // bzero(&request_buffer, REQUEST_READ_SIZE);
   }
   if (read_bytes == 0)
   {
 	  printf("Closing connexion for fd: %d\n", fd);
-	  // delete currentRequest;
-	  requestMap.erase(fd);
-	  close(fd);
+	  closeConnection(fd);
+	  return (-1);
   }
   return read_bytes;
 }
@@ -408,14 +404,6 @@ void Server::parseServerConfigFields(const std::string &bloc){
 		}
 	}
 	parsePort();
-	std::string uri = "/delete_resource.py";
-	std::string requested = "root";
-	std::cout << "GETTER: \'" << getLocationField(uri, requested) << "\'" << std::endl;
-	uri = "/delete_resource.py";
-	requested = "methods";
-	std::cout << "GETTER: \'" << getLocationField(uri, requested) << "\'" << std::endl;
-	uri += "lol";
-	std::string forYOUcoLOMBAN = getLocationField(uri, requested);
 };
 
 void Server::parsePort(void){
