@@ -93,7 +93,6 @@ void Request::TrimQueryString(size_t endOfURI){
 	if (queryPos != std::string::npos){
 		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, endOfURI - (queryPos + 1));
 		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
-		std::cout << "QUERY: " << _parsedHttpRequest["queryString"] << std::endl;
 	}
 }
 /**
@@ -111,9 +110,7 @@ int Request::parseHeader(Server &server){
 	head = tail + 1;
 	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
-	std::cout << "BF URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	TrimQueryString(tail);
-	std::cout << "URI: " << _parsedHttpRequest["requestURI"] << std::endl;
 	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
 		_parsedHttpRequest["requestURI"] = "/index.html";
 	}

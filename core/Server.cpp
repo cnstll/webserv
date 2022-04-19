@@ -324,22 +324,31 @@ std::string Server::findLocationPath(const std::string &line){
 	return locationPath;
 }
 
-// void Server::checkMethodsInLocation(const std::string &values){
-
-// 	int i = 0;
-// 	while (implementedMethods[i] != ""){
-// 		if (implementedMethods[i])
-// 		i++;
-// 	}
-// } 
-
-void Server::parseLocationFields(const std::string& line, const std::string &uri){
-	configMap::iterator it;
-	size_t matchField;
+void Server::checkMethodsInLocation(std::string &values, const std::string &line){
+	
 	std::vector<std::string> v;
 	std::vector<std::string>::iterator itVec;
 	int i;
-	it =  locationBlocs[uri].fields.begin();
+	v = tokenizeValues(values);
+	itVec = v.begin();
+	while (itVec != v.end())
+	{
+		i = 0;
+		while (implementedMethods[i] != "")
+		{
+			if (*itVec == implementedMethods[i])
+				break;
+			++i;
+		}
+		if (i == 3)
+			printErrorAndExit("ERROR: unknown method - FaultyLine: \'" + line + "\'\n");
+		++itVec;
+	}
+}
+
+void Server::parseLocationFields(const std::string& line, const std::string &uri){
+	size_t matchField;
+	configMap::iterator it = locationBlocs[uri].fields.begin();
 	while (it != locationBlocs[uri].fields.end()){
 		matchField = line.find(it->first);
 		if (matchField != std::string::npos){
@@ -347,21 +356,8 @@ void Server::parseLocationFields(const std::string& line, const std::string &uri
 			if (it->second != "")
 				printErrorAndExit("ERROR: field already exists in location bloc - FaultyLine: \'" + line + "\'\n");
 			it->second = std::string(line, matchField + 1,  line.length() - (matchField + 2));
-			if (it->first == "methods"){
-				v = tokenizeValues(it->second);
-				itVec = v.begin();
-				while (itVec != v.end()){
-					i = 0;
-					while (implementedMethods[i] != ""){
-						if (*itVec == implementedMethods[i])
-							break;
-						++i;
-					}
-					if (i == 3)
-						printErrorAndExit("ERROR: unknown method - FaultyLine: \'" + line + "\'\n");
-					++itVec;
-				}
-			}
+			if (it->first == "methods")
+				checkMethodsInLocation(it->second, line);
 			break;
 		}
 		++it;

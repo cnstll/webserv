@@ -44,6 +44,7 @@ class Server
 		void makeFdNonBlocking(int &fd);
 		int setupServer(int port, int backlog);
 		void respond(int fd);
+		void checkMethodsInLocation(std::string &values, const std::string &line);
 		std::string getExtension(std::string &);
 		std::string getLocationField(const std::string &locationUri, const std::string &requestedField);
 		std::string getServerConfigField(const std::string &requestedField);
