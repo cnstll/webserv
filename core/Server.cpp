@@ -228,13 +228,17 @@ int Server::recvRequest(const int &fd, Request &request){
         {
           headerParsed = 1;
           startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-          contentSize = stringToNumber((request.getParsedRequest()["Content-Length"].c_str()));
-		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size"))) {
+          contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
+		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "") {
 			request.setErrorCode(413);
+			Response resp(_currentRequest->getParsedRequest(), 413);
+			resp.addBody();
+			resp.sendResponse(fd);
 			closeConnection(fd);
-		  	return (-1);
+			headerParsed = 0;
+			return (-1);
 		}
-        }
+		}
       }
     }
     if (is_request_done(request, contentSize, startOfBody))
