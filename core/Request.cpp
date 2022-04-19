@@ -115,6 +115,14 @@ int Request::parseHeader(Server &server){
 		_requestParsingError = 414; //"URI Too long"
 		return -1;
 	}
+	if (_parsedHttpRequest["requestURI"] == "/makeCoffee"){
+		_requestParsingError = 418; // "I am a tea pot"
+		return -1;
+	}
+	if (_parsedHttpRequest["requestURI"] == "/censoredContent"){
+		_requestParsingError = 451; // "Legal Reason"
+		return -1;
+	}
 	// check if method is valid for the location bloc attached to the uri of the request
 	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
 	
