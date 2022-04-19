@@ -56,15 +56,31 @@ static void checkLineForbiddenWhitespaces(const std::string &line){
   }
 }
 
+static int countTokenInLine(const std::string &line){
+  size_t startOfToken = 0, endOfToken = 0;
+  startOfToken = line.find_first_not_of(" \t");
+  int count = 0;
+  while (1){
+    ++count;
+    endOfToken = line.find(" ", startOfToken);
+    if (endOfToken == std::string::npos)
+      return count;
+    endOfToken -= 1;
+    startOfToken = line.find_first_not_of(" ", endOfToken + 1);
+  }
+  return count;
+}
+
 static void checkInstructionLineLayout(const std::string &line){
 	size_t startOfToken =0, endOfToken =0;
   size_t lineLen = line.length();
   if (lineLen > 1 && line.at(lineLen - 2) == ' ')
     printErrorAndExit("ERROR: bad synthaxe - FaultyLine: \'" + line + "\'\n");
-	startOfToken = line.find_first_not_of(" \t");
+	if (countTokenInLine(line) < 2)
+    printErrorAndExit("ERROR: too few parameters - FaultyLine: \'" + line + "\'\n");
+  startOfToken = line.find_first_not_of(" \t");
 	while (startOfToken < lineLen && endOfToken < lineLen){
-		//std::cerr << "EOL: " << eol << " START: " << startOfToken << " END: " << endOfToken << std::endl;
-		if (endOfToken != 0 && startOfToken - endOfToken > 2)
+    if (endOfToken != 0 && startOfToken - endOfToken > 2)
 			printErrorAndExit("ERROR: too many spaces within instruction - FaultyLine: \'" + line + "\'\n");
 		endOfToken = line.find(" ", startOfToken) - 1;
 		startOfToken = line.find_first_not_of(" ", endOfToken + 1);
