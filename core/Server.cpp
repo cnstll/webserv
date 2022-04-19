@@ -208,7 +208,6 @@ int Server::setupServer(int port, int backlog)
 int Server::recvRequest(const int &fd, Request &request){
   int read_bytes;
   char request_buffer[REQUEST_READ_SIZE + 1] = {};
-  static bool headerParsed = 0;
   int parsed;
   int contentSize;
   int startOfBody;
@@ -217,33 +216,34 @@ int Server::recvRequest(const int &fd, Request &request){
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
     request.append(request_buffer, read_bytes);
-    if (!headerParsed)
+    if (!request.headerParsed)
     {
       parsed = parseHeader(request)	;
       if (parsed)
-      {
-        if (parsed == 2)
-          return (read_bytes);
-        else
-        {
-          headerParsed = 1;
-          startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-          contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
-		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "") {
-			Response resp(413, *this);
-			resp.sendResponse(fd);
-			closeConnection(fd);
-			headerParsed = 0;
-			return (-1);
-		}
-		}
-      }
-    }
-    if (is_request_done(request, contentSize, startOfBody))
-    {
-      headerParsed = 0;
-      return (read_bytes);
-    }
+	  {
+		  request.headerParsed = 1;
+		  if (parsed == 2)
+			  return (read_bytes);
+		  else
+		  {
+			  startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+			  contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
+			  if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
+			  {
+				  Response resp(413, *this);
+				  resp.sendResponse(fd);
+				  closeConnection(fd);
+				  request.headerParsed = 0;
+				  return (-1);
+			  }
+		  }
+	  }
+	}
+  }
+  if (is_request_done(request, contentSize, startOfBody))
+  {
+	  request.headerParsed = 0;
+	  return (1);
   }
   if (read_bytes == 0)
   {

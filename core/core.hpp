@@ -22,7 +22,7 @@
 #define READ_SIZE 30000
 #define REQUEST_READ_SIZE 16000
 #define MAX_QUEUE 10000
-#define TIMEOUT 100
+#define TIMEOUT 10000
 const char *file_to_c_string(const std::string& path);
 std::string readFileIntoString(const std::string& path);
 

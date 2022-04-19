@@ -61,8 +61,7 @@ class Request
    
     void addFdInfo(int fd);
     int fd;    
-	
-  
+    bool headerParsed;
     time_t _inactiveTime;
   private:
     time_t _birth;
