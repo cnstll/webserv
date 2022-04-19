@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <iterator>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -62,6 +63,7 @@ class Server
 		void initServerConfig(void);
 		void addLocationBlocConfig(std::string &uri);
 		std::string findLocationPath(const std::string &line);
+		void checkMethodsInLocation(const std::string &values);
 		void parseLocationFields(const std::string& line, const std::string &uri);
 		void checkInstructionEOL(const std::string &line, bool hasLocationLineToken);
 		bool lineHasLocationToken(const std::string &line);
@@ -73,6 +75,7 @@ class Server
 
 		static std::string validServerFields[];
 		static std::string validLocationFields[];
+		static std::string methodsAllowed[];
 		configMap serverConfigFields;
 		std::map<std::string, Location> locationBlocs;
 		size_t countOfLocationBlocks;
