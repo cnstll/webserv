@@ -15,3 +15,4 @@ std::string numberToString(size_t &Number);
 std::string numberToString(int &Number);
 int stringToNumber(std::string str);
 std::vector<std::string> tokenizeValues(std::string &str);
+bool strIsInVector(const std::string &str, const std::vector<std::string> v);

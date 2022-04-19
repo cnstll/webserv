@@ -100,3 +100,16 @@ std::vector<std::string> tokenizeValues(std::string &str){
     tokenized.push_back(str.substr(startOfToken, str.length() - startOfToken));
     return tokenized;
 }
+
+bool strIsInVector(const std::string &str, const std::vector<std::string> v){
+    std::vector<std::string>::const_iterator iterVec = v.begin();
+    while (iterVec != v.end())
+    {
+        if (*iterVec == str)
+            return true;
+        ++iterVec;
+    }
+    if (iterVec == v.end())
+        return false;
+    return true;
+}

@@ -117,17 +117,9 @@ int Request::parseHeader(Server &server){
 	}
 	// check if method is valid for the location bloc attached to the uri of the request
 	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
-	std::vector<std::string> tokenizedMethods; 
-	std::vector<std::string>::iterator iterVec; 
+	
 	if (localMethods != ""){
-		tokenizedMethods = tokenizeValues(localMethods);
-		iterVec = tokenizedMethods.begin();
-		while (iterVec != tokenizedMethods.end()){
-			if (*iterVec == _parsedHttpRequest["method"])
-				break;
-			++iterVec;
-		}
-		if (iterVec == tokenizedMethods.end()){
+		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){	
 			_requestParsingError = 405; // Method Not implemented
 			std::cout << "NOT IMPLEMENTED\n";
 			return -1;
