@@ -66,7 +66,7 @@ std::string Response::getErrorContent(int errCode)
     sprintf(buf, "%d", errCode);
     //404 path
 
-    std::string errPathname = "." + std::string(ROOT_DIR) + "/" + buf + ".html"; 
+    std::string errPathname = _currentServer.getServerConfigField("error_pages_dir") + "/" + buf + ".html"; 
     if(doesFileExist(errPathname))
         return (readFileIntoString(errPathname));
     return "<Html>" + getCodeStatus(errCode) + "</Html>";
