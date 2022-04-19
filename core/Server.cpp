@@ -223,7 +223,10 @@ int Server::recvRequest(const int &fd, Request &request){
 	  {
 		  request.headerParsed = 1;
 		  if (parsed == 2)
+		  {
+			  request.headerParsed = 0;
 			  return (read_bytes);
+		  }
 		  else
 		  {
 			  startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
@@ -237,6 +240,9 @@ int Server::recvRequest(const int &fd, Request &request){
 				  return (-1);
 			  }
 		  }
+	  }
+	  else if (parsed == -1) {
+		  return (1);
 	  }
 	}
   }
