@@ -72,7 +72,7 @@ void Server::displayServerConfig(std::ostream &o) const{
   o << "---------------------------------------END OF SERVER CONFIG\n";
 }
 
-int Server::is_request_done(Request &request, int &contentLength, int &startOfBody)
+int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody)
 {
   if (request.getParsedRequest()["Transfer-Encoding"] == "chunked")
   {
@@ -246,7 +246,7 @@ int Server::recvRequest(const int &fd, Request &request){
 	  }
 	}
   }
-  if (is_request_done(request, contentSize, startOfBody))
+  if (isRequestDone(request, contentSize, startOfBody))
   {
 	  request.headerParsed = 0;
 	  return (1);
