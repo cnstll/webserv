@@ -231,7 +231,7 @@ int Server::recvRequest(const int &fd, Request &request){
           contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
 		if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "") {
 			request.setErrorCode(413);
-			Response resp(_currentRequest->getParsedRequest(), 413);
+			Response resp(_currentRequest->getParsedRequest(), 413, *this);
 			resp.addBody();
 			resp.sendResponse(fd);
 			closeConnection(fd);
@@ -471,7 +471,7 @@ std::string Server::validServerFields[] = {
 		"listen",
 		"server_name",
 		"root",
-		"error_page",
+		"error_pages_dir",
 		""
 };
 
