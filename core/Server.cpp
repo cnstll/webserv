@@ -167,13 +167,13 @@ void Server::respond(int fd)
 	{
 		if (std::remove(fullPath.c_str()) != 0)
 		{
-			Response resp(_currentRequest->getParsedRequest(), 204);
+			Response resp(_currentRequest->getParsedRequest(), 204, *this);
 			resp.sendResponse(fd);
 		}
 	}
 	else
 	{
-		Response resp(_currentRequest->getParsedRequest(), _currentRequest->getError());
+		Response resp(_currentRequest->getParsedRequest(), _currentRequest->getError(), *this);
 		resp.addBody(fullPath, this);
 		resp.sendResponse(fd);
 	}
@@ -459,7 +459,7 @@ std::string Server::validServerFields[] = {
 		"listen",
 		"server_name",
 		"root",
-		"error_page",
+		"error_pages_dir",
 		""
 };
 

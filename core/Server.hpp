@@ -23,7 +23,6 @@
 #define REQUEST_READ_SIZE 16000
 
 class Request;
-
 class Server
 {
 	public:
