@@ -14,12 +14,9 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Request::Request() : _fullRequest(), root_dir(ROOT_DIR), _requestParsingError(200){
-	initParsedRequestMap();
-	_birth = time(0);
-};
 
-Request::Request(std::string fullRequest)  : _fullRequest(fullRequest), root_dir(ROOT_DIR), _requestParsingError(200)
+Request::Request(std::string fullRequest, Server &serv) :
+_fullRequest(fullRequest), _currentServer(serv), root_dir(ROOT_DIR), _requestParsingError(200)
 {
 	initParsedRequestMap();
 	_birth = time(0);
@@ -118,6 +115,24 @@ int Request::parseHeader(Server &server){
 		_requestParsingError = 414; //"URI Too long"
 		return -1;
 	}
+	// check if method is valid for the location bloc attached to the uri of the request
+	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
+	std::vector<std::string> tokenizedMethods; 
+	std::vector<std::string>::iterator iterVec; 
+	if (localMethods != ""){
+		tokenizedMethods = tokenizeValues(localMethods);
+		iterVec = tokenizedMethods.begin();
+		while (iterVec != tokenizedMethods.end()){
+			if (*iterVec == _parsedHttpRequest["requestURI"])
+				break;
+			++iterVec;
+		}
+		if (iterVec == tokenizedMethods.end()){
+			_requestParsingError = 405; // Method Not implemented
+			std::cout << "NOT IMPLEMENTED\n";
+			return -1;
+		}
+	}
 	//! Here is we should check for redirects, before checking if the file exitsts as that won't be true if the file moved
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
@@ -133,7 +148,7 @@ int Request::parseHeader(Server &server){
 	
 	//Check HTTP Version
 	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){
-		_requestParsingError = 505; // Not implemented
+		_requestParsingError = 505; // std::vector<std::string>::iterator it
 		return -1;
 	}
 	//Parse each line of the request header and entity header

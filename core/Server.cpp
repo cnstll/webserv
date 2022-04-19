@@ -128,7 +128,7 @@ int Server::acceptNewConnexion(int server_fd)
   if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
   {
 	  makeFdNonBlocking(connexionFd);
-	  requestMap[connexionFd] = new Request;
+	  requestMap[connexionFd] = new Request("", *this);
 	  return connexionFd;
   }
   return -1;
@@ -318,9 +318,21 @@ std::string Server::findLocationPath(const std::string &line){
 	return locationPath;
 }
 
+// void Server::checkMethodsInLocation(const std::string &values){
+
+// 	int i = 0;
+// 	while (methodsAllowed[i] != ""){
+// 		if (methodsAllowed[i])
+// 		i++;
+// 	}
+// } 
+
 void Server::parseLocationFields(const std::string& line, const std::string &uri){
 	configMap::iterator it;
 	size_t matchField;
+	std::vector<std::string> v;
+	std::vector<std::string>::iterator itVec;
+	int i;
 	it =  locationBlocs[uri].fields.begin();
 	while (it != locationBlocs[uri].fields.end()){
 		matchField = line.find(it->first);
@@ -329,14 +341,29 @@ void Server::parseLocationFields(const std::string& line, const std::string &uri
 			if (it->second != "")
 				printErrorAndExit("ERROR: field already exists in location bloc - FaultyLine: \'" + line + "\'\n");
 			it->second = std::string(line, matchField + 1,  line.length() - (matchField + 2));
+			if (it->first == "methods"){
+				v = tokenizeValues(it->second);
+				itVec = v.begin();
+				while (itVec != v.end()){
+					i = 0;
+					while (methodsAllowed[i] != ""){
+						if (*itVec == methodsAllowed[i])
+							break;
+						++i;
+					}
+					if (i == 3)
+						printErrorAndExit("ERROR: unknown method - FaultyLine: \'" + line + "\'\n");
+					++itVec;
+				}
+			}
 			break;
 		}
 		++it;
 	}
 	if (it == locationBlocs[uri].fields.end())
 	 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
-
 }
+
 void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
 	std::string uri = findLocationPath(line);
 	addLocationBlocConfig(uri);
@@ -472,6 +499,13 @@ std::string Server::validLocationFields[] = {
 		"upload_dir",
 		"return",
 		""
+};
+
+std::string Server::methodsAllowed[] = {
+	"GET",
+	"POST",
+	"DELETE",
+	""
 };
 
 /* ************************************************************************** */

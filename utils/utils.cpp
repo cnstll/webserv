@@ -84,3 +84,19 @@ std::string numberToString(size_t &Number){
     convert << Number;      // insert the textual representation of 'Number' in the characters in the stream
     return (convert.str()); // convert stream to string
 }
+
+std::vector<std::string> tokenizeValues(std::string &str){
+    size_t startOfToken = 0, endOfToken = 0;
+    std::vector<std::string> tokenized;
+    while (endOfToken != std::string::npos)
+    {
+        startOfToken = str.find_first_not_of(" ", endOfToken);
+        endOfToken = str.find(" ", startOfToken);
+        if (endOfToken != std::string::npos){
+            tokenized.push_back(str.substr(startOfToken, endOfToken - startOfToken));
+            endOfToken += 1;
+        }
+    }
+    tokenized.push_back(str.substr(startOfToken, str.length() - startOfToken));
+    return tokenized;
+}
