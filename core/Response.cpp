@@ -64,6 +64,8 @@ std::string Response::getErrorContent(int errCode)
 {
     char buf[3];
     sprintf(buf, "%d", errCode);
+    //404 path
+
     std::string errPathname = "." + std::string(ROOT_DIR) + "/" + buf + ".html"; 
     if(doesFileExist(errPathname))
         return (readFileIntoString(errPathname));
@@ -241,6 +243,8 @@ void Response::sendResponse(int clientSocket){
     packagedResponse = packagedResponse + CRLF + _Content;
     // ! Handle error here. 
     int i;
+    const char *FORDEBUG = packagedResponse.c_str();
+    (void)FORDEBUG;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
