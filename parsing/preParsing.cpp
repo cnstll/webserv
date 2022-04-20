@@ -102,6 +102,8 @@ void preParsing(const std::string& config){
   std::string line;
   size_t startOfLine =0, endOfLine =0;
   const size_t configLen = config.length();
+  if(configLen == 0)
+    printErrorAndExit("ERROR: config file is empty\n");
   while (startOfLine < configLen){
     endOfLine = config.find("\n", startOfLine);
     line = config.substr(startOfLine, endOfLine - startOfLine);
