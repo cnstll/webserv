@@ -57,11 +57,6 @@ char	**cgiHandler::_calloc_str_list(size_t size)
 	return (str_list);
 }
 
-// cgiHandler::cgiHandler(void) : _currentServer()
-// {
-//     return ;
-// }
-
 cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::string &scriptPathname, int serverSocket, Server &currentServer) : _serverSocket(serverSocket), _currentServer(currentServer)
 {
 	_parsedRequest = parsedRequest;
@@ -71,13 +66,19 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 	_args[2] = NULL;
 	requestToEnvMap = initRequestToEnvMap();
 	_environment = _calloc_str_list(1);
-    str_add("GATEWAY_INTERFACE=CGI/1.1");
-    str_add("SERVER_NAME=webserv");
+	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
+    std::string serverName = "SERVER_NAME=" + _currentServer.getServerConfigField("server_name");
+    std::string serverPort = "SERVER_PORT=" + _currentServer.getServerPort();
+	
+	str_add("GATEWAY_INTERFACE=CGI/1.1");
     str_add("SERVER_PROTOCOL=HTTP/1.1");
     str_add("SERVER_SOFTWARE=webserv");
-	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
-    str_add(path_info.c_str());
-
+    str_add("SERVER_ADDR=127.0.0.1");
+    str_add("REMOTE_ADDR=127.0.0.1");
+    
+	str_add(path_info.c_str());
+    str_add(serverName.c_str());
+    str_add(serverPort.c_str());
 
 	_messageBody = parsedRequest["message-body"];
 	std::map<std::string, std::string>::iterator it = requestToEnvMap.begin();
@@ -91,9 +92,6 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 		}
 		++it;
 	}
-    str_add("SERVER_ADDR=127.0.0.1");
-    str_add("REMOTE_ADDR=127.0.0.1");
-    str_add("REMOTE_PORT=18000");
 	return;
 }
 
@@ -144,7 +142,7 @@ void cgiHandler::handleCGI(int fd)
 	catch (const std::exception &e)
 	{
 		std::cerr << e.what() << '\n';
-		Response resp(_parsedRequest, 500, _currentServer);
+		Response resp(_parsedRequest, 502, _currentServer);
 		resp.addBody();
 		resp.sendResponse(fd);
 		exit(0);
@@ -155,8 +153,3 @@ cgiHandler::~cgiHandler(void)
 {
     return ;
 }
-
-// cgiHandler& cgiHandler::operator=(const cgiHandler& newenv)
-// {
-//     return *this;
-// }

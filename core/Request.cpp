@@ -129,11 +129,17 @@ int Request::parseHeader(Server &server){
 	// check if method is valid for the location bloc attached to the uri of the request
 	checkMethodInLocationBloc();
 	//! Here is we should check for redirects, before checking if the file exitsts as that won't be true if the file moved
-	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
-		if (_parsedHttpRequest["requestURI"] == "/redirect")
-			_requestParsingError = 301;
-		else
-			_requestParsingError = 404; //"Not Found" 
+	if (server.getLocationField(getRequestedUri(), "return") != "")
+	{
+		std::string redirectStr = server.getLocationField(getRequestedUri(), "return");
+		std::vector<std::string> v = tokenizeValues(redirectStr);
+		_requestParsingError = stringToNumber(v[0]);
+		return -1;
+	}
+	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"])))
+	{
+
+		_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}
 	head = tail + 1;

@@ -219,12 +219,17 @@ void Response::sendResponse(int clientSocket){
         "Connection: " + _Connection + CRLF;
 
     if (_statusCode >= 300 && _statusCode < 400)
+    {
+        std::string redirectStr = _currentServer.getLocationField(_uri, "return");
+        std::vector<std::string> v = tokenizeValues(redirectStr);
+        _Location = v[1];
         packagedResponse += "Location: " + _Location + CRLF;
-    packagedResponse = packagedResponse + CRLF + _Content;
+    }
+    else{
+        packagedResponse = packagedResponse + CRLF + _Content;
+    }
     // ! Handle error here. 
     int i;
-    const char *FORDEBUG = packagedResponse.c_str();
-    (void)FORDEBUG;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
