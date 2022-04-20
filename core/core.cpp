@@ -27,14 +27,13 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
 
 bool check_error_flags(int event)
 {
-  if (event & EPOLLHUP || event & EPOLLERR)
-  {
-    if (event & EPOLLHUP)
-      write(0, "EPPOLHUP\n", 9);
-    if (event & EPOLLERR)
-      write(0, "EPPOLERR\n", 9);
+
+  if (event & EPOLLHUP)
     return (false);
-  }
+  if (event & EPOLLERR)
+    return (false);
+  if (event & EPOLLRDHUP)
+    return (false);
   return (true);
 }
 
@@ -98,6 +97,34 @@ bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
   }
   return false;
 }
+
+void print_events(struct epoll_event *events, int eventful_fds){
+  for (int i = 0; i < eventful_fds; i++)
+  {
+    printf("fd:    %i\n", events[i].data.fd);
+    if (events[i].events & EPOLLIN)
+      printf("EPOLLIN\n");
+    if (events[i].events & EPOLLOUT)
+      printf("EPOLLOUT\n");
+    if (events[i].events & EPOLLHUP)
+      printf("EPOLLHUP\n");
+    if (events[i].events & EPOLLERR)
+      printf("EPOLLERR\n");
+    if (events[i].events & EPOLLRDHUP)
+      printf("EPOLLRDHUP\n");
+    if (events[i].events & EPOLL_CLOEXEC)
+      printf("EPOLlCLOEXEC\n");    
+    if (events[i].events & EPOLLMSG)
+      printf("EPOLlMSG\n");    
+    if (events[i].events & EPOLLPRI)
+      printf("EPOLlPRI\n");    
+    if (events[i].events & EPOLLWAKEUP)
+      printf("EPOLLWAKEUP\n");    
+    //printf("something else happened\n");
+    printf("\n\n");
+  }
+}
+
 
 void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> &serverMap, int actualizedFdCount)
 {
@@ -175,6 +202,8 @@ int main(int argc, char *argv[])
       }
       else if (events[i].events & EPOLLIN)
       {
+        if (!check_error_flags(events[i].events))
+          continue;
         currentServer = portPicker(serverMap, events[i].data.fd);
         currentRequest = currentServer->requestMap[events[i].data.fd];
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
