@@ -93,7 +93,13 @@ int Server::parseHeader(Request &request)
   {
     request.parseHeader(*this);
     if (request.getHttpMethod() == "POST")
-      return (1);
+	{
+		int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+		int contentLength = stringToNumber(request.getRequestField("Content-Length"));
+		if (isRequestDone(request, contentLength, startOfBody)) 
+			return (1);
+		return (1);
+	}
     else
       return 2;
   }
@@ -147,8 +153,8 @@ std::string Server::getExtension(std::string &uri)
 
 void Server::closeConnection(int fd)
 {
-	close(fd);
 	requestMap.erase(fd);
+	close(fd);
 }
 
 void Server::respond(int fd)
@@ -177,11 +183,9 @@ void Server::respond(int fd)
 		resp.addBody(fullPath, this);
 		resp.sendResponse(fd);
 	}
+	_currentRequest->clear();
 	if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
 		closeConnection(fd);
-	else
-		_currentRequest->clear();
-
 }
 
 int Server::setupServer(int port, int backlog)
@@ -215,6 +219,7 @@ int Server::recvRequest(const int &fd, Request &request){
 //   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
+	// std::cerr << read_bytes << std::endl;
     request.append(request_buffer, read_bytes);
     if (!request.headerParsed)
     {
@@ -255,7 +260,7 @@ int Server::recvRequest(const int &fd, Request &request){
   {
 	  printf("Closing connexion for fd: %d\n", fd);
 	  closeConnection(fd);
-	//   return (-1);
+	  return (-1);
   }
   return read_bytes;
 }
