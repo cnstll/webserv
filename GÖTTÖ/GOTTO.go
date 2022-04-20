@@ -46,16 +46,15 @@ func makeFgBgStyle(fg, bg string) func(string) string {
 }
 
 type model struct {
-	textInput  textinput.Model
-	cursor     int
-	choices    []string
-	statuses   []string
-	selected   map[int]struct{}
-	testing    int
-	url        string
-	funkTable  []func(m model)
-	typing     bool
-	toBeTested [4]bool
+	textInput     textinput.Model
+	cursor        int
+	choices       []string
+	statuses      []string
+	selected      map[int]struct{}
+	url           string
+	typing        bool
+	toBeTested    [4]bool
+	serverRootDir string
 }
 
 type statusMsg struct {
@@ -88,7 +87,7 @@ func checkSomeUrl(m model) tea.Cmd {
 		if m.toBeTested[0] {
 
 			if m.url != "" {
-				nbOfConnections := 10000
+				nbOfConnections := 100000
 				wg = new(sync.WaitGroup)
 				for i := 0; i < nbOfConnections; i++ {
 					wg.Add(1)
@@ -108,7 +107,7 @@ func checkSomeUrl(m model) tea.Cmd {
 
 func checkSomeStatic(m model) tea.Cmd {
 
-	contentPath := "./server_root_test/index.html"
+	contentPath := m.serverRootDir + "/index.html"
 	content, _ := ioutil.ReadFile(contentPath)
 	fileRet, _ := os.Create("./log/ServerResponse.txt")
 	file, _ := os.Create("./log/OriginalFile.txt")
@@ -145,48 +144,12 @@ func checkSomeStatic(m model) tea.Cmd {
 	}
 }
 
-// func checkSomeStatic(m model) tea.Cmd {
-// 	contentPath := "./server_root_test/index.html"
-// 	content, _ := ioutil.ReadFile(contentPath)
-// 	fileRet, _ := os.Create("./log/ServerResponse.txt")
-// 	file, _ := os.Create("./log/OriginalFile.txt")
-// 	writer := bufio.NewWriter(file)
-// 	writerRet := bufio.NewWriter(fileRet)
-// 	return func() tea.Msg {
-// 		if m.toBeTested[1] {
-// 			if m.url != "" {
-// 				// c := &http.Client{Timeout: 5 * time.Second}
-// 				resp, err := http.PostForm(m.url+"/hash.html", url.Values{"key": {"Value"}, "id": {"123"}})
-// 				if err != nil {
-// 					return statusMsg{1, "OOPS something went wrong #500 internat server tester error"}
-// 				}
-// 				defer ret.Body.Close()
-// 				buf := new(bytes.Buffer)
-// 				buf.ReadFrom(ret.Body)
-// 				newStr := buf.String()
-// 				if newStr == string(content) {
-// 					return statusMsg{1, "PASS"}
-// 				} else {
-// 					writer.WriteString(string(content))
-// 					writerRet.WriteString(newStr)
-// 					writer.Flush()
-// 					writerRet.Flush()
-// 					return statusMsg{1, "FAIL"}
-// 				}
-// 			} else {
-// 				return statusMsg{1, "FAIL"}
-// 			}
-// 		}
-// 		return statusMsg{1, m.statuses[1]}
-// 	}
-// }
-
 func uploadFiles(m model) tea.Cmd {
 
 	//! the files here are prety small for ease of testing this tester out, they should be replaced with larger files
 	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "large_video_file.mp4", "img.jpeg", "img.jpeg"}
-	OgContentRootPath := "/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"
-	uploadContentPath := "/mnt/nfs/homes/jescully/Documents/webserv/core/server_root/tmp/"
+	OgContentRootPath := "./upload_files_originals/"
+	uploadContentPath := "./forest/iAmUploadDir/"
 
 	return func() tea.Msg {
 		if m.toBeTested[2] {
@@ -308,12 +271,13 @@ func main() {
 	t.Focus()
 
 	m := model{
-		textInput:  t,
-		choices:    []string{"Stress test (Don't crash!)", "Static pages check", "Upload files", "delete files"},
-		statuses:   []string{"", "", "", ""},
-		selected:   make(map[int]struct{}),
-		typing:     true,
-		toBeTested: [4]bool{false, false, false, false},
+		textInput:     t,
+		choices:       []string{"Stress test (Don't crash!)", "Static pages check", "Upload files", "delete files"},
+		statuses:      []string{"", "", "", ""},
+		selected:      make(map[int]struct{}),
+		typing:        true,
+		toBeTested:    [4]bool{false, false, false, false},
+		serverRootDir: "./forest/iAmRoot",
 	}
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	err := p.Start()
