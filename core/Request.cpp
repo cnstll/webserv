@@ -66,8 +66,10 @@ void Request::clear(){
 int Request::checkMethodInLocationBloc(){
 	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
 	if (localMethods != ""){
-		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){	
-			_requestParsingError = 405; // Method Not implemented
+		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){
+			std::cout << "R METHOD: " << _parsedHttpRequest["method"] << std::endl;
+			std::cout << "METHODS TOK: " << tokenizeValues(localMethods)[0] << std::endl;
+			_requestParsingError = 405; // Method Not Allowed
 			return -1;
 		}
 	}
@@ -79,12 +81,12 @@ int Request::checkIfMethodIsImplemented(Server &server){
 	std::string *methods = server.getImplementedMethods();
 	int i = 0;
 	while (methods[i] != ""){
-		if (methods[i] != _parsedHttpRequest["method"])
+		if (methods[i] == _parsedHttpRequest["method"])
 			return 0;
 		++i;
 	}
 	if (i == 3)
-		_requestParsingError = 405; // Method Not implemented
+		_requestParsingError = 501; // Method Not Implemented
 	return -1;
 }
 
@@ -129,11 +131,12 @@ int Request::parseHeader(Server &server){
 	// check if method is valid for the location bloc attached to the uri of the request
 	checkMethodInLocationBloc();
 	//! Here is we should check for redirects, before checking if the file exitsts as that won't be true if the file moved
-	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"]))){
+	std::string thisUri = server.constructPath(_parsedHttpRequest["requestURI"]);
+	if (!doesFileExist(thisUri)){
 		if (_parsedHttpRequest["requestURI"] == "/redirect")
 			_requestParsingError = 301;
 		else
-			_requestParsingError = 404; //"Not Found" 
+			_requestParsingError = 404; //"Not Found"
 		return -1;
 	}
 	head = tail + 1;
