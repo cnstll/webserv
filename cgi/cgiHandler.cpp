@@ -66,7 +66,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 	_args[2] = NULL;
 	requestToEnvMap = initRequestToEnvMap();
 	_environment = _calloc_str_list(1);
-	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
+	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "working_dir");
     std::string serverName = "SERVER_NAME=" + _currentServer.getServerConfigField("server_name");
     std::string serverPort = "SERVER_PORT=" + _currentServer.getServerPort();
 	

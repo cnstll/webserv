@@ -140,7 +140,6 @@ int Request::parseHeader(Server &server){
 	}
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"])))
 	{
-
 		_requestParsingError = 404; //"Not Found" 
 		return -1;
 	}
