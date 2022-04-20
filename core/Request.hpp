@@ -21,6 +21,7 @@ class Request
 		~Request();
 
 		// Request &		operator=( Request const & rhs );
+    std::string getRequestField(const std::string &requestedField);
 		void append(char *str, std::size_t readBytes);
 		void clear(void);
     int parseBody(void);

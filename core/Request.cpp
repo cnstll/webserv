@@ -160,8 +160,14 @@ int Request::parseHeader(Server &server){
 		if (_parsedHttpRequest.count(field) == 1)
 			_parsedHttpRequest[field] = value;
 	}
+	if (getRequestField("method") == "POST" && getRequestField("Content-Length") == "" && getRequestField("Transfer-Encoding") != "chunked")
+	{
+		_requestParsingError = 411;
+		return -1;
+	}
 	return 0;
 }
+
 
 int Request::parseBody(void){
 
@@ -255,6 +261,13 @@ void Request::writeStrToFile(const std::string &str, const char *filename){
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
+
+std::string Request::getRequestField(const std::string &requestedField)
+{
+	std::map<std::string, std::string>::iterator it;
+	it = _parsedHttpRequest.find(requestedField);
+	return (it == _parsedHttpRequest.end() ? std::string("") : _parsedHttpRequest[requestedField]);
+}
 
 std::string Request::getRequestedUri(){
 	return _parsedHttpRequest["requestURI"];
