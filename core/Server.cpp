@@ -117,6 +117,17 @@ int check2(int return_value, std::string const &error_msg)
   return 1;
 }
 
+int checkFatal(int return_value, std::string const &error_msg)
+{
+  if (return_value < 0)
+  {
+    std::cerr << error_msg << std::endl;
+    exit(EXIT_FAILURE);
+    return -1;
+  }
+  return 1;
+}
+
 void Server::makeFdNonBlocking(int &fd)
 {
   int flags;
@@ -204,8 +215,8 @@ int Server::setupServer(int port, int backlog)
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(port);
-  check2(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
-  check2(listen(serverFd, backlog), "listen error");
+  checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
+  checkFatal(listen(serverFd, backlog), "listen error");
   return serverFd;
 }
 
