@@ -75,7 +75,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
     str_add("SERVER_NAME=webserv");
     str_add("SERVER_PROTOCOL=HTTP/1.1");
     str_add("SERVER_SOFTWARE=webserv");
-	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
+	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "working_dir");
     str_add(path_info.c_str());
 
 
@@ -100,6 +100,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 void	cgiHandler::_executeScript()
 {
 	std::string CGI_EXECUTOR = "/usr/bin/python";
+
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	if (execve(_args[0], _args, _environment) < 0)
 	{

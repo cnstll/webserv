@@ -488,7 +488,6 @@ std::string *Server::getImplementedMethods(void){
 */
 std::string Server::validServerFields[] = {
 
-		"index",
 		"listen",
 		"server_name",
 		"root",
@@ -502,7 +501,7 @@ std::string Server::validLocationFields[] = {
 		"methods",
 		"autoindex",
 		"client_max_body_size",
-		"upload_dir",
+		"working_dir",
 		"return",
 		""
 };
