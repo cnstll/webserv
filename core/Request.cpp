@@ -53,17 +53,6 @@ void Request::clear(){
 	_requestParsingError = 200;
 }
 
-// bool isADir(std::string directoryPath)
-// {  
-//   DIR *dh;
-  
-//   dh = opendir (directoryPath.c_str());
-  
-//   if ( !dh )
-//     return 0;
-//   closedir ( dh );
-//   return 1;
-// }
 int Request::checkMethodInLocationBloc(){
 	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
 	if (localMethods != ""){

@@ -150,14 +150,14 @@ void cgiHandler::handleCGI(int fd)
 	catch (cgiHandler::internalServerError &e)
 	{
 		std::cerr << e.what() << '\n';
-		Response resp(_parsedRequest, 500, _currentServer);
+		Response resp(500, _currentServer);
 		resp.addBody();
 		resp.sendResponse(fd);
 	}
 	catch (const std::exception &e)
 	{
 		std::cerr << e.what() << '\n';
-		Response resp(_parsedRequest, 502, _currentServer);
+		Response resp(502, _currentServer);
 		resp.addBody();
 		resp.sendResponse(fd);
 		exit(0);

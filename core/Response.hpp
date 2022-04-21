@@ -1,16 +1,12 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
-
-
 #include "core.hpp"
 #include "Server.hpp"
-
-
-# include <iostream>
+#include "Request.hpp"
+#include <iostream>
 #include <stdlib.h>
 #include<sys/socket.h>
-#include <map>  
-
+#include <map>
 
 class Server;
 
@@ -31,19 +27,17 @@ private:
     //! this obviously shouldn't be hardcoded... where should this info come from? the config file probably?
     std::string _Location;
     std::string timeAsString();
-    const char *convertToCString();
-    std::string directoryContents (std::string pathname);
     std::map<int, std::string>  _ErrCodeMap;
     std::map<int, std::string> initErrCodeMap();
     Server &_currentServer;
+    std::string directoryContents (std::string pathname);
 
 public:
     std::string getErrorContent(int errCode);
     std::string getCodeStatus(int errCode);
     std::string codeToReasonPhrase(int);
     // Response(const Response &newResponse);
-    Response(int code, Server &serv);
-    Response(std::map<std::string, std::string> &parsedRequest, int errorCode, Server &serv);
+    Response(int errorCode, Server &serv);
     ~Response();
     void sendResponse(int clientSocket);
     void sendErrorResponse(int clientSocket, int errorCode);
@@ -51,6 +45,7 @@ public:
     void addBody(std::string pathname, Server *);
     void addBody();
     void addBody(int);
+    void setConnectionField(const std::string &value);
     // Response &operator=(const Response &newResponse);
 };
 #endif

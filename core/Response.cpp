@@ -61,26 +61,18 @@ std::string Response::codeToReasonPhrase(int statusCode){
     return getCodeStatus(statusCode);
 }
 
-Response::Response(int code, Server &serv)
-    : _statusCode(code),
-      _Date(timeAsString()), _ServerName(serv.getServerConfigField("server_name")), _ContentLength(""),
-      _ContentType("text/html"), _Connection("keep-alive"), _currentServer(serv){
-    
-    char buf[3];
-    sprintf(buf,"%i", _statusCode);
-    _ErrCodeMap = initErrCodeMap();
-    this->_ReasonPhrase = Response::codeToReasonPhrase(code);
-    _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
-};
-
-Response::Response(std::map<std::string, std::string> &parsedRequest, int errorCode, Server &serv)
+Response::Response(int errorCode, Server &serv)
     : _statusCode(errorCode),
       _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
-      _ContentLength(""), _ContentType(parsedRequest["Content-Type"]),
-      _Connection(parsedRequest["Connection"]),
+      _ContentLength(serv.getRequestField("Content-Length")), _ContentType("text/html; charset=UTF-8"),
+      _Connection(serv.getRequestField("Connection")),
       _Location("./index.html"),  _currentServer(serv){
 
-    _uri = parsedRequest["requestURI"];
+    _uri = serv.getRequestField("requestURI");
+    if (_Connection == "" && _statusCode != 408)
+        _Connection = "keep-alive";
+    if (_statusCode == 408)
+        _Connection = "close";
     char buf[3];
     _ErrCodeMap = initErrCodeMap();
     sprintf(buf,"%i", _statusCode);
@@ -213,10 +205,11 @@ void Response::sendResponse(int clientSocket){
     std::string packagedResponse = _Status + CRLF +
         "Date: " + _Date + CRLF +
         "Server: " + _ServerName + CRLF +
-        "Content-Length: " + _ContentLength + CRLF +
-        "Content-Type: " + contype + CRLF +
+        "Content-Type: " + _ContentType + CRLF +
         "Connection: " + _Connection + CRLF;
-
+    
+    if (_ContentLength != "")
+        packagedResponse += "Content-Length: " + _ContentLength + CRLF;
     if (_statusCode >= 300 && _statusCode < 400)
     {
         std::string redirectStr = _currentServer.getLocationField(_uri, "return");
@@ -235,6 +228,9 @@ void Response::sendResponse(int clientSocket){
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
         exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
+}
+void Response::setConnectionField(const std::string &value){
+    _Connection = value;
 }
 
 void Response::sendErrorResponse(int clientSocket, int errorCode){
