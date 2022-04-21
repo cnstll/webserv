@@ -117,8 +117,13 @@ std::string Response::directoryContents ( std::string pathname )
   ret += "<Html>\n <h1> This is Otto's index, he's very proud of it so don't be rude now... </h1> <h3>";
   while ( ( contents = readdir ( dh ) ) != NULL )
   {
-    std::string name = "<li> <a href=\"" + std::string(contents->d_name) + "\">" + contents->d_name + "</a> </li>";
+    std::string dirName = contents->d_name;
+    if (dirName != "." && dirName != "..")
+    {
+
+    std::string name = "<li> <a href=\"" + _uri + "/" + dirName + "\">" + contents->d_name + "</a> </li>";
     ret += name += "\n";
+    }
   }
   ret += "</h3>";
   ret += "</Html>\n";
