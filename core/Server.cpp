@@ -111,7 +111,6 @@ int check2(int return_value, std::string const &error_msg)
   if (return_value < 0)
   {
     std::cerr << error_msg << std::endl;
-    // exit(EXIT_FAILURE);
     return -1;
   }
   return 1;
@@ -266,12 +265,11 @@ int Server::recvRequest(const int &fd, Request &request){
   if (isRequestDone(request, request.contentSize, startOfBody))
   {
 	  request.headerParsed = 0;
-	  std::cerr << read_bytes << std::endl;
 	  return (1);
   }
   if (read_bytes == 0)
   {
-	  printf("Closing connexion for fd: %d\n", fd);
+	  log("Closing connexion for fd: " + numberToString(fd));
 	  closeConnection(fd);
 	  return (-1);
   }
