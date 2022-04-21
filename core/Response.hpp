@@ -50,6 +50,7 @@ public:
     void addBody(std::string pathname);
     void addBody(std::string pathname, Server *);
     void addBody();
+    void addBody(int);
     // Response &operator=(const Response &newResponse);
 };
 #endif

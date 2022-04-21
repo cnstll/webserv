@@ -39,11 +39,10 @@ std::map<int, std::string> Response::initErrCodeMap()
 
 std::string Response::getErrorContent(int errCode)
 {
-    char buf[3];
-    sprintf(buf, "%d", errCode);
+
     //404 path
 
-    std::string errPathname = _currentServer.getServerConfigField("error_pages_dir") + "/" + buf + ".html"; 
+    std::string errPathname = _currentServer.getServerConfigField("error_pages_dir") + "/" + numberToString(errCode) + ".html"; 
     if(doesFileExist(errPathname))
         return (readFileIntoString(errPathname));
     return "<Html>" + getCodeStatus(errCode) + "</Html>";
@@ -51,10 +50,11 @@ std::string Response::getErrorContent(int errCode)
 
 std::string Response::getCodeStatus(int errCode)
 {
-    std::map<int, std::string>::iterator it = _ErrCodeMap.find(errCode);
+    std::map<int, std::string>::iterator it;
+    it = _ErrCodeMap.find(errCode);
     if (it != _ErrCodeMap.end())
         return it->second;
-    return "";
+    return "Untreated Error";
 }
 
 std::string Response::codeToReasonPhrase(int statusCode){
@@ -68,6 +68,7 @@ Response::Response(int code, Server &serv)
     
     char buf[3];
     sprintf(buf,"%i", _statusCode);
+    _ErrCodeMap = initErrCodeMap();
     this->_ReasonPhrase = Response::codeToReasonPhrase(code);
     _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
 };
@@ -87,20 +88,11 @@ Response::Response(std::map<std::string, std::string> &parsedRequest, int errorC
     _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
 };
 
-// Response::Response(const Response &newResponse)
-// {
-//     return;
-// }
 
 Response::~Response(void)
 {
     return;
 }
-
-// Response &Response::operator=(const Response &newResponse)
-// {
-//     return *this;
-// }
 
 std::string Response::timeAsString()
 {
@@ -205,6 +197,13 @@ void Response::addBody()
         _Content = getErrorContent(_statusCode);    
     sprintf(buf, "%lu", _Content.size());
     _ContentLength = std::string(buf);
+}
+
+void Response::addBody(int errorCode)
+{
+    _Content = getErrorContent(errorCode);
+    size_t size = _Content.size();
+    _ContentLength = numberToString(size);
 }
 
 void Response::sendResponse(int clientSocket){
