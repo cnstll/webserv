@@ -11,12 +11,6 @@ Server::Server()
 
 Server::Location::Location(){}
 
-// Server::Server( const Server & src )
-// {
-	// (void)src;
-// }
-
-
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -28,12 +22,6 @@ Server::Location::~Location(){}
 /*
 ** --------------------------------- OVERLOAD ---------------------------------
 */
-
-// Server &				Server::operator=( Server const & rhs )
-// {
-	// (void)rhs;
-	// return *this;
-// }
 
 std::ostream &			operator<<( std::ostream & o, Server const & i )
 {
@@ -84,7 +72,8 @@ int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody
   int lengthRecvd = request.getFullRequest().length() - startOfBody;
   if (contentLength <= lengthRecvd)
     return (1);
-  return 0;
+	else
+    return 0;
 }
 
 int Server::parseHeader(Request &request)
@@ -93,17 +82,18 @@ int Server::parseHeader(Request &request)
   {
     request.parseHeader(*this);
     if (request.getHttpMethod() == "POST")
-	{
-		int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-		int contentLength = stringToNumber(request.getRequestField("Content-Length"));
-		if (isRequestDone(request, contentLength, startOfBody)) 
-			return (1);
-		return (1);
-	}
+	  {
+		  int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+		  int contentLength = stringToNumber(request.getRequestField("Content-Length"));
+		  if (isRequestDone(request, contentLength, startOfBody)) 
+		  	return (1);
+		  return (1);
+	  }
     else
-      return 2;
+        return 2;
   }
-  return 0;
+	else
+    return 0;
 }
 
 int check2(int return_value, std::string const &error_msg)
@@ -113,7 +103,8 @@ int check2(int return_value, std::string const &error_msg)
     std::cerr << error_msg << std::endl;
     return -1;
   }
-  return 1;
+	else
+    return 1;
 }
 
 int checkFatal(int return_value, std::string const &error_msg)
@@ -124,15 +115,20 @@ int checkFatal(int return_value, std::string const &error_msg)
     exit(EXIT_FAILURE);
     return -1;
   }
-  return 1;
+	else
+    return 1;
 }
 
-void Server::makeFdNonBlocking(int &fd)
+int Server::makeFdNonBlocking(int &fd)
 {
   int flags;
-  check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
+	int ret;
+  ret = check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
   flags |= O_NONBLOCK;
-  check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
+	if (ret < 0)
+	  return -1;
+  ret = check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
+	return ret;
 }
 
 int Server::acceptNewConnexion(int server_fd)
@@ -143,11 +139,13 @@ int Server::acceptNewConnexion(int server_fd)
 
   if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
   {
-	  makeFdNonBlocking(connexionFd);
+	  if (makeFdNonBlocking(connexionFd) < 0)
+		  return -1;
 	  requestMap[connexionFd] = new Request("", *this);
 	  return connexionFd;
   }
-  return -1;
+	else
+    return -1;
 }
 
 std::string Server::getExtension(std::string &uri)
@@ -275,10 +273,6 @@ int Server::recvRequest(const int &fd, Request &request){
   }
   return read_bytes;
 }
-
-// void Server::closeConnection() {
-
-// }
 
 void Server::initServerConfig(){
 	int i = 0;
@@ -452,7 +446,6 @@ void Server::parseServerConfigFields(const std::string &bloc){
 };
 
 void Server::parsePort(void){
-	std::cerr << "LISTEN: " << serverConfigFields["listen"] << std::endl;
 	size_t findport = serverConfigFields["listen"].find(":");
 	if (findport == std::string::npos)
 		printErrorAndExit("ERROR: bad synthax for listen instruction\n");

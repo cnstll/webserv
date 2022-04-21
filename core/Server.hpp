@@ -41,7 +41,7 @@ class Server
 		int recvRequest(const int &fd, Request &request);
 		int isRequestDone(Request &Request, int &contentLength, int &startOfBody);
 		int acceptNewConnexion(int serverFd);
-		void makeFdNonBlocking(int &fd);
+		int makeFdNonBlocking(int &fd);
 		int setupServer(int port, int backlog);
 		void respond(int fd);
 		void checkMethodsInLocation(std::string &values, const std::string &line);

@@ -78,7 +78,7 @@ def printValidResponse(valid_body):
   print("\n")
   print(valid_body)
 
-eprint("DELETE SCRIPT LAUNCHED")
+# eprint("DELETE SCRIPT LAUNCHED")
 try:
   env = os.environ
   qs = env.get('QUERY_STRING')
