@@ -8,7 +8,7 @@
     
     <!-- Importing the jQuery -->
     <script src=
-"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js">
       </script>
 </head>
   
@@ -26,24 +26,18 @@
           urlReq = "/delete_resource.py?" + "filename=" + fileToDelete;
           $.ajax({
             url: urlReq,
-            type: 'DELETE'
-            // success: function(data, textStatus, request){
-              // document.write(request.responseText);
-            // }
-             })
-            .done(function(data, textStatus, jqXHR) {
-              console.log("success");
-              console.log(data)
-              console.log(textStatus)
-              console.log(jqXHR.responseText)
-              document.write(jqXHR.responseText)
-              })
-            .fail(function(data, textStatus, jqXHR) {
-              console.log("error");
-              console.log(data)
-              console.log(textStatus)
-              console.log(jqXHR.responseText)
-              document.write(jqXHR.responseText)
+            method: 'DELETE',
+          })
+          .done(function( data, textStatus, jqXHR ) {
+            console.log(data)
+            console.log(jqXHR)
+            console.log(textStatus)
+          })
+          .fail(function( jqXHR, textStatus, errorThrown ) {
+            console.log("FAIL")
+            console.log(errorThrown)
+            console.log(jqXHR)
+            console.log(textStatus)
           });
         }
         else {
