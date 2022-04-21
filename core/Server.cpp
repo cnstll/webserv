@@ -82,6 +82,8 @@ int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody
       return 0;
   }
   int lengthRecvd = request.getFullRequest().length() - startOfBody;
+//   std::cout << "lenght recvd: " << lengthRecvd << std::endl;
+//   std::cout << "lenght expected: " << contentLength << std::endl;
   if (contentLength <= lengthRecvd)
     return (1);
   return 0;
@@ -225,17 +227,17 @@ int Server::recvRequest(const int &fd, Request &request){
   int read_bytes;
   char request_buffer[REQUEST_READ_SIZE + 1] = {};
   int parsed;
-  int contentSize = 0;
+//   ?int contentSize = 0;
   int startOfBody = 0;
 
 //   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
   {
-	// std::cerr << read_bytes << std::endl;
     request.append(request_buffer, read_bytes);
     if (!request.headerParsed)
     {
-      parsed = parseHeader(request)	;
+      request.contentSize = 0;
+	  parsed = parseHeader(request)	;
       if (parsed)
 	  {
 		  request.headerParsed = 1;
@@ -247,8 +249,8 @@ int Server::recvRequest(const int &fd, Request &request){
 		  else
 		  {
 			  startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-			  contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
-			  if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
+			  request.contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
+			  if (request.contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
 			  {
 				  Response resp(413, *this);
 				  resp.sendErrorResponse(fd, 413);
@@ -263,9 +265,10 @@ int Server::recvRequest(const int &fd, Request &request){
 	  }
 	}
   }
-  if (isRequestDone(request, contentSize, startOfBody))
+  if (isRequestDone(request, request.contentSize, startOfBody))
   {
 	  request.headerParsed = 0;
+	  std::cerr << read_bytes << std::endl;
 	  return (1);
   }
   if (read_bytes == 0)
