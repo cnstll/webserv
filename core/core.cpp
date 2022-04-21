@@ -1,21 +1,11 @@
 #include "core.hpp"
 
-int check(int return_value, std::string const &error_msg)
-{
-  if (return_value < 0)
-  {
-    std::cerr << error_msg << std::endl;
-    return -1;
-  }
-  return 1;
-}
-
 void monitorSocketAction(int epoll_fd, int fdToMonitor, uint32_t eventsToMonitor, int action)
 {
   struct epoll_event event_parameters;
   event_parameters.data.fd = fdToMonitor;
   event_parameters.events = eventsToMonitor;
-  std::cout << "Accepting connection on fd: " << fdToMonitor << std::endl;
+  log("Accepting connection on fd: " + numberToString(fdToMonitor));
   check((epoll_ctl(epoll_fd, action, fdToMonitor, &event_parameters)), "epoll_ctl error");
 }
 

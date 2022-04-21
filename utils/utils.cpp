@@ -1,6 +1,14 @@
 #include "utils.hpp"
 #include <dirent.h>
 
+void log(std::string logMessage)
+{
+  std::ofstream myfile;
+  myfile.open ("./log/server.log", std::fstream::app);
+  myfile << logMessage << std::endl;
+  myfile.close();
+}
+
 std::string readFileIntoString(const std::string& path) {
     std::ifstream input_file(path.c_str());
     if (!input_file.is_open()) {
@@ -9,6 +17,16 @@ std::string readFileIntoString(const std::string& path) {
         exit(EXIT_FAILURE);
     }
     return std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+}
+
+int check(int return_value, std::string const &error_msg)
+{
+  if (return_value < 0)
+  {
+    std::cerr << error_msg << std::endl;
+    return -1;
+  }
+  return 1;
 }
 
 const char *string_to_c_str(const std::string& str)

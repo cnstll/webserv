@@ -7,9 +7,11 @@
 #include <vector>
 #include <map>
 #include "../core/Server.hpp"
+#include <dirent.h>
 
 class Server;
-
+void log(std::string);
+int check(int return_value, std::string const &error_msg);
 bool isSeverFd(int fd, std::map<int, Server> serverMap);
 bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized);
 std::string get_extension(std::string uri);
