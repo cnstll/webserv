@@ -185,13 +185,13 @@ void Server::respond(int fd)
 	{
 		if (std::remove(fullPath.c_str()) != 0)
 		{
-			Response resp(_currentRequest->getParsedRequest(), 404, *this);
+			Response resp(_currentRequest->getError(), *this);
 			resp.sendResponse(fd);
 		}
 	}
 	else
 	{
-		Response resp(_currentRequest->getParsedRequest(), _currentRequest->getError(), *this);
+		Response resp(_currentRequest->getError(), *this);
 		resp.addBody(fullPath, this);
 		resp.sendResponse(fd);
 	}
@@ -501,6 +501,9 @@ std::string *Server::getImplementedMethods(void){
 	return implementedMethods;
 }
 
+std::string Server::getRequestField(const std::string &requestedField){
+	return _currentRequest->getRequestField(requestedField);
+}
 /*
 ** --------------------------------- STATIC ---------------------------------
 */

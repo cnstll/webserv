@@ -49,6 +49,7 @@ class Server
 		std::string getLocationField(const std::string &locationUri, const std::string &requestedField);
 		std::string getServerConfigField(const std::string &requestedField);
 		std::string *getImplementedMethods(void);
+		std::string getRequestField(const std::string &requestedField);
 		void	closeConnection(int fd);
 		bool isEndOfBloc(const std::string &line);
 		class Location {
