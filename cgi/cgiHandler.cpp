@@ -20,6 +20,20 @@ const char * cgiHandler::CgiError::what( void ) const throw()
 	return ("EXECVE FAILED");
 }
 
+
+void	free_str_list(char **str_list, int size_to_free)
+{
+	int	i;
+
+	i = 0;
+	while (i < size_to_free && str_list[i])
+	{
+		free(str_list[i]);
+		i++;
+	}
+	free(str_list);
+}
+
 char **cgiHandler::str_add(std::string str_to_add)
 {
 	int		i;
@@ -41,7 +55,7 @@ char **cgiHandler::str_add(std::string str_to_add)
 	dup_list[i] = strdup(str_to_add.c_str());
 	if (!dup_list[i])
 		return (NULL);
-    free(_environment);
+    free_str_list(_environment, strlen_list(_environment));
     _environment = dup_list;
 	return (dup_list);
 }
@@ -152,5 +166,6 @@ void cgiHandler::handleCGI(int fd)
 
 cgiHandler::~cgiHandler(void)
 {
+	free_str_list(_environment, strlen_list(_environment));
     return ;
 }
