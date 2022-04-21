@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   // test if config file exist, otherwise exit
   if (argc != 2)
   {
-    std::cerr << "Wrong Number of arguments\n";
+    std::cerr << "ERROR: Wrong Number of arguments\n";
     exit(EXIT_FAILURE);
   }
   std::string config = configToString(argv[1]);
