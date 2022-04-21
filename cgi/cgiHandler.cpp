@@ -66,7 +66,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 	_args[2] = NULL;
 	requestToEnvMap = initRequestToEnvMap();
 	_environment = _calloc_str_list(1);
-	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "upload_dir");
+	std::string path_info = "PATH_INFO=" + _currentServer.getLocationField(parsedRequest["requestURI"], "working_dir");
     std::string serverName = "SERVER_NAME=" + _currentServer.getServerConfigField("server_name");
     std::string serverPort = "SERVER_PORT=" + _currentServer.getServerPort();
 	
@@ -98,6 +98,7 @@ cgiHandler::cgiHandler(std::map<std::string, std::string> &parsedRequest, std::s
 void	cgiHandler::_executeScript()
 {
 	std::string CGI_EXECUTOR = "/usr/bin/python";
+
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	if (execve(_args[0], _args, _environment) < 0)
 	{

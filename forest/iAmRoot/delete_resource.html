@@ -1,31 +1,51 @@
 <!DOCTYPE html>
-<html>
-
-  <head>
-    <meta charset="utf-8" />
-    <button onclick="window.location.href='http://localhost:18000';"> HOME </button>
-  <style>
-    form {
-      /* Center the form on the page */
-      margin: 0 auto;
-      width: 500px;
-      /* Form outline */
-      padding: 1em;
-      border: 1px solid #CCC;
-    }
-    </style>
+<html lang="en">
+  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content=
+          "width=device-width, initial-scale=1.0">
+    
+    <!-- Importing the jQuery -->
+    <script src=
+"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+      </script>
 </head>
-
+  
+<script>
+  
+    function makeDELETErequest() {
+        let input = $("input").val();
+        if (input.length > 0){
+          let lastBackSlash = input.lastIndexOf("\\");
+          let fileToDelete;
+          if (lastBackSlash == -1)
+            fileToDelete = input;
+          else
+            fileToDelete = input.substr(lastBackSlash + 1, input.length - lastBackSlash);
+          urlReq = "/delete_resource.py?" + "filename=" + fileToDelete;
+          $.ajax({
+            url: urlReq,
+            type: 'DELETE',
+            success: function(data, textStatus, request){
+              document.write(request.responseText);
+            },
+            error: function (request, textStatus, errorThrown) {
+              document.write(request.responseText);
+            }
+          });
+        }
+        else {
+          alert("Please select a file to delete!")
+        }
+    }
+</script>
+<button onclick="window.location.href='http://localhost:18000';"> HOME </button>
 <body>
-  <form method="delete" action="/delete_resource.py">
-    <div>
-      <label for="name">Resource:</label>
-      <input type="text" id="filename" name="file_to_delete" placeholder="filename of resource to be deleted" />
-    </div>
-    <div>
-      <button>Delete</button>
-    </div>
-  </form>
+  <input type="file" id="filename" name="file_to_delete" placeholder="filename of resource to be deleted" />
+    <button id="deleteBtn" onclick="makeDELETErequest()">
+        Delete
+    </button>
 </body>
-
+  
 </html>
