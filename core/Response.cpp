@@ -39,9 +39,6 @@ std::map<int, std::string> Response::initErrCodeMap()
 
 std::string Response::getErrorContent(int errCode)
 {
-
-    //404 path
-
     std::string errPathname = _currentServer.getServerConfigField("error_pages_dir") + "/" + numberToString(errCode) + ".html"; 
     if(doesFileExist(errPathname))
         return (readFileIntoString(errPathname));

@@ -29,15 +29,10 @@
             method: 'DELETE',
           })
           .done(function( data, textStatus, jqXHR ) {
-            console.log(data)
-            console.log(jqXHR)
-            console.log(textStatus)
+            document.write(jqXHR.responseText)
           })
           .fail(function( jqXHR, textStatus, errorThrown ) {
-            console.log("FAIL")
-            console.log(errorThrown)
-            console.log(jqXHR)
-            console.log(textStatus)
+            document.write(jqXHR.responseText)
           });
         }
         else {

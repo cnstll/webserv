@@ -186,7 +186,7 @@ void Server::respond(int fd)
 		if (std::remove(fullPath.c_str()) != 0)
 		{
 			Response resp(_currentRequest->getError(), *this);
-			resp.sendResponse(fd);
+			resp.sendErrorResponse(fd, 404);
 		}
 	}
 	else
