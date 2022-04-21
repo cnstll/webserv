@@ -136,7 +136,7 @@ void	cgiHandler::cgiDispatch()
 			throw CgiError();
 		_executeScript();
 	}
-	if (write(fd[1], _messageBody.c_str(), _messageBody.length()) == -1)
+    if (write(fd[1], _messageBody.c_str(), _messageBody.length()) == -1)
 		throw internalServerError();
 	close(fd[1]);
 }

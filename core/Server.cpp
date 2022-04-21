@@ -164,6 +164,7 @@ std::string Server::getExtension(std::string &uri)
 
 void Server::closeConnection(int fd)
 {
+	delete (requestMap[fd]);
 	requestMap.erase(fd);
 	close(fd);
 }
@@ -195,8 +196,8 @@ void Server::respond(int fd)
 		resp.sendResponse(fd);
 	}
 	_currentRequest->clear();
-	if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
-		closeConnection(fd);
+	// if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
+	// 	closeConnection(fd);
 }
 
 int Server::setupServer(int port, int backlog)
@@ -224,8 +225,8 @@ int Server::recvRequest(const int &fd, Request &request){
   int read_bytes;
   char request_buffer[REQUEST_READ_SIZE + 1] = {};
   int parsed;
-  int contentSize;
-  int startOfBody;
+  int contentSize = 0;
+  int startOfBody = 0;
 
 //   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
   while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)

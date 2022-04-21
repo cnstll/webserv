@@ -21,6 +21,7 @@ _fullRequest(fullRequest), _currentServer(serv), _requestParsingError(200)
 	initParsedRequestMap();
 	_birth = time(0);
 	_inactiveTime = 0;
+	headerParsed = 0;
 }
 
 

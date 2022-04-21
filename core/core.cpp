@@ -141,9 +141,7 @@ void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> 
           Response resp(408, iterServ->second);
           resp.addBody();
           resp.sendResponse(iterReq->first);
-          if (close(iterReq->first) == -1)
-            perror("error:");
-          iterServ->second.requestMap.erase(iterReq->first);
+          iterServ->second.closeConnection(iterReq->first);
           iterReq = iterServ->second.requestMap.begin();
           return;
         }
@@ -191,8 +189,8 @@ int main(int argc, char *argv[])
     // print_events(events, count_of_fd_actualized);
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      if (check_error_flags(events[i].events) == false)
-        continue;
+      // if (check_error_flags(events[i].events) == false)
+      //   continue;
       if (isSeverFd(events[i].data.fd, serverMap))
       {
         check_error_flags(events[i].events);
@@ -202,8 +200,8 @@ int main(int argc, char *argv[])
       }
       else if (events[i].events & EPOLLIN)
       {
-        if (!check_error_flags(events[i].events))
-          continue;
+        // if (!check_error_flags(events[i].events))
+        //   continue;
         currentServer = portPicker(serverMap, events[i].data.fd);
         currentRequest = currentServer->requestMap[events[i].data.fd];
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
@@ -215,10 +213,14 @@ int main(int argc, char *argv[])
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);
+        if (!check_error_flags(events[i].events))
+        {
+          if (currentRequest->getRequestField("Connection") != "keep-alive")
+              currentServer->closeConnection(events[i].data.fd);
+        }
       }
     }
-    // closeInnactiveConnections
-    // closeInactiveConnections(events, serverMap, count_of_fd_actualized);
+    closeInactiveConnections(events, serverMap, count_of_fd_actualized);
   }
   close(server_fd);
 }
