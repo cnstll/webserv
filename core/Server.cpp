@@ -215,7 +215,7 @@ int Server::setupServer(int port, int backlog)
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(port);
-  checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "bind error");
+  checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "ERROR: issue while attempting to bind the port to the socket, as a result, this server will not be able to execute, we aare deeply sorry for this inconvenience and hope you will still consider us for your future server needs. \nTLDR; bind");
   checkFatal(listen(serverFd, backlog), "listen error");
   return serverFd;
 }
@@ -250,7 +250,7 @@ int Server::recvRequest(const int &fd, Request &request){
 			  if (contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
 			  {
 				  Response resp(413, *this);
-				  resp.sendResponse(fd);
+				  resp.sendErrorResponse(fd, 413);
 				  closeConnection(fd);
 				  request.headerParsed = 0;
 				  return (-1);
