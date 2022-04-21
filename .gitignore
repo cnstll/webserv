@@ -2,3 +2,4 @@
 *.out
 webserv
 *.log
+.nfs*

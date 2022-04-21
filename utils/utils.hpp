@@ -5,7 +5,16 @@
 #include <fstream>
 #include <cstdlib>
 #include <vector>
+#include <map>
+#include "../core/Server.hpp"
 
+class Server;
+
+bool isSeverFd(int fd, std::map<int, Server> serverMap);
+bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized);
+std::string get_extension(std::string uri);
+bool checkHangUpFlags(int event);
+bool checkErrorFlags(int event);
 bool isADir(std::string directoryPath);
 std::string readFileIntoString(const std::string& path);
 bool doesFileExist(const std::string &name);

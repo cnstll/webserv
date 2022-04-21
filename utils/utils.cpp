@@ -24,6 +24,60 @@ const char *file_to_c_string(const std::string& path)
     return (c_str);
 }
 
+bool checkErrorFlags(int event)
+{
+  if (event & EPOLLERR)
+    return (false);
+  if (event & EPOLLHUP)
+    return (false);
+  if (event & EPOLLRDHUP)
+    return (false);
+  return (true);
+}
+
+bool checkHangUpFlags(int event)
+{
+
+  if (event & EPOLLHUP)
+    return (false);
+  if (event & EPOLLRDHUP)
+    return (false);
+  return (true);
+}
+
+std::string get_extension(std::string uri)
+{
+  if (uri != "")
+  {
+    size_t pos = uri.find_last_of(".");
+    if (pos != std::string::npos)
+      return (uri.substr(pos));
+  }
+  return (uri);
+}
+
+bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
+{
+  for (int i = 0; i < countOfFdActualized; i++)
+  {
+    if (events[i].data.fd == fd)
+      return true;
+  }
+  return false;
+}
+
+bool isSeverFd(int fd, std::map<int, Server> serverMap)
+{
+  std::map<int, Server>::iterator iter = serverMap.begin();
+  while (iter != serverMap.end())
+  {
+    if (iter->first == fd)
+      return 1;
+    ++iter;
+  }
+  return 0;
+}
+
 bool isADir(std::string directoryPath)
 {  
   DIR *dh;
