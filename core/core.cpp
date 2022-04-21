@@ -143,5 +143,4 @@ int main(int argc, char *argv[])
     }
     closeInactiveConnections(events, serverMap, count_of_fd_actualized);
   }
-  close(server_fd);
 }
