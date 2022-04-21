@@ -82,7 +82,7 @@ void checkBlocsAndParse(const std::string &config, std::vector<Server> &servers)
     endOfBloc = findEndOfBloc(config, startOfBloc + serverToken.length() + 1);
     servers.push_back(Server());
     servers[i].parseServerConfigFields(config.substr(startOfBloc, endOfBloc));
-    std::cout << servers[i];
+    // std::cout << servers[i];
     startOfBloc = endOfBloc + 1;
     i++;
   }
