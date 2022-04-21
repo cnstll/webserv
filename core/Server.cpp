@@ -185,7 +185,7 @@ void Server::respond(int fd)
 	{
 		if (std::remove(fullPath.c_str()) != 0)
 		{
-			Response resp(_currentRequest->getParsedRequest(), 204, *this);
+			Response resp(_currentRequest->getParsedRequest(), 404, *this);
 			resp.sendResponse(fd);
 		}
 	}

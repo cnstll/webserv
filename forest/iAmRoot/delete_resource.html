@@ -26,13 +26,24 @@
           urlReq = "/delete_resource.py?" + "filename=" + fileToDelete;
           $.ajax({
             url: urlReq,
-            type: 'DELETE',
-            success: function(data, textStatus, request){
-              document.write(request.responseText);
-            },
-            error: function (request, textStatus, errorThrown) {
-              document.write(request.responseText);
-            }
+            type: 'DELETE'
+            // success: function(data, textStatus, request){
+              // document.write(request.responseText);
+            // }
+             })
+            .done(function(data, textStatus, jqXHR) {
+              console.log("success");
+              console.log(data)
+              console.log(textStatus)
+              console.log(jqXHR.responseText)
+              document.write(jqXHR.responseText)
+              })
+            .fail(function(data, textStatus, jqXHR) {
+              console.log("error");
+              console.log(data)
+              console.log(textStatus)
+              console.log(jqXHR.responseText)
+              document.write(jqXHR.responseText)
           });
         }
         else {
