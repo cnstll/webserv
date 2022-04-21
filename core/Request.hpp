@@ -43,6 +43,7 @@ class Request
     bool timeout(void);
     void addFdInfo(int fd);
     int fd;    
+    int contentSize;
     bool headerParsed;
     time_t _inactiveTime;
   

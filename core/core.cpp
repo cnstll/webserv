@@ -27,10 +27,19 @@ void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_m
 
 bool check_error_flags(int event)
 {
-
+  if (event & EPOLLERR)
+    return (false);
   if (event & EPOLLHUP)
     return (false);
-  if (event & EPOLLERR)
+  if (event & EPOLLRDHUP)
+    return (false);
+  return (true);
+}
+
+bool check_hang_up_flags(int event)
+{
+
+  if (event & EPOLLHUP)
     return (false);
   if (event & EPOLLRDHUP)
     return (false);
@@ -189,8 +198,8 @@ int main(int argc, char *argv[])
     // print_events(events, count_of_fd_actualized);
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      // if (check_error_flags(events[i].events) == false)
-      //   continue;
+      if (check_error_flags(events[i].events) == false)
+        continue;
       if (isSeverFd(events[i].data.fd, serverMap))
       {
         check_error_flags(events[i].events);
@@ -200,8 +209,8 @@ int main(int argc, char *argv[])
       }
       else if (events[i].events & EPOLLIN)
       {
-        // if (!check_error_flags(events[i].events))
-        //   continue;
+        if (!check_error_flags(events[i].events))
+          continue;
         currentServer = portPicker(serverMap, events[i].data.fd);
         currentRequest = currentServer->requestMap[events[i].data.fd];
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
@@ -213,11 +222,8 @@ int main(int argc, char *argv[])
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);
-        if (!check_error_flags(events[i].events))
-        {
-          if (currentRequest->getRequestField("Connection") != "keep-alive")
+        if (!check_hang_up_flags(events[i].events))
               currentServer->closeConnection(events[i].data.fd);
-        }
       }
     }
     closeInactiveConnections(events, serverMap, count_of_fd_actualized);
