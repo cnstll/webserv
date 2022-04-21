@@ -82,8 +82,6 @@ int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody
       return 0;
   }
   int lengthRecvd = request.getFullRequest().length() - startOfBody;
-//   std::cout << "lenght recvd: " << lengthRecvd << std::endl;
-//   std::cout << "lenght expected: " << contentLength << std::endl;
   if (contentLength <= lengthRecvd)
     return (1);
   return 0;
@@ -198,8 +196,8 @@ void Server::respond(int fd)
 		resp.sendResponse(fd);
 	}
 	_currentRequest->clear();
-	// if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
-	// 	closeConnection(fd);
+	if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
+		closeConnection(fd);
 }
 
 int Server::setupServer(int port, int backlog)

@@ -55,7 +55,7 @@
       {
         "cwd": "/mnt/nfs/homes/jescully/Documents/webserv",
         "binaryPath": "/mnt/nfs/homes/jescully/Documents/webserv/webserv",
-        "binaryArgs": ["core/config/minimal.config"]
+        "binaryArgs": ["core/config/minimal_two_ports.config"]
       },
       {
         "cwd": "/mnt/nfs/homes/calle/42projects/webserv",

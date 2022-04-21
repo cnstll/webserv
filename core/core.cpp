@@ -14,18 +14,19 @@ int check(int return_value, std::string const &error_msg)
   return 1;
 }
 
-void monitor_socket_action(int epoll_fd, int fd_to_monitor, uint32_t events_to_monitor, int action)
+void monitorSocketAction(int epoll_fd, int fdToMonitor, uint32_t eventsToMonitor, int action)
 {
   // Set a epoll event object to parametrize monitored fds
   struct epoll_event event_parameters;
   // Fd that will be added to the epoll
-  event_parameters.data.fd = fd_to_monitor;
-  event_parameters.events = events_to_monitor;
+  event_parameters.data.fd = fdToMonitor;
+  event_parameters.events = eventsToMonitor;
   // event_parameters.data.ptr = NULL;
-  check((epoll_ctl(epoll_fd, action, fd_to_monitor, &event_parameters)), "epoll_ctl error");
+  std::cout << "Accepting connection on fd: " << fdToMonitor << std::endl;
+  check((epoll_ctl(epoll_fd, action, fdToMonitor, &event_parameters)), "epoll_ctl error");
 }
 
-bool check_error_flags(int event)
+bool checkErrorFlags(int event)
 {
   if (event & EPOLLERR)
     return (false);
@@ -93,7 +94,7 @@ void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOf
   {
     int tmpServerfd = servIter->setupServer(servIter->getServerPort(), MAX_QUEUE);
     serverMap[tmpServerfd] = *servIter;
-    monitor_socket_action(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+    monitorSocketAction(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
     ++servIter;
   }
 }
@@ -198,19 +199,22 @@ int main(int argc, char *argv[])
     // print_events(events, count_of_fd_actualized);
     for (int i = 0; i < count_of_fd_actualized; i++)
     {
-      if (check_error_flags(events[i].events) == false)
+      if (checkErrorFlags(events[i].events) == false)
         continue;
       if (isSeverFd(events[i].data.fd, serverMap))
       {
-        check_error_flags(events[i].events);
+        checkErrorFlags(events[i].events);
         if (!check((connexion_fd = serverMap[events[i].data.fd].acceptNewConnexion(events[i].data.fd)), "accept error"))
           continue;
-        monitor_socket_action(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
+        monitorSocketAction(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
       }
       else if (events[i].events & EPOLLIN)
       {
-        if (!check_error_flags(events[i].events))
+        if (!checkErrorFlags(events[i].events))
+        {
+          currentServer->closeConnection(events[i].data.fd);
           continue;
+        }
         currentServer = portPicker(serverMap, events[i].data.fd);
         currentRequest = currentServer->requestMap[events[i].data.fd];
         recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);

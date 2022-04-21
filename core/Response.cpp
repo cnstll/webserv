@@ -220,9 +220,9 @@ void Response::sendResponse(int clientSocket){
     else{
         packagedResponse = packagedResponse + CRLF + _Content;
     }
-    std::cout << "RESPONSE-----------------------------------\n";
-    std::cout << packagedResponse << std::endl;
-    std::cout << "-----------------------------------RESPONSE\n";
+    // std::cout << "RESPONSE-----------------------------------\n";
+    // std::cout << packagedResponse << std::endl;
+    // std::cout << "-----------------------------------RESPONSE\n";
     // ! Handle error here. 
     int i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
