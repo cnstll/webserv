@@ -64,7 +64,7 @@ std::string Response::codeToReasonPhrase(int statusCode){
 Response::Response(int code, Server &serv)
     : _statusCode(code),
       _Date(timeAsString()), _ServerName(serv.getServerConfigField("server_name")), _ContentLength(""),
-      _ContentType("text/html"), _Connection("Keep-Alive"), _currentServer(serv){
+      _ContentType("text/html"), _Connection("keep-alive"), _currentServer(serv){
     
     char buf[3];
     sprintf(buf,"%i", _statusCode);
@@ -227,6 +227,9 @@ void Response::sendResponse(int clientSocket){
     else{
         packagedResponse = packagedResponse + CRLF + _Content;
     }
+    std::cout << "RESPONSE-----------------------------------\n";
+    std::cout << packagedResponse << std::endl;
+    std::cout << "-----------------------------------RESPONSE\n";
     // ! Handle error here. 
     int i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
