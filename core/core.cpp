@@ -1,9 +1,5 @@
 #include "core.hpp"
 
-std::string CGI_EXTENSION = ".py";
-
-int server_fd;
-
 int check(int return_value, std::string const &error_msg)
 {
   if (return_value < 0)
@@ -16,71 +12,23 @@ int check(int return_value, std::string const &error_msg)
 
 void monitorSocketAction(int epoll_fd, int fdToMonitor, uint32_t eventsToMonitor, int action)
 {
-  // Set a epoll event object to parametrize monitored fds
   struct epoll_event event_parameters;
-  // Fd that will be added to the epoll
   event_parameters.data.fd = fdToMonitor;
   event_parameters.events = eventsToMonitor;
-  // event_parameters.data.ptr = NULL;
   std::cout << "Accepting connection on fd: " << fdToMonitor << std::endl;
   check((epoll_ctl(epoll_fd, action, fdToMonitor, &event_parameters)), "epoll_ctl error");
 }
 
-bool checkErrorFlags(int event)
-{
-  if (event & EPOLLERR)
-    return (false);
-  if (event & EPOLLHUP)
-    return (false);
-  if (event & EPOLLRDHUP)
-    return (false);
-  return (true);
-}
-
-bool check_hang_up_flags(int event)
-{
-
-  if (event & EPOLLHUP)
-    return (false);
-  if (event & EPOLLRDHUP)
-    return (false);
-  return (true);
-}
-
-std::string get_extension(std::string uri)
-{
-  if (uri != "")
-  {
-    size_t pos = uri.find_last_of(".");
-    if (pos != std::string::npos)
-      return (uri.substr(pos));
-  }
-  return (uri);
-}
-
-bool isSeverFd(int fd, std::map<int, Server> serverMap)
-{
-  std::map<int, Server>::iterator iter = serverMap.begin();
-  while (iter != serverMap.end())
-  {
-    if (iter->first == fd)
-      return 1;
-    ++iter;
-  }
-  return 0;
-}
-
 Server *portPicker(std::map<int, Server> &serverMap, int fd)
 {
-  Server *currentServer;
+  Server *currentServer = NULL;
   std::map<int, Server>::iterator iter = serverMap.begin();
   while (iter != serverMap.end())
   {
     if (iter->second.requestMap.find(fd) != iter->second.requestMap.end())
     {
-      // currentRequest = iter->second.requestMap[events[i].data.fd];
       currentServer = &iter->second;
-      break;
+      return currentServer;
     }
     ++iter;
   }
@@ -98,43 +46,6 @@ void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOf
     ++servIter;
   }
 }
-bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
-{
-  for (int i = 0; i < countOfFdActualized; i++)
-  {
-    if (events[i].data.fd == fd)
-      return true;
-  }
-  return false;
-}
-
-void print_events(struct epoll_event *events, int eventful_fds){
-  for (int i = 0; i < eventful_fds; i++)
-  {
-    printf("fd:    %i\n", events[i].data.fd);
-    if (events[i].events & EPOLLIN)
-      printf("EPOLLIN\n");
-    if (events[i].events & EPOLLOUT)
-      printf("EPOLLOUT\n");
-    if (events[i].events & EPOLLHUP)
-      printf("EPOLLHUP\n");
-    if (events[i].events & EPOLLERR)
-      printf("EPOLLERR\n");
-    if (events[i].events & EPOLLRDHUP)
-      printf("EPOLLRDHUP\n");
-    if (events[i].events & EPOLL_CLOEXEC)
-      printf("EPOLlCLOEXEC\n");    
-    if (events[i].events & EPOLLMSG)
-      printf("EPOLlMSG\n");    
-    if (events[i].events & EPOLLPRI)
-      printf("EPOLlPRI\n");    
-    if (events[i].events & EPOLLWAKEUP)
-      printf("EPOLLWAKEUP\n");    
-    //printf("something else happened\n");
-    printf("\n\n");
-  }
-}
-
 
 void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> &serverMap, int actualizedFdCount)
 {
@@ -217,7 +128,7 @@ int main(int argc, char *argv[])
         }
         currentServer = portPicker(serverMap, events[i].data.fd);
         currentRequest = currentServer->requestMap[events[i].data.fd];
-        recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest); // recv_request(events[i].data.fd, currentRequest, *currentServer);
+        recv_bytes = currentServer->recvRequest(events[i].data.fd, *currentRequest);
         if (recv_bytes == -1)
           continue;
         if (recv_bytes == 0)
@@ -226,7 +137,7 @@ int main(int argc, char *argv[])
         std::string requestedURI = currentRequest->getRequestedUri();
         if (events[i].events & EPOLLOUT)
           currentServer->respond(events[i].data.fd);
-        if (!check_hang_up_flags(events[i].events))
+        if (!checkHangUpFlags(events[i].events))
               currentServer->closeConnection(events[i].data.fd);
       }
     }
