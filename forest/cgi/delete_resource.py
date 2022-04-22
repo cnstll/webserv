@@ -82,7 +82,7 @@ def printValidResponse(valid_body):
 try:
   env = os.environ
   qs = env.get('QUERY_STRING')
-  if len(qs) == 0:
+  if qs is None:
     printErrorResponse("400 Bad Request", "Illformed request :(", error_body)
   else:
     filename = qs.split("=")[1]

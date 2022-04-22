@@ -40,8 +40,6 @@ int Request::checkMethodInLocationBloc()
 	{
 		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods)))
 		{
-			std::cout << "R METHOD: " << _parsedHttpRequest["method"] << std::endl;
-			std::cout << "METHODS TOK: " << tokenizeValues(localMethods)[0] << std::endl;
 			_requestParsingError = 405; // Method Not Allowed
 			return -1;
 		}
