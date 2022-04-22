@@ -11,7 +11,7 @@ SRCS = ./core/Response.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP= g++ -g -fdiagnostics-color=always -fsanitize=address
+COMP= g++ -g -fdiagnostics-color=always #-fsanitize=address
 
 CFLAGS = -std=c++98 -Wall -Wextra -Werror
 

@@ -121,7 +121,7 @@ func checkSomeStatic(m model) tea.Cmd {
 				ret, err := c.Get(m.url)
 
 				if err != nil {
-					return statusMsg{1, "OOPS something went wrong #500 internat server tester error"}
+					return statusMsg{1, "OOPS something went wrong #500 internal server tester error"}
 				}
 				defer ret.Body.Close()
 				buf := new(bytes.Buffer)
@@ -155,7 +155,7 @@ func uploadFiles(m model) tea.Cmd {
 		if m.toBeTested[2] {
 
 			for _, file := range testFiles {
-				cmd := exec.Command("curl", "-F", "filename=@/mnt/nfs/homes/jescully/Documents/webserv/GÖTTÖ/upload_files_originals/"+file, "http://localhost:18000/upload_resource.py")
+				cmd := exec.Command("curl", "-F", "filename=@./upload_files_originals/"+file, "http://localhost:18000/upload_resource.py")
 				cmd.Run()
 				OgContent, _ := ioutil.ReadFile(OgContentRootPath + file)
 				UploadedContent, _ := ioutil.ReadFile(uploadContentPath + file)
