@@ -68,13 +68,25 @@ Response::Response(int errorCode, Server &serv)
     _uri = serv.getRequestField("requestURI");
     if (_Connection == "" && _statusCode != 408)
         _Connection = "keep-alive";
-    if (_statusCode == 408)
-        _Connection = "close";
-    char buf[3];
     _ErrCodeMap = initErrCodeMap();
-    sprintf(buf,"%i", _statusCode);
+    std::string statusCode = numberToString(_statusCode);
     this->_ReasonPhrase = codeToReasonPhrase(errorCode);
-    _Status = "HTTP/1.1 " + std::string(buf) + " " + _ReasonPhrase; 
+    _Status = "HTTP/1.1 " + statusCode + " " + _ReasonPhrase; 
+};
+
+
+Response::Response(Server &serv)
+    : _statusCode(408),
+      _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
+      _ContentLength(""), _ContentType("text/html; charset=UTF-8"),
+      _Connection("close"),
+      _currentServer(serv){
+
+    _uri = "";
+    _ErrCodeMap = initErrCodeMap();
+    std::string statusCode = numberToString(_statusCode);
+    this->_ReasonPhrase = codeToReasonPhrase(_statusCode);
+    _Status = "HTTP/1.1 " + statusCode + " " + _ReasonPhrase;
 };
 
 
@@ -225,10 +237,9 @@ void Response::sendResponse(int clientSocket){
     // std::cout << "RESPONSE-----------------------------------\n";
     // std::cout << packagedResponse << std::endl;
     // std::cout << "-----------------------------------RESPONSE\n";
-    // ! Handle error here. 
     int i;
     if ((i = write(clientSocket, packagedResponse.c_str(), packagedResponse.size())) < 0){
-        exit(EXIT_FAILURE); //! thats no good, throw exception here?
+        // exit(EXIT_FAILURE); //! thats no good, throw exception here?
     }
 }
 void Response::setConnectionField(const std::string &value){

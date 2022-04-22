@@ -38,6 +38,7 @@ public:
     std::string codeToReasonPhrase(int);
     // Response(const Response &newResponse);
     Response(int errorCode, Server &serv);
+    Response(Server &serv);
     ~Response();
     void sendResponse(int clientSocket);
     void sendErrorResponse(int clientSocket, int errorCode);

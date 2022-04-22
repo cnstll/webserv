@@ -4,7 +4,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Server.hpp"
-#include "../cgi/cgiHandler.hpp"
+#include "../cgi/CgiHandler.hpp"
 #include "../parsing/parsing.hpp"
 #include <iostream>
 #include <fstream>
