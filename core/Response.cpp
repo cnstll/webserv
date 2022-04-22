@@ -161,7 +161,7 @@ void Response::sendResponse(int clientSocket)
         std::string redirectStr = _currentServer.getLocationField(_uri, "return");
         std::vector<std::string> v = tokenizeValues(redirectStr);
         _Location = v[1];
-        packagedResponse += "Location: " + _Location + CRLF;
+        packagedResponse += "Location: " + _Location + CRLF + CRLF;
     }
     else
         packagedResponse = packagedResponse + CRLF + _Content;
