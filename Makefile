@@ -11,11 +11,9 @@ SRCS = ./core/Response.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP= g++ -g -fdiagnostics-color=always #-g -fsanitize=address
+COMP= g++ -g -fdiagnostics-color=always -fsanitize=address
 
 CFLAGS = -std=c++98 -Wall -Wextra -Werror
-
-GFLAG = #-g3 -fsanitize=address
 
 all : $(NAME)
 
@@ -25,12 +23,6 @@ $(NAME) : $(OBJS)
 %.o: %.cpp
 	$(COMP) -o $@ -c $^ $(CFLAGS)
 
-debug :
-	$(COMP) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 
-
-debug_lldb :
-	$(COMP) $(CFLAGS) -g -o $(NAME) $(SRCS) 
-
 clean :
 	rm -f $(OBJS)
 
@@ -38,3 +30,5 @@ fclean:	clean
 	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean re fclean
