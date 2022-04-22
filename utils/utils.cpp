@@ -116,7 +116,7 @@ bool isADir(std::string directoryPath)
 }
 
 bool doesFileExist (const std::string& name) {
-    if (FILE *file = fopen(name.c_str(), "r+")) {
+    if (FILE *file = fopen(name.c_str(), "r")) {
         fclose(file);
         return true;
     } else if (isADir(name)) {
