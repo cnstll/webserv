@@ -48,6 +48,7 @@ valid_body = " <!DOCTYPE html>\
   \
   </body>\
   </html> "
+
 #eprint("HASH SCRIPT LAUNCHED")
 form = cgi.FieldStorage()
 
@@ -59,7 +60,6 @@ if check_form_fields(form) < 0:
   print("Content-Length: " + str(len(error_body)))
   print("\n")
   print(error_body)
-
 else:
   msg_hash = to_hash(str(form["user_message"]))
   ready_body = valid_body.replace("hash_placeholder", str(msg_hash))

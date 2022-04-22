@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content=
+          "width=device-width, initial-scale=1.0">
+    
+    <!-- Importing the jQuery -->
+    <script src=
+"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js">
+      </script>
+</head>
+  
+<script>
+  
+    function makeDELETErequest() {
+        let input = $("input").val();
+        if (input.length > 0){
+          let lastBackSlash = input.lastIndexOf("\\");
+          let fileToDelete;
+          if (lastBackSlash == -1)
+            fileToDelete = input;
+          else
+            fileToDelete = input.substr(lastBackSlash + 1, input.length - lastBackSlash);
+          urlReq = "/delete_resource.py?" + "filename=" + fileToDelete;
+          $.ajax({
+            url: urlReq,
+            method: 'DELETE',
+          })
+          .done(function( data, textStatus, jqXHR ) {
+            document.write(jqXHR.responseText)
+          })
+          .fail(function( jqXHR, textStatus, errorThrown ) {
+            document.write(jqXHR.responseText)
+          });
+        }
+        else {
+          alert("Please select a file to delete!")
+        }
+    }
+</script>
+<button onclick="window.location.href='http://localhost:18000';"> HOME </button>
+<body>
+  <input type="file" id="filename" name="file_to_delete" placeholder="filename of resource to be deleted" />
+    <button id="deleteBtn" onclick="makeDELETErequest()">
+        Delete
+    </button>
+</body>
+  
+</html>
