@@ -7,7 +7,6 @@ static bool hasValidBlocOpening(const std::string &line){
   const std::string locationToken = "location";
   startOfToken = line.find_first_not_of(" \t");
   endOfToken = line.find_first_of(" ", startOfToken);
-  // std::cout << "EOT: " << endOfToken << " SOT: " << startOfToken << " LEN: " << locationToken.length() << " LLEN: " << lineLen << std::endl;
   if (line.substr(startOfToken, endOfToken).find(serverToken) != std::string::npos
     && (serverToken.length() == endOfToken - startOfToken)){
       if (endOfToken == lineLen - 2)
@@ -25,7 +24,6 @@ static bool hasValidBlocOpening(const std::string &line){
   } else {
       return false;
   }
-
 }
 
 static void checkBlocOpening(const std::string &line){
@@ -117,7 +115,6 @@ void preParsing(const std::string& config){
     checkBlocOpening(line);
     if (!isBlocOpeningLine(line) && !isBlocClosingLine(line))
       checkInstructionLineLayout(line);
-    //std::cout << "SL: " << startOfLine << " - EL: " << endOfLine << " - LINE: " << line << std::endl;
     startOfLine = endOfLine + 1;
   }
 }
