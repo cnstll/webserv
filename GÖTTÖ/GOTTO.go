@@ -87,7 +87,7 @@ func checkSomeUrl(m model) tea.Cmd {
 		if m.toBeTested[0] {
 
 			if m.url != "" {
-				nbOfConnections := 100000
+				nbOfConnections := 10000
 				wg = new(sync.WaitGroup)
 				for i := 0; i < nbOfConnections; i++ {
 					wg.Add(1)
@@ -147,7 +147,7 @@ func checkSomeStatic(m model) tea.Cmd {
 func uploadFiles(m model) tea.Cmd {
 
 	//! the files here are prety small for ease of testing this tester out, they should be replaced with larger files
-	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "large_file.AppImage", "img.jpeg", "img.jpeg"}
+	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "large_video_file.mp4", "img.jpeg", "img.jpeg"}
 	OgContentRootPath := "./upload_files_originals/"
 	uploadContentPath := "./forest/iAmUploadDir/"
 
