@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
+#include <fcntl.h>
 
 #define REQUEST_READ_SIZE 16000
 

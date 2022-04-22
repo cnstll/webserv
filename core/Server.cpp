@@ -56,7 +56,7 @@ int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody
 	}
 	int lengthRecvd = request.getFullRequest().length() - startOfBody;
 	if (contentLength <= lengthRecvd)
-		return (1);
+		return 1;
 	else
 		return 0;
 }
@@ -66,51 +66,21 @@ int Server::parseHeader(Request &request)
 	if (request.getFullRequest().find("\r\n\r\n") != std::string::npos)
 	{
 		request.parseHeader(*this);
-		if (request.getHttpMethod() == "POST")
-		{
-			int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-			int contentLength = stringToNumber(request.getRequestField("Content-Length"));
-			return (1);
-		}
-		else
-			return 2;
+		return ((request.getHttpMethod() == "POST") ? 1 : 2);
 	}
 	else
 		return 0;
-}
-
-int check2(int return_value, std::string const &error_msg)
-{
-	if (return_value < 0)
-	{
-		std::cerr << error_msg << std::endl;
-		return -1;
-	}
-	else
-		return 1;
-}
-
-int checkFatal(int return_value, std::string const &error_msg)
-{
-	if (return_value < 0)
-	{
-		std::cerr << error_msg << std::endl;
-		exit(EXIT_FAILURE);
-		return -1;
-	}
-	else
-		return 1;
 }
 
 int Server::makeFdNonBlocking(int &fd)
 {
 	int flags;
 	int ret;
-	ret = check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
+	ret = check((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
 	flags |= O_NONBLOCK;
 	if (ret < 0)
 		return -1;
-	ret = check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
+	ret = check((fcntl(fd, F_SETFL, flags)), "fcntl error");
 	return ret;
 }
 
@@ -120,7 +90,7 @@ int Server::acceptNewConnexion(int server_fd)
 	struct sockaddr_in connexion_address;
 	int connexionFd;
 
-	if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
+	if (check(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
 	{
 		if (makeFdNonBlocking(connexionFd) < 0)
 			return -1;
@@ -133,13 +103,11 @@ int Server::acceptNewConnexion(int server_fd)
 
 std::string Server::getExtension(std::string &uri)
 {
-	if (uri != "")
-	{
-		size_t pos = uri.find_last_of(".");
-		if (pos != std::string::npos)
-			return (uri.substr(pos));
-	}
-	return (uri);
+	size_t pos = uri.find_last_of(".");
+	if (pos != std::string::npos)
+		return (uri.substr(pos));
+	else
+		return ("");
 }
 
 void Server::closeConnection(int fd)
@@ -186,19 +154,15 @@ int Server::setupServer(int port, int backlog)
 	struct sockaddr_in server_addr;
 	int serverFd;
 
-	check2((serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
+	checkFatal((serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "ERROR: error while setting socket");
 	int yes = 1;
-	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
-	{
-		perror("setsockopt");
-		exit(1);
-	}
+	checkFatal(setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes), "ERROR: error while setting chaussettes\n");
 	bzero(&server_addr, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(port);
 	checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "ERROR: issue while attempting to bind the port to the socket, as a result, this server will not be able to execute, we aare deeply sorry for this inconvenience and hope you will still consider us for your future server needs. \nTLDR; bind");
-	checkFatal(listen(serverFd, backlog), "listen error");
+	checkFatal(listen(serverFd, backlog), "ERROR: error listen");
 	return serverFd;
 }
 
@@ -210,7 +174,6 @@ int Server::recvRequest(const int &fd, Request &request)
 	//   ?int contentSize = 0;
 	int startOfBody = 0;
 
-	//   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
 	while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
 	{
 		request.append(request_buffer, read_bytes);
@@ -218,31 +181,24 @@ int Server::recvRequest(const int &fd, Request &request)
 		{
 			request.contentSize = 0;
 			parsed = parseHeader(request);
-			if (parsed)
+			if (parsed == 2)
+			{
+				request.headerParsed = 0;
+				return (read_bytes);
+			}
+			else if (parsed == 1)
 			{
 				request.headerParsed = 1;
-				if (parsed == 2)
+				startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+				request.contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
+				if (request.contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
 				{
+					Response resp(413, *this);
+					resp.sendErrorResponse(fd, 413);
+					closeConnection(fd);
 					request.headerParsed = 0;
-					return (read_bytes);
+					return (-1);
 				}
-				else
-				{
-					startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-					request.contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
-					if (request.contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
-					{
-						Response resp(413, *this);
-						resp.sendErrorResponse(fd, 413);
-						closeConnection(fd);
-						request.headerParsed = 0;
-						return (-1);
-					}
-				}
-			}
-			else if (parsed == -1)
-			{
-				return (1);
 			}
 		}
 	}
@@ -263,13 +219,13 @@ int Server::recvRequest(const int &fd, Request &request)
 void Server::initServerConfig()
 {
 	int i = 0;
+	countOfLocationBlocks = 0;
 	// fill map with all possible allowed fields in server
 	while (Server::validServerFields[i] != "")
 	{
 		serverConfigFields[Server::validServerFields[i]] = std::string();
 		i++;
 	}
-	countOfLocationBlocks = 0;
 }
 
 void Server::addLocationBlocConfig(std::string &uri)
@@ -444,16 +400,12 @@ void Server::parseServerConfigFields(const std::string &bloc)
 		if (isEmptyLine(line) || isEndOfBloc(line))
 			continue;
 		if (lineHasLocationToken(line))
-		{
 			parseLocationBloc(bloc, line, startOfLine, endOfLine);
-		}
 		else
-		{
 			parseMainInstructionsFields(bloc, line, startOfLine, endOfLine);
-		}
 	}
 	parsePort();
-};
+}
 
 void Server::parsePort(void)
 {
@@ -464,24 +416,17 @@ void Server::parsePort(void)
 	if (!serverPort)
 		printErrorAndExit("ERROR: invalid server port");
 }
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
+
 Server::configMap Server::getServerConfig(void) const
 {
 	return serverConfigFields;
-};
+}
+
 int Server::getServerPort(void) const
 {
 	return serverPort;
 }
-/**
- * @brief Retrieve a field in a specific location bloc
- *
- * @param locationUri path directly following the location token used to identify the correct bloc
- * @param requestedField field to find in a location bloc
- * @return std::string either an empty string if the field is not found, or the corresponding string value
- */
+
 std::string Server::getLocationField(const std::string &locationUri, const std::string &requestedField)
 {
 	std::map<std::string, Location>::iterator it = locationBlocs.find(locationUri);
@@ -494,6 +439,7 @@ std::string Server::getLocationField(const std::string &locationUri, const std::
 		return (itLoc == it->second.fields.end() ? std::string("") : it->second.fields[requestedField]);
 	}
 }
+
 std::string Server::getServerConfigField(const std::string &requestedField)
 {
 	configMap::iterator it;
@@ -510,16 +456,15 @@ std::string Server::getRequestField(const std::string &requestedField)
 {
 	return currentRequest->getRequestField(requestedField);
 }
-/*
-** --------------------------------- STATIC ---------------------------------
-*/
+
 std::string Server::validServerFields[] = {
 
 	"listen",
 	"server_name",
 	"root",
 	"error_pages_dir",
-	""};
+	""
+};
 
 std::string Server::validLocationFields[] = {
 
@@ -529,12 +474,13 @@ std::string Server::validLocationFields[] = {
 	"client_max_body_size",
 	"working_dir",
 	"return",
-	""};
+	""
+};
 
 std::string Server::implementedMethods[] = {
+
 	"GET",
 	"POST",
 	"DELETE",
-	""};
-
-/* ************************************************************************** */
+	""
+};

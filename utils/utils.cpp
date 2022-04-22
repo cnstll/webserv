@@ -70,19 +70,15 @@ bool checkHangUpFlags(int event)
 }
 
 
-
-
-
-
-std::string get_extension(std::string uri)
+int checkFatal(int return_value, const std::string &error_msg)
 {
-  if (uri != "")
-  {
-    size_t pos = uri.find_last_of(".");
-    if (pos != std::string::npos)
-      return (uri.substr(pos));
-  }
-  return (uri);
+	if (return_value < 0)
+	{
+		std::cerr << error_msg << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	else
+		return 1;
 }
 
 bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized)
