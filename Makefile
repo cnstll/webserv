@@ -3,7 +3,7 @@ NAME = webserv
 SRCS = ./core/core.cpp  \
 		./core/Response.cpp \
 		./core/Request.cpp \
-		./cgi/cgiHandler.cpp \
+		./cgi/CgiHandler.cpp \
 		./parsing/parseConfig.cpp \
 		./parsing/preParsing.cpp \
 		./core/Server.cpp \
@@ -11,7 +11,7 @@ SRCS = ./core/core.cpp  \
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP=g++  -fdiagnostics-color=always -g -std=c++98
+COMP= g++  -fdiagnostics-color=always -fsanitize=address -g -std=c++98
 
 CFLAGS = -std=c++98 -Wall -Wextra -Werror
 

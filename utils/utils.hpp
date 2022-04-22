@@ -10,7 +10,7 @@
 #include <dirent.h>
 
 class Server;
-void log(std::string);
+void log(std::string );
 int check(int return_value, std::string const &error_msg);
 bool isSeverFd(int fd, std::map<int, Server> serverMap);
 bool isInUpdatedFds(struct epoll_event *events, int fd, int countOfFdActualized);
@@ -24,6 +24,8 @@ void printErrorAndExit(const std::string &errorMessage);
 size_t getLineFromPosition(const std::string &str, size_t pos);
 std::string numberToString(size_t &Number);
 std::string numberToString(int &Number);
+std::string numberToString(const int &Number);
 int stringToNumber(std::string str);
 std::vector<std::string> tokenizeValues(std::string &str);
 bool strIsInVector(const std::string &str, const std::vector<std::string> v);
+int strlen_list(char **strList);

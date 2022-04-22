@@ -14,9 +14,15 @@ std::string readFileIntoString(const std::string& path) {
     if (!input_file.is_open()) {
         std::cerr << "Could not open the file - '"
              << path << "'" << std::endl;
-        exit(EXIT_FAILURE);
     }
     return std::string((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+}
+
+int strlen_list(char **strList) {
+    int i = 0;
+    while (strList[i])
+        i++;
+    return i;
 }
 
 int check(int return_value, std::string const &error_msg)
@@ -62,6 +68,11 @@ bool checkHangUpFlags(int event)
     return (false);
   return (true);
 }
+
+
+
+
+
 
 std::string get_extension(std::string uri)
 {
@@ -146,6 +157,12 @@ int stringToNumber(std::string str){
 }
 
 std::string numberToString(int &Number){
+    std::ostringstream convert;   // stream used for the conversion
+    convert << Number;      // insert the textual representation of 'Number' in the characters in the stream
+    return (convert.str()); // convert stream to string
+}
+
+std::string numberToString(const int &Number){
     std::ostringstream convert;   // stream used for the conversion
     convert << Number;      // insert the textual representation of 'Number' in the characters in the stream
     return (convert.str()); // convert stream to string

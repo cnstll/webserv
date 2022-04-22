@@ -3,7 +3,7 @@
 # include "../utils/utils.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
-# include "../cgi/cgiHandler.hpp"
+# include "../cgi/CgiHandler.hpp"
 # include <iostream>
 # include <string>
 #include <map>

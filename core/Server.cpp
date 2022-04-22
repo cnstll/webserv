@@ -67,31 +67,31 @@ int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody
     if (request.getFullRequest().find("\r\n0\r\n") != std::string::npos)
       return 1;
     else
-      return 0;
+		return 0;
   }
   int lengthRecvd = request.getFullRequest().length() - startOfBody;
   if (contentLength <= lengthRecvd)
-    return (1);
-	else
-    return 0;
+	  return (1);
+  else
+	  return 0;
 }
 
 int Server::parseHeader(Request &request)
 {
-  if (request.getFullRequest().find("\r\n\r\n") != std::string::npos)
-  {
-    request.parseHeader(*this);
-    if (request.getHttpMethod() == "POST")
-	  {
-		  int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-		  int contentLength = stringToNumber(request.getRequestField("Content-Length"));
-		  if (isRequestDone(request, contentLength, startOfBody)) 
-		  	return (1);
-		  return (1);
-	  }
-    else
-        return 2;
-  }
+	if (request.getFullRequest().find("\r\n\r\n") != std::string::npos)
+	{
+		request.parseHeader(*this);
+		if (request.getHttpMethod() == "POST")
+		{
+			int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+			int contentLength = stringToNumber(request.getRequestField("Content-Length"));
+			if (isRequestDone(request, contentLength, startOfBody))
+				return (1);
+			return (1);
+		}
+		else
+			return 2;
+	}
 	else
     return 0;
 }
@@ -175,7 +175,7 @@ void Server::respond(int fd)
 	std::string fullPath = constructPath(uri);
 	if (getExtension(extension) == cgiExtension && _currentRequest->getError() <= 300)
 	{
-		cgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd, *this);
+		CgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd, *this);
 		cgiParams.handleCGI(fd);
 	}
 	else if (_currentRequest->getHttpMethod() == "DELETE")
