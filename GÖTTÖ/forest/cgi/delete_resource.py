@@ -90,8 +90,8 @@ try:
   path =  root + "/" + filename
   status = delete_resource(path)
   if (status < 0):
-    printErrorResponse("404 Not Found", "<p>File Not Found in working directory :(</p>", error_body)
+    printErrorResponse("404 Not Found", "File Not Found in working directory :(", error_body)
   else:
     printValidResponse(valid_body)
 except:
-  printErrorResponse("500 Internal Server Error", "<p> Oh woowww... something went slightly horribly wrong :S</p>", error_body)
+  printErrorResponse("502 Bad Gateway", "Oh wow... something went wrong here.. :O", error_body)

@@ -12,7 +12,7 @@ def eprint(*args, **kwargs):
 
 def to_hash(message):
   m = hashlib.sha256()
-  m.update(message)
+  m.update(message.encode('utf-8'))
   return m.hexdigest()
 
 def check_form_fields(form):

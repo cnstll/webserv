@@ -8,7 +8,7 @@
 
 const char * CgiHandler::internalServerError::what( void ) const throw()
 {
-	return ("Internally, the server has errored. it is very sorry about this and rest assured it will not happen again");
+	return ("Internal Server Error");
 }
 
 const char * CgiHandler::CgiError::what( void ) const throw()
@@ -109,7 +109,7 @@ void	CgiHandler::_executeScript()
 	_args[0] = (char *)CGI_EXECUTOR.c_str();
 	if (execve(_args[0], _args, _environment) < 0)
 	{
-		exit(EXIT_FAILURE);
+		throw CgiError();
 	}
 }
 
@@ -143,17 +143,18 @@ void CgiHandler::handleCGI(int fd)
 	}
 	catch (CgiHandler::internalServerError &e)
 	{
-		std::cerr << e.what() << '\n';
+		log(e.what() + '\n');
 		Response resp(500, _currentServer);
 		resp.addBody();
 		resp.sendResponse(fd);
 	}
 	catch (CgiHandler::CgiError &e)
 	{
-		std::cerr << e.what() << '\n';
-		Response resp(502, _currentServer);
+		log(e.what() + '\n');
+		Response resp(500, _currentServer);
 		resp.addBody();
 		resp.sendResponse(fd);
+		exit(1);
 	}
 }
 
