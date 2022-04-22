@@ -12,7 +12,7 @@ def eprint(*args, **kwargs):
 
 def to_hash(message):
   m = hashlib.sha256()
-  m.update(message)
+  m.update(message.encode('utf-8'))
   return m.hexdigest()
 
 def check_form_fields(form):
@@ -25,8 +25,8 @@ error_body = " <!DOCTYPE html>\
 <html>\
 <body>\
 \
-<h1>Error 400</h1>\
-<p>Please fill in the name and message fields of the form.</p>\
+<h1>Error ERROR_PLACEHOLDER</h1>\
+<p>MESSAGE_PLACEHOLDER</p>\
 \
 <button onclick=\"window.location.href='http://localhost:18000/hash.html';\">\
   Try Again\
@@ -49,24 +49,37 @@ valid_body = " <!DOCTYPE html>\
   </body>\
   </html> "
 
-#eprint("HASH SCRIPT LAUNCHED")
-form = cgi.FieldStorage()
-
-if check_form_fields(form) < 0:
-  print("HTTP/1.1 400 Bad Request")
+def printErrorResponse(err, msg, error_body):
+  error = err
+  error_body = error_body.replace("ERROR_PLACEHOLDER", str(error))
+  error_body = error_body.replace("MESSAGE_PLACEHOLDER", str(msg))
+  print("HTTP/1.1 " + error)
   currentDate.printFormatedCurrentDate()
   print("Connection: Keep-Alive")
   print("Content-Type: text/html")
   print("Content-Length: " + str(len(error_body)))
   print("\n")
   print(error_body)
-else:
-  msg_hash = to_hash(str(form["user_message"]))
-  ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
+
+def printValidResponse(valid_body):
   print("HTTP/1.1 200 OK")
-  print("Content-Type: text/html")
   currentDate.printFormatedCurrentDate()
+  print("Content-Type: text/html")
   print("Connection: Keep-Alive")
-  print("Content-Length: " + str(len(ready_body)))
+  print("Content-Length: " + str(len(valid_body)))
   print("\n")
-  print(ready_body)
+  print(valid_body)
+
+#eprint("HASH SCRIPT LAUNCHED")
+form = cgi.FieldStorage()
+
+if check_form_fields(form) < 0:
+  printErrorResponse(400, "Bad Request", "Did you put a name and a message?")
+else:
+  try:
+    msg_hash = to_hash(str(form["user_message"]))
+    ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
+  except:
+    printErrorResponse(502, "Internal Server Error", "Did you put a name and a message?")
+  else
+    printValidResponse(valid_body)
