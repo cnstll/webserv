@@ -29,7 +29,7 @@ int check(int return_value, std::string const &error_msg)
 {
   if (return_value < 0)
   {
-    std::cerr << error_msg << std::endl;
+    log(error_msg);
     return -1;
   }
   return 1;

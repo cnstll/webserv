@@ -1,23 +1,21 @@
 NAME = webserv
 
-SRCS = ./core/core.cpp  \
-		./core/Response.cpp \
+SRCS = ./core/Response.cpp \
 		./core/Request.cpp \
 		./cgi/CgiHandler.cpp \
 		./parsing/parseConfig.cpp \
 		./parsing/preParsing.cpp \
 		./core/Server.cpp \
+		./core/core.cpp  \
 		./utils/utils.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
-COMP= g++  -fdiagnostics-color=always -fsanitize=address -g -std=c++98
+COMP= g++ -g -fdiagnostics-color=always #-g -fsanitize=address
 
 CFLAGS = -std=c++98 -Wall -Wextra -Werror
 
 GFLAG = #-g3 -fsanitize=address
-
-INCLUDES= -I includes/
 
 all : $(NAME)
 
@@ -25,7 +23,7 @@ $(NAME) : $(OBJS)
 	$(COMP) $(CFLAGS) -o $(NAME) $(OBJS)
 
 %.o: %.cpp
-	$(COMP) -o $@ -c $^ $(CFLAGS) $(INCLUDES)
+	$(COMP) -o $@ -c $^ $(CFLAGS)
 
 debug :
 	$(COMP) $(CFLAGS) $(GFLAG) -o $(NAME) $(SRCS) 

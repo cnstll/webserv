@@ -58,31 +58,38 @@ std::string Response::codeToReasonPhrase(int statusCode){
     return getCodeStatus(statusCode);
 }
 
+// Response::Response(int errorCode, Server &serv)
+    // : _statusCode(errorCode),
+    //   _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
+    //   _ContentType("text/html; charset=UTF-8"),
+    //   _Connection(serv.getRequestField("Connection")),
+    //   _currentServer(serv)
+// {
+// 
+    // _uri = serv.getRequestField("requestURI");
+    // if (_Connection == "" && _statusCode != 408)
+        // _Connection = "keep-alive";
+    // _ErrCodeMap = initErrCodeMap();
+    // std::string statusCode = numberToString(_statusCode);
+    // this->_ReasonPhrase = codeToReasonPhrase(errorCode);
+    // _Status = "HTTP/1.1 " + statusCode + " " + _ReasonPhrase; 
+// };
+
+
 Response::Response(int errorCode, Server &serv)
     : _statusCode(errorCode),
       _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
-      _ContentLength(serv.getRequestField("Content-Length")), _ContentType("text/html; charset=UTF-8"),
-      _Connection(serv.getRequestField("Connection")),
-      _Location("./index.html"),  _currentServer(serv){
-
-    _uri = serv.getRequestField("requestURI");
-    if (_Connection == "" && _statusCode != 408)
-        _Connection = "keep-alive";
-    _ErrCodeMap = initErrCodeMap();
-    std::string statusCode = numberToString(_statusCode);
-    this->_ReasonPhrase = codeToReasonPhrase(errorCode);
-    _Status = "HTTP/1.1 " + statusCode + " " + _ReasonPhrase; 
-};
-
-
-Response::Response(Server &serv)
-    : _statusCode(408),
-      _Date(timeAsString()),_ServerName(serv.getServerConfigField("server_name")),
-      _ContentLength(""), _ContentType("text/html; charset=UTF-8"),
-      _Connection("close"),
+      _ContentType("text/html; charset=UTF-8"),
       _currentServer(serv){
 
-    _uri = "";
+    _Connection = "keep-alive";
+    if (_statusCode >= 400){
+        if (_statusCode == 408)
+            _Connection = "close";
+        _uri = "";
+    }
+    else
+        _uri = serv.getRequestField("requestURI");
     _ErrCodeMap = initErrCodeMap();
     std::string statusCode = numberToString(_statusCode);
     this->_ReasonPhrase = codeToReasonPhrase(_statusCode);

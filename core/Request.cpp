@@ -8,44 +8,24 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
-# include <dirent.h>
-# include <ctime>
+#include <ctime>
 
-/*
-** ------------------------------- CONSTRUCTOR --------------------------------
-*/
-
-Request::Request(std::string fullRequest, Server &serv) :
-_fullRequest(fullRequest), _currentServer(serv), _requestParsingError(200)
+Request::Request(std::string fullRequest, Server &serv) : inactiveTime(0), headerParsed(0),
+														  _fullRequest(fullRequest), _currentServer(serv), _requestParsingError(200),
+														  _birth(time(0))
 {
 	initParsedRequestMap();
-	_birth = time(0);
-	_inactiveTime = 0;
-	headerParsed = 0;
 }
-
-
-/*
-** -------------------------------- DESTRUCTOR --------------------------------
-*/
 
 Request::~Request()
 {
 }
 
-
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-
-/*
-** --------------------------------- METHODS ----------------------------------
-*/
-
-void Request::clear(){
+void Request::clear()
+{
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
-	while (it != _parsedHttpRequest.end()){
+	while (it != _parsedHttpRequest.end())
+	{
 		it->second = std::string();
 		++it;
 	}
@@ -53,10 +33,13 @@ void Request::clear(){
 	_requestParsingError = 200;
 }
 
-int Request::checkMethodInLocationBloc(){
+int Request::checkMethodInLocationBloc()
+{
 	std::string localMethods = _currentServer.getLocationField(_parsedHttpRequest["requestURI"], "methods");
-	if (localMethods != ""){
-		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods))){
+	if (localMethods != "")
+	{
+		if (!strIsInVector(_parsedHttpRequest["method"], tokenizeValues(localMethods)))
+		{
 			std::cout << "R METHOD: " << _parsedHttpRequest["method"] << std::endl;
 			std::cout << "METHODS TOK: " << tokenizeValues(localMethods)[0] << std::endl;
 			_requestParsingError = 405; // Method Not Allowed
@@ -66,11 +49,13 @@ int Request::checkMethodInLocationBloc(){
 	return 0;
 }
 
-int Request::checkIfMethodIsImplemented(Server &server){
-	
+int Request::checkIfMethodIsImplemented(Server &server)
+{
+
 	std::string *methods = server.getImplementedMethods();
 	int i = 0;
-	while (methods[i] != ""){
+	while (methods[i] != "")
+	{
 		if (methods[i] == _parsedHttpRequest["method"])
 			return 0;
 		++i;
@@ -80,21 +65,24 @@ int Request::checkIfMethodIsImplemented(Server &server){
 	return -1;
 }
 
-void Request::TrimQueryString(size_t endOfURI){
-		std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
-	if (queryPos != std::string::npos){
+void Request::TrimQueryString(size_t endOfURI)
+{
+	std::size_t queryPos = _parsedHttpRequest["requestURI"].find("?", 0);
+	if (queryPos != std::string::npos)
+	{
 		_parsedHttpRequest["queryString"] = std::string(_parsedHttpRequest["requestURI"], queryPos + 1, endOfURI - (queryPos + 1));
 		_parsedHttpRequest["requestURI"] = std::string(_parsedHttpRequest["requestURI"], 0, queryPos);
 	}
 }
 /**
  * @brief Parse Request and fill in the parsedHttpRequest map
- * 
+ *
  */
-int Request::parseHeader(Server &server){
+int Request::parseHeader(Server &server)
+{
 	std::size_t head = 0;
 	std::size_t tail = 0;
-	//check if method is valid {"GET", "POST, "DELETE"}
+	// check if method is valid {"GET", "POST, "DELETE"}
 	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["method"] = std::string(_fullRequest, head, tail - head);
 	if (checkIfMethodIsImplemented(server) < 0)
@@ -103,18 +91,22 @@ int Request::parseHeader(Server &server){
 	tail = _fullRequest.find(' ', head);
 	_parsedHttpRequest["requestURI"] = std::string(_fullRequest, head, tail - head);
 	TrimQueryString(tail);
-	if (_parsedHttpRequest["requestURI"].compare("/") == 0){
+	if (_parsedHttpRequest["requestURI"].compare("/") == 0)
+	{
 		_parsedHttpRequest["requestURI"] = "/index.html";
 	}
-	if (_parsedHttpRequest["requestURI"].size() > URI_MAX_LEN){
+	if (_parsedHttpRequest["requestURI"].size() > URI_MAX_LEN)
+	{
 		_requestParsingError = 414; //"URI Too long"
 		return -1;
 	}
-	if (_parsedHttpRequest["requestURI"] == "/makeCoffee"){
+	if (_parsedHttpRequest["requestURI"] == "/makeCoffee")
+	{
 		_requestParsingError = 418; // "I am a tea pot"
 		return -1;
 	}
-	if (_parsedHttpRequest["requestURI"] == "/censoredContent"){
+	if (_parsedHttpRequest["requestURI"] == "/censoredContent")
+	{
 		_requestParsingError = 451; // "Legal Reason"
 		return -1;
 	}
@@ -130,22 +122,24 @@ int Request::parseHeader(Server &server){
 	}
 	if (!doesFileExist(server.constructPath(_parsedHttpRequest["requestURI"])))
 	{
-		_requestParsingError = 404; //"Not Found" 
+		_requestParsingError = 404; //"Not Found"
 		return -1;
 	}
 	head = tail + 1;
 	tail = _fullRequest.find("\r\n", head);
 	_parsedHttpRequest["httpVersion"] = std::string(_fullRequest, head, tail - head);
-	//Check HTTP Version
-	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0){
+	// Check HTTP Version
+	if (_parsedHttpRequest["httpVersion"].compare("HTTP/1.1") != 0)
+	{
 		_requestParsingError = 505; // std::vector<std::string>::iterator it
 		return -1;
 	}
-	//Parse each line of the request header and entity header
-	//When 2 CRLF are encountered the next bits will be message-body
+	// Parse each line of the request header and entity header
+	// When 2 CRLF are encountered the next bits will be message-body
 	std::size_t _fullRequestLen = _fullRequest.length();
 	std::size_t endOfHeader = _fullRequest.find("\r\n\r\n", tail);
-	while (tail < _fullRequestLen && tail != endOfHeader){
+	while (tail < _fullRequestLen && tail != endOfHeader)
+	{
 		head = tail + 2;
 		std::string field;
 		std::string value;
@@ -165,99 +159,74 @@ int Request::parseHeader(Server &server){
 	return 0;
 }
 
+int Request::parseBody(void)
+{
 
-int Request::parseBody(void){
-
-		size_t tail =0, head =0;
-		std::size_t endOfHeader = _fullRequest.find("\r\n\r\n", 0);
-		if (endOfHeader == std::string::npos)
-			return 0;
-		head = endOfHeader + 4;
-		tail = _fullRequest.length();
-		if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
-			_parsedHttpRequest["message-body"] = unchunckedRequest(head);	
-		else
-			_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+	size_t tail = 0, head = 0;
+	std::size_t endOfHeader = _fullRequest.find("\r\n\r\n", 0);
+	if (endOfHeader == std::string::npos)
 		return 0;
+	head = endOfHeader + 4;
+	tail = _fullRequest.length();
+	if (_parsedHttpRequest["Transfer-Encoding"] == "chunked")
+		_parsedHttpRequest["message-body"] = unchunckedRequest(head);
+	else
+		_parsedHttpRequest["message-body"] = std::string(_fullRequest, head, tail - head);
+	return 0;
 }
 
 bool Request::timeout(void)
 {
-	_inactiveTime = std::difftime(time(0), _birth);
-	return _inactiveTime > 3;
+	inactiveTime = std::difftime(time(0), _birth);
+	return inactiveTime > REQUEST_TIMEOUT;
 }
 
-std::string Request::unchunckedRequest(int startOfBody) 
+std::string Request::unchunckedRequest(int startOfBody)
 {
-  std::size_t head = 0;
+	std::size_t head = 0;
 	std::size_t tail = 0;
-  std::string finalBody;
-  std::string ogBody;
-  std::string sizeStr;
-  size_t chunckSize = 1;
+	std::string finalBody;
+	std::string ogBody;
+	std::string sizeStr;
+	size_t chunckSize = 1;
 
-  ogBody = _fullRequest.substr(startOfBody);
-  while (chunckSize)
-  {
-    head = ogBody.find("\r\n", tail);
-    chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
-    if (!chunckSize)
-      return finalBody;
-    head += 2;
-    finalBody.append(ogBody, head, chunckSize);
-    tail = head + chunckSize + 2;
-  }
-  return finalBody;
+	ogBody = _fullRequest.substr(startOfBody);
+	while (chunckSize)
+	{
+		head = ogBody.find("\r\n", tail);
+		chunckSize = strtol(ogBody.substr(tail, head).c_str(), NULL, 16);
+		if (!chunckSize)
+			return finalBody;
+		head += 2;
+		finalBody.append(ogBody, head, chunckSize);
+		tail = head + chunckSize + 2;
+	}
+	return finalBody;
 }
 
-/**
- * @brief Append str to the _fullRequest string
- * 
- * @param str c string appended to _fullRequest
- */
-void Request::append(char *str, std::size_t readBytes){
+void Request::append(char *str, std::size_t readBytes)
+{
 	_fullRequest.append(str, readBytes);
 }
 
-void Request::addFdInfo(int fd){
-	this->fd = fd;
-}
-
-
-void Request::printFullRequest(void){
+void Request::printFullRequest(void)
+{
 	std::cout << "\nBEGINNING OF FULL REQUEST -----------------\n";
 	std::cout << _fullRequest << std::endl;
 	std::cout << "-----------------------------END FULL REQUEST\n";
 }
 
-void Request::printFullParsedRequest(void){
+void Request::printFullParsedRequest(void)
+{
 	std::cout << "\nBEGINNING OF FULL PARSED REQUEST -----------------\n";
 	std::map<std::string, std::string>::iterator it = _parsedHttpRequest.begin();
-	while (it != _parsedHttpRequest.end()){
-		std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" <<  std::endl;
+	while (it != _parsedHttpRequest.end())
+	{
+		std::cout << "Key stored: " << it->first << " - Value stored: '" << it->second << "'" << std::endl;
 		it++;
 	}
 	std::cout << "-----------------------------END FULL PARSED REQUEST\n";
 }
-
-
-
-void Request::writeFullRequestToFile(const char *filename){
-	std::ofstream ofs(filename, std::ios_base::app);
-	ofs << _fullRequest;
-  ofs.close();
-};
-
-void Request::writeStrToFile(const std::string &str, const char *filename){
-	std::ofstream ofs(filename);
-	ofs << str;
-  ofs.close();
-};
-
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
 
 std::string Request::getRequestField(const std::string &requestedField)
 {
@@ -266,40 +235,43 @@ std::string Request::getRequestField(const std::string &requestedField)
 	return (it == _parsedHttpRequest.end() ? std::string("") : _parsedHttpRequest[requestedField]);
 }
 
-std::string Request::getRequestedUri(){
+std::string Request::getRequestedUri()
+{
 	return _parsedHttpRequest["requestURI"];
 }
 
-std::string Request::getHttpMethod(void){
+std::string Request::getHttpMethod(void)
+{
 	return _parsedHttpRequest["method"];
 }
 
-int Request::getError(void) const {
-	return _requestParsingError;
-}
-
-std::map<std::string, std::string> &Request::getParsedRequest(void){
+std::map<std::string, std::string> &Request::getParsedRequest(void)
+{
 	return _parsedHttpRequest;
 }
 
-void Request::setErrorCode(int code){
+void Request::setErrorCode(int code)
+{
 	_requestParsingError = code;
 }
 
-int Request::getErrorCode(){
+int Request::getErrorCode()
+{
 
 	return _requestParsingError;
 }
 
-std::string Request::getFullRequest(void){
+std::string Request::getFullRequest(void)
+{
 	return _fullRequest;
 }
 
-/* ************************************************************************** */
-void Request::initParsedRequestMap(){
-		int i = 0;
-	//fill map with all possible fields request and an empty string
-	while (Request::_validRequestFields[i] != ""){
+void Request::initParsedRequestMap()
+{
+	int i = 0;
+	// fill map with all possible fields request and an empty string
+	while (Request::_validRequestFields[i] != "")
+	{
 		_parsedHttpRequest[Request::_validRequestFields[i]] = std::string();
 		i++;
 	}
@@ -307,54 +279,53 @@ void Request::initParsedRequestMap(){
 
 std::string Request::_validRequestFields[] = {
 
-//Request line
-		"method",
-		"httpVersion",
-		"requestURI",
-		"queryString",
-		"Cache-Control",
-    "Connection",
-    "Date",
-    "Pragma",
-    "Trailer",
-    "Transfer-Encoding",
-    "Upgrade",
-    "Via",
-    "Warning",
-//request-header
-    "Accept",
-    "Accept-Charset",
-    "Accept-Encoding",
-    "Accept-Language",
-    "Authorization",
-    "Expect",
-    "From",
-    "Host",
-    "If-Match",
-    "If-Modified-Sinc",
-    "If-None-Match",
-    "If-Range",
-    "If-Unmodified-Si",
-    "Max-Forwards",
-    "Proxy-Authorizat",
-    "Range",
-    "Referer",
-    "TE",
-    "User-Agent",
+	// Request line
+	"method",
+	"httpVersion",
+	"requestURI",
+	"queryString",
+	"Cache-Control",
+	"Connection",
+	"Date",
+	"Pragma",
+	"Trailer",
+	"Transfer-Encoding",
+	"Upgrade",
+	"Via",
+	"Warning",
+	// request-header
+	"Accept",
+	"Accept-Charset",
+	"Accept-Encoding",
+	"Accept-Language",
+	"Authorization",
+	"Expect",
+	"From",
+	"Host",
+	"If-Match",
+	"If-Modified-Sinc",
+	"If-None-Match",
+	"If-Range",
+	"If-Unmodified-Si",
+	"Max-Forwards",
+	"Proxy-Authorizat",
+	"Range",
+	"Referer",
+	"TE",
+	"User-Agent",
 
-//entity-header
-    "Allow",
-    "Content-Encoding",
-    "Content-Language",
-    "Content-Length",
-    "Content-Location",
-    "Content-MD5",
-    "Content-Range",
-    "Content-Type",
-    "Expires",
-    "Last-Modified",
-    "extension-header",
-//message-body
-		"message-body",
-		""
-};
+	// entity-header
+	"Allow",
+	"Content-Encoding",
+	"Content-Language",
+	"Content-Length",
+	"Content-Location",
+	"Content-MD5",
+	"Content-Range",
+	"Content-Type",
+	"Expires",
+	"Last-Modified",
+	"extension-header",
+	// message-body
+	"message-body",
+	""};

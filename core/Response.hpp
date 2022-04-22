@@ -4,8 +4,6 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include <iostream>
-#include <stdlib.h>
-#include<sys/socket.h>
 #include <map>
 
 class Server;

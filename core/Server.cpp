@@ -1,79 +1,64 @@
 #include "Server.hpp"
 
-/*
-** ------------------------------- CONSTRUCTOR --------------------------------
-*/
-
 Server::Server()
 {
 	initServerConfig();
 }
+Server::Location::Location() {}
+Server::~Server() {}
+Server::Location::~Location() {}
 
-Server::Location::Location(){}
-
-/*
-** -------------------------------- DESTRUCTOR --------------------------------
-*/
-
-Server::~Server(){}
-Server::Location::~Location(){}
-
-
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-std::ostream &			operator<<( std::ostream & o, Server const & i )
+std::ostream &operator<<(std::ostream &o, Server const &i)
 {
 	i.displayServerConfig(o);
 	return o;
 }
 
-
-/*
-** --------------------------------- METHODS ----------------------------------
-*/
-void Server::displayServerConfig(std::ostream &o) const{
-  configMap::const_iterator itServ = serverConfigFields.begin();
-  std::map<std::string, Location>::const_iterator itLoc = locationBlocs.begin();
+void Server::displayServerConfig(std::ostream &o) const
+{
+	configMap::const_iterator itServ = serverConfigFields.begin();
+	std::map<std::string, Location>::const_iterator itLoc = locationBlocs.begin();
 	size_t i = 0;
 	o << "BEGINNING OF SERVER CONFIG---------------------------------\n";
-	while(itServ != serverConfigFields.end()){
+	while (itServ != serverConfigFields.end())
+	{
 		if (itServ->second != "")
-    	o << "Field: " << itServ->first << " - Value: " << itServ->second << std::endl;
-    ++itServ;
-  }
+			o << "Field: " << itServ->first << " - Value: " << itServ->second << std::endl;
+		++itServ;
+	}
 	if (countOfLocationBlocks)
 		o << "\nTOTAL NUMBER OF LOCATION BLOCS: " << countOfLocationBlocks;
-	while (itLoc != locationBlocs.end()){
+	while (itLoc != locationBlocs.end())
+	{
 		o << "\nLOCATION FIELD no " << i << std::endl;
 		o << "Uri path attached to location: " << itLoc->first << std::endl;
 		configMap::const_iterator itLocFields = itLoc->second.fields.begin();
-		while(itLocFields != itLoc->second.fields.end()){
+		while (itLocFields != itLoc->second.fields.end())
+		{
 			if (itLocFields->second != "")
-  	  	o << "Field: " << itLocFields->first << " - Value: " << itLocFields->second << std::endl;
-  	  ++itLocFields;
-  	}
+				o << "Field: " << itLocFields->first << " - Value: " << itLocFields->second << std::endl;
+			++itLocFields;
+		}
 		++itLoc;
 	}
 
-  o << "---------------------------------------END OF SERVER CONFIG\n";
+	o << "---------------------------------------END OF SERVER CONFIG\n";
 }
 
 int Server::isRequestDone(Request &request, int &contentLength, int &startOfBody)
 {
-  if (request.getParsedRequest()["Transfer-Encoding"] == "chunked")
-  {
-    if (request.getFullRequest().find("\r\n0\r\n") != std::string::npos)
-      return 1;
-    else
+	if (request.getParsedRequest()["Transfer-Encoding"] == "chunked")
+	{
+		if (request.getFullRequest().find("\r\n0\r\n") != std::string::npos)
+			return 1;
+		else
+			return 0;
+	}
+	int lengthRecvd = request.getFullRequest().length() - startOfBody;
+	if (contentLength <= lengthRecvd)
+		return (1);
+	else
 		return 0;
-  }
-  int lengthRecvd = request.getFullRequest().length() - startOfBody;
-  if (contentLength <= lengthRecvd)
-	  return (1);
-  else
-	  return 0;
 }
 
 int Server::parseHeader(Request &request)
@@ -85,67 +70,65 @@ int Server::parseHeader(Request &request)
 		{
 			int startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
 			int contentLength = stringToNumber(request.getRequestField("Content-Length"));
-			if (isRequestDone(request, contentLength, startOfBody))
-				return (1);
 			return (1);
 		}
 		else
 			return 2;
 	}
 	else
-    return 0;
+		return 0;
 }
 
 int check2(int return_value, std::string const &error_msg)
 {
-  if (return_value < 0)
-  {
-    std::cerr << error_msg << std::endl;
-    return -1;
-  }
+	if (return_value < 0)
+	{
+		std::cerr << error_msg << std::endl;
+		return -1;
+	}
 	else
-    return 1;
+		return 1;
 }
 
 int checkFatal(int return_value, std::string const &error_msg)
 {
-  if (return_value < 0)
-  {
-    std::cerr << error_msg << std::endl;
-    exit(EXIT_FAILURE);
-    return -1;
-  }
+	if (return_value < 0)
+	{
+		std::cerr << error_msg << std::endl;
+		exit(EXIT_FAILURE);
+		return -1;
+	}
 	else
-    return 1;
+		return 1;
 }
 
 int Server::makeFdNonBlocking(int &fd)
 {
-  int flags;
+	int flags;
 	int ret;
-  ret = check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
-  flags |= O_NONBLOCK;
+	ret = check2((flags = fcntl(fd, F_GETFL, NULL)), "flags error");
+	flags |= O_NONBLOCK;
 	if (ret < 0)
-	  return -1;
-  ret = check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
+		return -1;
+	ret = check2((fcntl(fd, F_SETFL, flags)), "fcntl error");
 	return ret;
 }
 
 int Server::acceptNewConnexion(int server_fd)
 {
-  socklen_t addr_in_len = sizeof(struct sockaddr_in);
-  struct sockaddr_in connexion_address;
-  int connexionFd;
+	socklen_t addr_in_len = sizeof(struct sockaddr_in);
+	struct sockaddr_in connexion_address;
+	int connexionFd;
 
-  if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
-  {
-	  if (makeFdNonBlocking(connexionFd) < 0)
-		  return -1;
-	  requestMap[connexionFd] = new Request("", *this);
-	  return connexionFd;
-  }
+	if (check2(connexionFd = accept(server_fd, (struct sockaddr *)&connexion_address, &addr_in_len), "failed accept"))
+	{
+		if (makeFdNonBlocking(connexionFd) < 0)
+			return -1;
+		requestMap[connexionFd] = new Request("", *this);
+		return connexionFd;
+	}
 	else
-    return -1;
+		return -1;
 }
 
 std::string Server::getExtension(std::string &uri)
@@ -161,6 +144,7 @@ std::string Server::getExtension(std::string &uri)
 
 void Server::closeConnection(int fd)
 {
+	log("Closing connection on fd: " + numberToString(fd));
 	delete (requestMap[fd]);
 	requestMap.erase(fd);
 	close(fd);
@@ -169,126 +153,132 @@ void Server::closeConnection(int fd)
 void Server::respond(int fd)
 {
 	std::string cgiExtension = ".py";
-	_currentRequest = requestMap[fd];
-	std::string extension = _currentRequest->getRequestedUri();
-	std::string uri = _currentRequest->getRequestedUri();
+	currentRequest = requestMap[fd];
+	std::string extension = currentRequest->getRequestedUri();
+	std::string uri = currentRequest->getRequestedUri();
 	std::string fullPath = constructPath(uri);
-	if (getExtension(extension) == cgiExtension && _currentRequest->getError() <= 300)
+	if (getExtension(extension) == cgiExtension && currentRequest->getErrorCode() <= 300)
 	{
-		CgiHandler cgiParams(_currentRequest->getParsedRequest(), fullPath, fd, *this);
+		CgiHandler cgiParams(currentRequest->getParsedRequest(), fullPath, fd, *this);
 		cgiParams.handleCGI(fd);
 	}
-	else if (_currentRequest->getHttpMethod() == "DELETE")
+	else if (currentRequest->getHttpMethod() == "DELETE")
 	{
 		if (std::remove(fullPath.c_str()) != 0)
 		{
-			Response resp(_currentRequest->getError(), *this);
+			Response resp(currentRequest->getErrorCode(), *this);
 			resp.sendErrorResponse(fd, 404);
 		}
 	}
 	else
 	{
-		Response resp(_currentRequest->getError(), *this);
+		Response resp(currentRequest->getErrorCode(), *this);
 		resp.addBody(fullPath, this);
 		resp.sendResponse(fd);
 	}
-	_currentRequest->clear();
-	if (_currentRequest->getParsedRequest()["Connection"] != "keep-alive")
+	currentRequest->clear();
+	if (currentRequest->getParsedRequest()["Connection"] != "keep-alive")
 		closeConnection(fd);
 }
 
 int Server::setupServer(int port, int backlog)
 {
-  struct sockaddr_in server_addr;
-  int serverFd;
+	struct sockaddr_in server_addr;
+	int serverFd;
 
-  check2((serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
-  int yes = 1;
-  if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
-  {
-    perror("setsockopt");
-    exit(1);
-  }
-  bzero(&server_addr, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr.sin_port = htons(port);
-  checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "ERROR: issue while attempting to bind the port to the socket, as a result, this server will not be able to execute, we aare deeply sorry for this inconvenience and hope you will still consider us for your future server needs. \nTLDR; bind");
-  checkFatal(listen(serverFd, backlog), "listen error");
-  return serverFd;
-}
-
-int Server::recvRequest(const int &fd, Request &request){
-  int read_bytes;
-  char request_buffer[REQUEST_READ_SIZE + 1] = {};
-  int parsed;
-//   ?int contentSize = 0;
-  int startOfBody = 0;
-
-//   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
-  while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
-  {
-    request.append(request_buffer, read_bytes);
-    if (!request.headerParsed)
-    {
-      request.contentSize = 0;
-	  parsed = parseHeader(request)	;
-      if (parsed)
-	  {
-		  request.headerParsed = 1;
-		  if (parsed == 2)
-		  {
-			  request.headerParsed = 0;
-			  return (read_bytes);
-		  }
-		  else
-		  {
-			  startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
-			  request.contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
-			  if (request.contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
-			  {
-				  Response resp(413, *this);
-				  resp.sendErrorResponse(fd, 413);
-				  closeConnection(fd);
-				  request.headerParsed = 0;
-				  return (-1);
-			  }
-		  }
-	  }
-	  else if (parsed == -1) {
-		  return (1);
-	  }
+	check2((serverFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)), "socket error");
+	int yes = 1;
+	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+	{
+		perror("setsockopt");
+		exit(1);
 	}
-  }
-  if (isRequestDone(request, request.contentSize, startOfBody))
-  {
-	  request.headerParsed = 0;
-	  return (1);
-  }
-  if (read_bytes == 0)
-  {
-	  log("Closing connexion for fd: " + numberToString(fd));
-	  closeConnection(fd);
-	  return (-1);
-  }
-  return read_bytes;
+	bzero(&server_addr, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	server_addr.sin_port = htons(port);
+	checkFatal(bind(serverFd, (struct sockaddr *)&server_addr, sizeof(server_addr)), "ERROR: issue while attempting to bind the port to the socket, as a result, this server will not be able to execute, we aare deeply sorry for this inconvenience and hope you will still consider us for your future server needs. \nTLDR; bind");
+	checkFatal(listen(serverFd, backlog), "listen error");
+	return serverFd;
 }
 
-void Server::initServerConfig(){
+int Server::recvRequest(const int &fd, Request &request)
+{
+	int read_bytes;
+	char request_buffer[REQUEST_READ_SIZE + 1] = {};
+	int parsed;
+	//   ?int contentSize = 0;
+	int startOfBody = 0;
+
+	//   bzero(&request_buffer, REQUEST_READ_SIZE + 1);
+	while ((read_bytes = recv(fd, &request_buffer, REQUEST_READ_SIZE, 0)) > 0)
+	{
+		request.append(request_buffer, read_bytes);
+		if (!request.headerParsed)
+		{
+			request.contentSize = 0;
+			parsed = parseHeader(request);
+			if (parsed)
+			{
+				request.headerParsed = 1;
+				if (parsed == 2)
+				{
+					request.headerParsed = 0;
+					return (read_bytes);
+				}
+				else
+				{
+					startOfBody = request.getFullRequest().find("\r\n\r\n") + 4;
+					request.contentSize = stringToNumber((request.getParsedRequest()["Content-Length"]));
+					if (request.contentSize > stringToNumber(getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size")) && getLocationField(request.getParsedRequest()["requestURI"], "client_max_body_size") != "")
+					{
+						Response resp(413, *this);
+						resp.sendErrorResponse(fd, 413);
+						closeConnection(fd);
+						request.headerParsed = 0;
+						return (-1);
+					}
+				}
+			}
+			else if (parsed == -1)
+			{
+				return (1);
+			}
+		}
+	}
+	if (isRequestDone(request, request.contentSize, startOfBody))
+	{
+		request.headerParsed = 0;
+		return (1);
+	}
+	if (read_bytes == 0)
+	{
+		log("Closing connexion for fd: " + numberToString(fd));
+		closeConnection(fd);
+		return (-1);
+	}
+	return read_bytes;
+}
+
+void Server::initServerConfig()
+{
 	int i = 0;
-	//fill map with all possible allowed fields in server
-	while (Server::validServerFields[i] != ""){
+	// fill map with all possible allowed fields in server
+	while (Server::validServerFields[i] != "")
+	{
 		serverConfigFields[Server::validServerFields[i]] = std::string();
 		i++;
 	}
 	countOfLocationBlocks = 0;
 }
 
-void Server::addLocationBlocConfig(std::string &uri){
+void Server::addLocationBlocConfig(std::string &uri)
+{
 	int i = 0;
 	Location newLocation;
-	//fill map with all possible allowed fields in server
-	while (Server::validLocationFields[i] != ""){
+	// fill map with all possible allowed fields in server
+	while (Server::validLocationFields[i] != "")
+	{
 		newLocation.fields[Server::validLocationFields[i]] = std::string();
 		i++;
 	}
@@ -296,16 +286,19 @@ void Server::addLocationBlocConfig(std::string &uri){
 	++countOfLocationBlocks;
 }
 
-bool Server::lineHasLocationToken(const std::string &line){
+bool Server::lineHasLocationToken(const std::string &line)
+{
 	std::string locationToken = "location /";
 	return (line.find(locationToken) != std::string::npos);
 }
 
-bool Server::isEmptyLine(const std::string &line){
+bool Server::isEmptyLine(const std::string &line)
+{
 	return (line.find_first_not_of(" \t") == std::string::npos);
 }
 
-bool Server::isEndOfBloc(const std::string &line){
+bool Server::isEndOfBloc(const std::string &line)
+{
 	size_t pos = line.find_first_not_of(" \t");
 	if (pos == std::string::npos)
 		return false;
@@ -315,17 +308,20 @@ bool Server::isEndOfBloc(const std::string &line){
 		return false;
 }
 
-std::string Server::findLocationPath(const std::string &line){
+std::string Server::findLocationPath(const std::string &line)
+{
 	std::string locationPath;
 	const std::string locationToken = "location";
 	size_t startOfLocationToken = line.find(locationToken);
 	size_t c = startOfLocationToken + locationToken.length();
 	size_t startOfPath = line.find("/", startOfLocationToken);
-	if (startOfPath == std::string::npos){
+	if (startOfPath == std::string::npos)
+	{
 		std::cerr << "ERROR: No path found for location bloc\n";
 		exit(EXIT_FAILURE);
 	}
-	if (startOfPath - c != 1 || line.substr(startOfLocationToken, startOfPath - startOfLocationToken).find_first_not_of(" ")){
+	if (startOfPath - c != 1 || line.substr(startOfLocationToken, startOfPath - startOfLocationToken).find_first_not_of(" "))
+	{
 		std::cerr << "ERROR: synthax error in location bloc\n";
 		exit(EXIT_FAILURE);
 	}
@@ -334,8 +330,9 @@ std::string Server::findLocationPath(const std::string &line){
 	return locationPath;
 }
 
-void Server::checkMethodsInLocation(std::string &values, const std::string &line){
-	
+void Server::checkMethodsInLocation(std::string &values, const std::string &line)
+{
+
 	std::vector<std::string> v;
 	std::vector<std::string>::iterator itVec;
 	int i;
@@ -356,16 +353,19 @@ void Server::checkMethodsInLocation(std::string &values, const std::string &line
 	}
 }
 
-void Server::parseLocationFields(const std::string& line, const std::string &uri){
+void Server::parseLocationFields(const std::string &line, const std::string &uri)
+{
 	size_t matchField;
 	configMap::iterator it = locationBlocs[uri].fields.begin();
-	while (it != locationBlocs[uri].fields.end()){
+	while (it != locationBlocs[uri].fields.end())
+	{
 		matchField = line.find(it->first);
-		if (matchField != std::string::npos){
+		if (matchField != std::string::npos)
+		{
 			matchField += it->first.length();
 			if (it->second != "")
 				printErrorAndExit("ERROR: field already exists in location bloc - FaultyLine: \'" + line + "\'\n");
-			it->second = std::string(line, matchField + 1,  line.length() - (matchField + 2));
+			it->second = std::string(line, matchField + 1, line.length() - (matchField + 2));
 			if (it->first == "methods")
 				checkMethodsInLocation(it->second, line);
 			break;
@@ -373,10 +373,11 @@ void Server::parseLocationFields(const std::string& line, const std::string &uri
 		++it;
 	}
 	if (it == locationBlocs[uri].fields.end())
-	 	printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
+		printErrorAndExit("ERROR: unknown field in location bloc - FaultyLine: \'" + line + "\'\n");
 }
 
-void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
+void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine)
+{
 	std::string uri = findLocationPath(line);
 	addLocationBlocConfig(uri);
 	size_t endOfLocationBloc = bloc.find("}", endOfLine + 1);
@@ -393,13 +394,16 @@ void Server::parseLocationBloc(const std::string &bloc, std::string &line, size_
 	}
 }
 
-void Server::parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine){
+void Server::parseMainInstructionsFields(const std::string &bloc, std::string &line, size_t &startOfLine, size_t &endOfLine)
+{
 	size_t matchField;
 	configMap::iterator it;
 	it = serverConfigFields.begin();
-	while (it != serverConfigFields.end()){
+	while (it != serverConfigFields.end())
+	{
 		matchField = bloc.substr(startOfLine, endOfLine - startOfLine).find(it->first);
-		if (matchField != std::string::npos){
+		if (matchField != std::string::npos)
+		{
 			matchField += it->first.length();
 			if (it->second != "")
 				printErrorAndExit("ERROR: field already exists in main server bloc - FaultyLine: \'" + line + "\'\n");
@@ -412,7 +416,8 @@ void Server::parseMainInstructionsFields(const std::string &bloc, std::string &l
 		printErrorAndExit("ERROR: unknown field in server bloc - FaultyLine: \'" + line + "\'\n");
 }
 
-std::string Server::constructPath(std::string &uri) {
+std::string Server::constructPath(std::string &uri)
+{
 	std::string fullPath;
 	std::map<std::string, Location>::iterator it;
 	it = locationBlocs.find(uri);
@@ -422,13 +427,15 @@ std::string Server::constructPath(std::string &uri) {
 		return it->second.fields["root"] + uri;
 }
 
-void Server::parseServerConfigFields(const std::string &bloc){
+void Server::parseServerConfigFields(const std::string &bloc)
+{
 	size_t startOfLine, endOfLine, endOfBloc;
 	std::string line;
 	std::string lineNumber;
 	startOfLine = endOfLine = 0;
 	endOfBloc = bloc.length();
-	while (endOfLine <= endOfBloc){
+	while (endOfLine <= endOfBloc)
+	{
 		startOfLine = bloc.find("\n", startOfLine) + 1;
 		endOfLine = bloc.find("\n", startOfLine);
 		if (endOfLine == std::string::npos)
@@ -436,35 +443,41 @@ void Server::parseServerConfigFields(const std::string &bloc){
 		line = bloc.substr(startOfLine, endOfLine - startOfLine);
 		if (isEmptyLine(line) || isEndOfBloc(line))
 			continue;
-		if (lineHasLocationToken(line)){
+		if (lineHasLocationToken(line))
+		{
 			parseLocationBloc(bloc, line, startOfLine, endOfLine);
-		} else {
+		}
+		else
+		{
 			parseMainInstructionsFields(bloc, line, startOfLine, endOfLine);
 		}
 	}
 	parsePort();
 };
 
-void Server::parsePort(void){
+void Server::parsePort(void)
+{
 	size_t findport = serverConfigFields["listen"].find(":");
 	if (findport == std::string::npos)
 		printErrorAndExit("ERROR: bad synthax for listen instruction\n");
-	serverPort = stringToNumber(serverConfigFields["listen"].substr(findport+1));
+	serverPort = stringToNumber(serverConfigFields["listen"].substr(findport + 1));
 	if (!serverPort)
 		printErrorAndExit("ERROR: invalid server port");
 }
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
-Server::configMap Server::getServerConfig(void) const{
+Server::configMap Server::getServerConfig(void) const
+{
 	return serverConfigFields;
 };
-int Server::getServerPort(void) const {
+int Server::getServerPort(void) const
+{
 	return serverPort;
 }
 /**
  * @brief Retrieve a field in a specific location bloc
- * 
+ *
  * @param locationUri path directly following the location token used to identify the correct bloc
  * @param requestedField field to find in a location bloc
  * @return std::string either an empty string if the field is not found, or the corresponding string value
@@ -488,41 +501,40 @@ std::string Server::getServerConfigField(const std::string &requestedField)
 	return (it == serverConfigFields.end() ? std::string("") : serverConfigFields[requestedField]);
 }
 
-std::string *Server::getImplementedMethods(void){
+std::string *Server::getImplementedMethods(void)
+{
 	return implementedMethods;
 }
 
-std::string Server::getRequestField(const std::string &requestedField){
-	return _currentRequest->getRequestField(requestedField);
+std::string Server::getRequestField(const std::string &requestedField)
+{
+	return currentRequest->getRequestField(requestedField);
 }
 /*
 ** --------------------------------- STATIC ---------------------------------
 */
 std::string Server::validServerFields[] = {
 
-		"listen",
-		"server_name",
-		"root",
-		"error_pages_dir",
-		""
-};
+	"listen",
+	"server_name",
+	"root",
+	"error_pages_dir",
+	""};
 
 std::string Server::validLocationFields[] = {
 
-		"root",
-		"methods",
-		"autoindex",
-		"client_max_body_size",
-		"working_dir",
-		"return",
-		""
-};
+	"root",
+	"methods",
+	"autoindex",
+	"client_max_body_size",
+	"working_dir",
+	"return",
+	""};
 
 std::string Server::implementedMethods[] = {
 	"GET",
 	"POST",
 	"DELETE",
-	""
-};
+	""};
 
 /* ************************************************************************** */

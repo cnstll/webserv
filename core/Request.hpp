@@ -5,10 +5,11 @@
 #include <map>
 # include <string>
 # include "Server.hpp"
-#include <ctime>
-
 # ifndef URI_MAX_LEN
-# define URI_MAX_LEN 128
+# define URI_MAX_LEN 254
+# endif
+# ifndef REQUEST_TIMEOUT
+# define REQUEST_TIMEOUT 5
 # endif
 
 class Server;
@@ -16,40 +17,33 @@ class Server;
 class Request
 {
 	public:
+
 		Request(std::string fullRequest, Server &serv);
-		// Request( Request const & src );
 		~Request();
 
-		// Request &		operator=( Request const & rhs );
-    std::string getRequestField(const std::string &requestedField);
 		void append(char *str, std::size_t readBytes);
 		void clear(void);
     int parseBody(void);
     int parseHeader(Server &server);
+
+    std::string getRequestField(const std::string &requestedField);
 		std::string getRequestedUri(void);
     std::string getPathToFile(void);
 		std::string getHttpMethod(void);
-    int getError(void) const;
+    int getErrorCode(void);
+    std::string getFullRequest(void);
     std::map<std::string, std::string> &getParsedRequest(void);
     void setErrorCode(int code);
-    int getErrorCode(void);
     void printFullRequest(void);
-    std::string getFullRequest(void);
     void printFullParsedRequest(void);
-    void writeFullRequestToFile(const char *filename);
-    void writeStrToFile(const std::string &str, const char *filename);
     std::string unchunckedRequest(int startOfBody);
-    //!experimentation -> is it still an experimentation now ?
     bool timeout(void);
-    void addFdInfo(int fd);
-    int fd;    
     int contentSize;
+    time_t inactiveTime;
     bool headerParsed;
-    time_t _inactiveTime;
   
   private:
 
-    time_t _birth; 
 		void extractUri( void );
     void initParsedRequestMap(void);
     int checkMethodInLocationBloc(void);
@@ -57,11 +51,12 @@ class Request
     void TrimQueryString(size_t endOfURI);
 		std::string _fullRequest;
     Server &_currentServer;
-    std::string _uri;
     unsigned int _requestParsingError;
+    time_t _birth; 
+    std::string _uri;
     std::map<std::string, std::string> _parsedHttpRequest;
     static std::string _validRequestFields[];
 };
 
 
-#endif /* ********************************************************* REQUEST_H */
+#endif

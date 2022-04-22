@@ -25,7 +25,7 @@ void CgiHandler::_callocEnv(size_t size)
 		throw internalServerError();
 }
 
-char **CgiHandler::_addVarToEnv(std::string str_to_add)
+void CgiHandler::_addVarToEnv(std::string str_to_add)
 {
 	int		i;
 	char	**dup_list;
@@ -33,7 +33,7 @@ char **CgiHandler::_addVarToEnv(std::string str_to_add)
 
 	i = 0;
 	list_size = strlen_list(_environment);
-	dup_list = (char **)calloc(strlen_list(_environment), sizeof(char *));
+	dup_list = (char **)calloc(list_size + 2, sizeof(char *));
 	if (!dup_list)
 		throw internalServerError();
 	while (i < list_size)
@@ -48,7 +48,6 @@ char **CgiHandler::_addVarToEnv(std::string str_to_add)
 		throw internalServerError();
     _freeEnv();
     _environment = dup_list;
-	return (dup_list);
 }
 
 void	CgiHandler::_freeEnv()

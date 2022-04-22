@@ -1,12 +1,12 @@
 #include "core.hpp"
 
-void monitorSocketAction(int epoll_fd, int fdToMonitor, uint32_t eventsToMonitor, int action)
+int monitorSocketAction(int epoll_fd, int fdToMonitor, uint32_t eventsToMonitor, int action)
 {
   struct epoll_event event_parameters;
   event_parameters.data.fd = fdToMonitor;
   event_parameters.events = eventsToMonitor;
   log("Accepting connection on fd: " + numberToString(fdToMonitor));
-  check((epoll_ctl(epoll_fd, action, fdToMonitor, &event_parameters)), "epoll_ctl error");
+  return (check((epoll_ctl(epoll_fd, action, fdToMonitor, &event_parameters)), "epoll_ctl error"));
 }
 
 Server *portPicker(std::map<int, Server> &serverMap, int fd)
@@ -32,7 +32,7 @@ void  setupServers(std::map<int, Server> &serverMap, std::vector<Server> bunchOf
   {
     int tmpServerfd = servIter->setupServer(servIter->getServerPort(), MAX_QUEUE);
     serverMap[tmpServerfd] = *servIter;
-    monitorSocketAction(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD);
+    check(monitorSocketAction(epollFd, tmpServerfd, EPOLLIN | EPOLLOUT, EPOLL_CTL_ADD), "epoctl error");
     ++servIter;
   }
 }
@@ -49,7 +49,7 @@ void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> 
       {
         if (iterReq->second->timeout())
         {
-          Response resp(iterServ->second);
+          Response resp(408, iterServ->second);
           resp.addBody();
           resp.sendResponse(iterReq->first);
           iterServ->second.closeConnection(iterReq->first);
@@ -59,7 +59,7 @@ void closeInactiveConnections(struct epoll_event *events, std::map<int, Server> 
       }
       else
       {
-        iterReq->second->_inactiveTime = 0;
+        iterReq->second->inactiveTime = 0;
       }
       ++iterReq;
     }
@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
   // Prep a set of epoll event struct to register listened events
   struct epoll_event *events = (struct epoll_event *)calloc(MAX_EVENTS, sizeof(struct epoll_event));
   // Set up an epoll instance
-  check((epoll_fd = epoll_create(1)), "epoll error");
+  if (check((epoll_fd = epoll_create(1)), "epoll error") < 0)
+    printErrorAndExit("ERROR: server setup critical error");
   setupServers(serverMap, bunchOfServers, epoll_fd);
 
   while (1)
@@ -107,7 +108,12 @@ int main(int argc, char *argv[])
         checkErrorFlags(events[i].events);
         if (!check((connexion_fd = serverMap[events[i].data.fd].acceptNewConnexion(events[i].data.fd)), "accept error"))
           continue;
-        monitorSocketAction(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD);
+        if (monitorSocketAction(epoll_fd, connexion_fd, EPOLLIN | EPOLLHUP | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP | EPOLLET, EPOLL_CTL_ADD) < 0)
+        {
+          Response resp(500, serverMap[events[i].data.fd]);
+          resp.addBody();
+          resp.sendResponse(connexion_fd);
+        }
       }
       else if (events[i].events & EPOLLIN)
       {

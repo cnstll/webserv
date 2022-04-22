@@ -2,15 +2,13 @@
 #define CGIHANDLER_HPP
 
 #include <iostream>
-#include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <iostream>
 #include <exception>
 #include <map>
-#include <sys/wait.h>
 #include "../core/Server.hpp"
 
 class Server;
@@ -29,7 +27,7 @@ private:
     void _cgiDispatch();
     Server &_currentServer;
     std::map<std::string, std::string> _parsedRequest;
-    char **_addVarToEnv(std::string str_to_add);
+    void _addVarToEnv(std::string str_to_add);
     char *_args[3];
     char **_environment;
     void _freeEnv();
