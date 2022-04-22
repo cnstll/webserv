@@ -74,12 +74,12 @@ def printValidResponse(valid_body):
 form = cgi.FieldStorage()
 
 if check_form_fields(form) < 0:
-  printErrorResponse(400, "Bad Request", "Did you put a name and a message?")
+  printErrorResponse("400 Bad Request", "Did you put a name and a message?", error_body)
 else:
   try:
     msg_hash = to_hash(str(form["user_message"]))
     ready_body = valid_body.replace("hash_placeholder", str(msg_hash))
   except:
-    printErrorResponse(502, "Internal Server Error", "Did you put a name and a message?")
+    printErrorResponse("502 Bad Gateway", "Did you put a name and a message?", error_body)
   else
     printValidResponse(valid_body)

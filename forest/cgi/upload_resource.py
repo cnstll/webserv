@@ -77,7 +77,7 @@ try:
   fileitem = form["filename"]
 except:
   # if no file has been sent, error msg
-  printErrorResponse("500 Internal Server Error", "<p> Oh woowww... something went slightly horribly wrong :S</p>", error_body) 
+  printErrorResponse("400 Bad Request", "<p> SO BAAAAAAD !</p", error_body) 
 else:
   if fileitem.filename:
     # Checking for leading path and striping it
@@ -88,7 +88,7 @@ else:
       open(path, 'wb').write(fileitem.file.read())
     # Response Header and Body sent to stdout
     except:
-      printErrorResponse("502 Bad Gateway", "<p></p>", error_body)
+      printErrorResponse("502 Bad Gateway", "<p>Wow... that's looking bad :s</p>", error_body)
     else:
       printValidResponse(valid_body)
   else:
