@@ -74,7 +74,9 @@ func picker(m model) tea.Cmd {
 	if m.toBeTested[2] {
 		return uploadFiles(m)
 	}
-	//return checkSomeStatic(m)
+	if m.toBeTested[3] {
+		return uploadChunkedFiles(m)
+	}
 	return func() tea.Msg {
 		return statusMsg{5, ""}
 	}
@@ -166,6 +168,31 @@ func uploadFiles(m model) tea.Cmd {
 			return statusMsg{2, "PASS"}
 		}
 		return statusMsg{2, m.statuses[2]}
+	}
+}
+
+func uploadChunkedFiles(m model) tea.Cmd {
+
+	//! the files here are prety small for ease of testing this tester out, they should be replaced with larger files
+	var testFiles = [5]string{"small_text_file.txt", "large_text_file.txt", "large_video_file.mp4", "img.jpeg", "img.jpeg"}
+	OgContentRootPath := "./upload_files_originals/"
+	uploadContentPath := "./forest/iAmUploadDir/"
+
+	return func() tea.Msg {
+		if m.toBeTested[3] {
+
+			for _, file := range testFiles {
+				cmd := exec.Command("curl", "-F", "filename=@./upload_files_originals/"+file, "http://localhost:18000/upload_resource.py")
+				cmd.Run()
+				OgContent, _ := ioutil.ReadFile(OgContentRootPath + file)
+				UploadedContent, _ := ioutil.ReadFile(uploadContentPath + file)
+				if string(UploadedContent) != string(OgContent) {
+					return statusMsg{3, "FAIL"}
+				}
+			}
+			return statusMsg{3, "PASS"}
+		}
+		return statusMsg{3, m.statuses[3]}
 	}
 }
 
@@ -272,7 +299,7 @@ func main() {
 
 	m := model{
 		textInput:     t,
-		choices:       []string{"Stress test (Don't crash!)", "Static pages check", "Upload files", "delete files"},
+		choices:       []string{"Stress test (Don't crash!)", "Static pages check", "Upload files", "Chunked Post's"},
 		statuses:      []string{"", "", "", ""},
 		selected:      make(map[int]struct{}),
 		typing:        true,
