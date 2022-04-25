@@ -24,7 +24,7 @@ rootDirOfServ: "./forest"
 
 ## Testing With Gotto   
 Webserv can be tested with a Go tester named "GÖTTÖ".     
-GUI done with [bubbleTea](https://github.com/charmbracelet/bubbletea).     
+TUI done with [bubbleTea](https://github.com/charmbracelet/bubbletea).     
 ### Multiple tests can be performed in parallel:    
 1/ Stress test  
 2/ Static Pages integrity test  
