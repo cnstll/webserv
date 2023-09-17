@@ -1,16 +1,21 @@
 # Webserv    
-
+## Presentation of the project
+This project aims at implementing a HTTP server from scratch in C++.  
+The project features has been heavily load tested through concurrent automated testing (Götto).  
+Features can be tested through a static website.  
 ## Launch Webserv   
 `make && ./webserv \[config_file_path\]`
 
 ## Testing from Firefox     
 Go to http://localhost:18000 and clic on buttons.    
 ### Tested features:         
+0/ Get  
 1/ Hash message      
 2/ Upload       
 3/ Delete   
 4/ Redirects        
-5/ Error testing     
+5/ Error testing   
+
 ### Suggested Config and root  
 Conf: "/config/two_ports.config"     
 rootDirOfServ: "./forest"   
